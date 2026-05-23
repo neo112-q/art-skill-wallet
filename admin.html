@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtSkillWallet — Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="logo-container">
+            <img src="img/LogoPlaceHolder.jpg" height="45px" alt="Logo">
+            <span class="ArtSkillWallet">ArtSkillWallet</span>
+        </div>
+        <nav>
+            <ul class="headSectorHolder">
+                <li class="headSector">Explore</li>
+                <li class="headSector active">Skills</li>
+                <li class="headSector">History</li>
+            </ul>
+        </nav>
+        <div class="profile-icon">
+            <i class="fas fa-user-circle fa-2x" id="userProfile"></i>
+        </div>
+    </header>
+
+    <main class="bodyPage">
+
+        <!-- Page title -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Skill Submissions</h1>
+                <p class="page-subtitle">Review and approve artwork uploaded by users</p>
+            </div>
+            <span class="pending-count">6 Pending</span>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+            <div class="filter-left">
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" placeholder="Search by user or title...">
+                </div>
+
+                <select class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="pending" selected>Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+
+                <select class="filter-select">
+                    <option value="">All Skills</option>
+                    <option value="illustration">Illustration</option>
+                    <option value="ui">UI Design</option>
+                    <option value="3d">3D Modeling</option>
+                    <option value="photo">Photography</option>
+                    <option value="video">Video Editing</option>
+                </select>
+
+                <select class="filter-select">
+                    <option value="">All Levels</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select>
+            </div>
+
+            <div class="filter-right">
+                <select class="filter-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Submissions table -->
+        <div class="table-wrap">
+            <table class="submissions-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Title</th>
+                        <th>Skill</th>
+                        <th>Level</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar">JD</div>
+                                <span>Jane Doe</span>
+                            </div>
+                        </td>
+                        <td class="title-cell">Fantasy Forest Scene</td>
+                        <td>Illustration</td>
+                        <td><span class="badge badge-intermediate">Intermediate</span></td>
+                        <td class="date-cell">20 May 2026</td>
+                        <td><span class="status status-pending">Pending</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-view"><i class="fas fa-eye"></i></button>
+                                <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
+                                <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar">MS</div>
+                                <span>Mark S.</span>
+                            </div>
+                        </td>
+                        <td class="title-cell">Product Dashboard UI</td>
+                        <td>UI Design</td>
+                        <td><span class="badge badge-advanced">Advanced</span></td>
+                        <td class="date-cell">19 May 2026</td>
+                        <td><span class="status status-pending">Pending</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-view"><i class="fas fa-eye"></i></button>
+                                <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
+                                <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar">AL</div>
+                                <span>Amy Lee</span>
+                            </div>
+                        </td>
+                        <td class="title-cell">City Street Photography</td>
+                        <td>Photography</td>
+                        <td><span class="badge badge-beginner">Beginner</span></td>
+                        <td class="date-cell">18 May 2026</td>
+                        <td><span class="status status-pending">Pending</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-view"><i class="fas fa-eye"></i></button>
+                                <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
+                                <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar">RW</div>
+                                <span>Ryan W.</span>
+                            </div>
+                        </td>
+                        <td class="title-cell">Dragon Concept Art</td>
+                        <td>Illustration</td>
+                        <td><span class="badge badge-advanced">Advanced</span></td>
+                        <td class="date-cell">15 May 2026</td>
+                        <td><span class="status status-pending">Pending</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-view"><i class="fas fa-eye"></i></button>
+                                <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
+                                <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+    </main>
+
+    <footer class="footer"></footer>
+
+</body>
+</html>

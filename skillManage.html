@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtSkillWallet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/skillManage.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="logo-container">
+            <img src="img/LogoPlaceHolder.jpg" height="45px" alt="Logo">
+            <span class="ArtSkillWallet">ArtSkillWallet</span>
+        </div>
+        <nav>
+            <ul class="headSectorHolder">
+                <li class="headSector">Explore</li>
+                <li class="headSector active">Skills</li>
+                <li class="headSector">History</li>
+            </ul>
+        </nav>
+        <div class="profile-icon">
+            <i class="fas fa-user-circle fa-2x" id="userProfile"></i>
+        </div>
+    </header>
+
+    <main class="bodyPage">
+
+        <div class="skills-header">
+            <h1 class="skills-title">My Skills</h1>
+            <button class="add-btn">
+                <i class="fas fa-plus"></i> Add Skill
+            </button>
+        </div>
+
+        <div class="skills-grid">
+
+            <!-- Row 1 -->
+            <div class="skill-card">
+                <div class="skill-name">Illustration</div>
+                <div class="skill-rank rank-beginner">
+                    <img src="img/Beginner.png" alt="Beginner" onerror="this.style.display='none'">
+                    <span class="rank-badge badge-beginner">
+                        <i class="fas fa-seedling"></i> Beginner
+                    </span>
+                </div>
+                <button class="edit-btn"><i class="fas fa-pen"></i> Edit</button>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-name">UI Design</div>
+                <div class="skill-rank rank-intermediate">
+                    <img src="img/Intermediate.png" alt="Intermediate" onerror="this.style.display='none'">
+                    <span class="rank-badge badge-intermediate">
+                        <i class="fas fa-fire"></i> Intermediate
+                    </span>
+                </div>
+                <button class="edit-btn"><i class="fas fa-pen"></i> Edit</button>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-name">3D Modeling</div>
+                <div class="skill-rank rank-advanced">
+                    <img src="img/Advanced.png" alt="Advanced" onerror="this.style.display='none'">
+                    <span class="rank-badge badge-advanced">
+                        <i class="fas fa-crown"></i> Advanced
+                    </span>
+                </div>
+                <button class="edit-btn"><i class="fas fa-pen"></i> Edit</button>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="skill-card">
+                <div class="skill-name">Photography</div>
+                <div class="skill-rank rank-intermediate">
+                    <img src="img/Intermediate.png" alt="Intermediate" onerror="this.style.display='none'">
+                    <span class="rank-badge badge-intermediate">
+                        <i class="fas fa-fire"></i> Intermediate
+                    </span>
+                </div>
+                <button class="edit-btn"><i class="fas fa-pen"></i> Edit</button>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-name">Video Editing</div>
+                <div class="skill-rank rank-beginner">
+                    <img src="img/Beginner.png" alt="Beginner" onerror="this.style.display='none'">
+                    <span class="rank-badge badge-beginner">
+                        <i class="fas fa-seedling"></i> Beginner
+                    </span>
+                </div>
+                <button class="edit-btn"><i class="fas fa-pen"></i> Edit</button>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-name">Concept Art</div>
+                <div class="skill-rank rank-advanced">
+                    <img src="img/Advanced.png" alt="Advanced" onerror="this.style.display='none'">
+                    <span class="rank-badge badge-advanced">
+                        <i class="fas fa-crown"></i> Advanced
+                    </span>
+                </div>
+                <button class="edit-btn"><i class="fas fa-pen"></i> Edit</button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="footer"></footer>
+
+</body>
+</html>
