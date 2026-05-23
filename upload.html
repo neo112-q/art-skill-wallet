@@ -1,119 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArtSkillWallet</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/upload.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload – ArtSkillWallet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/upload.css">
 </head>
-<body>
+<body class="bg-[#121212] text-white min-h-screen flex flex-col">
 
-    <header class="main-header">
-        <div class="logo-container">
-            <img src="img/LogoPlaceHolder.jpg" height="45px" alt="Logo">
-            <span class="ArtSkillWallet">ArtSkillWallet</span>
-        </div>
-        <nav>
-            <ul class="headSectorHolder">
-                <li class="headSector">Explore</li>
-                <li class="headSector active">Skills</li>
-                <li class="headSector">History</li>
-            </ul>
-        </nav>
-        <div class="profile-icon">
-            <i class="fas fa-user-circle fa-2x" id="userProfile"></i>
-        </div>
-    </header>
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-[#2A2A2A] bg-[rgba(18,18,18,0.9)] backdrop-blur-md">
+    <div class="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
+      <a href="home.html" class="flex items-center gap-2">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
+          <polygon points="16,8 26,26 6,26" fill="#121212"/>
+          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+        </svg>
+        <span class="logo-text">ArtSkillWallet</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#" class="nav-link">Explore</a>
+        <a href="#" class="nav-link nav-active">Skills</a>
+        <a href="#" class="nav-link">History</a>
+      </div>
+      <img
+        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80"
+        alt="avatar"
+        class="w-11 h-11 rounded-full border-2 border-[#CCFF00] object-cover cursor-pointer"
+      >
+    </div>
+  </nav>
 
-    <main class="bodyPage">
-        <div class="form-container">
+  <!-- Main -->
+  <main class="flex-1 max-w-2xl mx-auto w-full px-6 pt-28 pb-16">
 
-            <!-- Upload Artwork -->
-            <section class="form-section">
-                <h2 class="section-title">Artwork</h2>
-                <label class="upload-box" for="artworkUpload">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span class="upload-label">Click or Drag File</span>
-                    <span class="upload-hint">PNG, JPG, MP4 — max 50MB</span>
-                    <input type="file" id="artworkUpload" accept="image/*,video/*" hidden>
-                </label>
-            </section>
+    <!-- Page title -->
+    <div class="mb-8 fade-in">
+      <h1 class="text-2xl font-extrabold text-white">Upload Artwork</h1>
+      <p class="text-[#888] text-sm mt-1">Submit your work for skill verification</p>
+    </div>
 
-            <!-- Title -->
-            <section class="form-section">
-                <h2 class="section-title">Title</h2>
-                <input type="text" class="input-field" placeholder="Enter title...">
-            </section>
+    <div class="flex flex-col gap-5 fade-in-2">
 
-            <!-- Description -->
-            <section class="form-section">
-                <h2 class="section-title">Description</h2>
-                <textarea class="input-field textarea" placeholder="Describe your work..."></textarea>
-            </section>
+      <!-- Artwork Upload -->
+      <section class="form-section">
+        <h2 class="section-title">Artwork</h2>
+        <label class="upload-box" for="artworkUpload">
+          <i class="fas fa-cloud-upload-alt text-3xl text-[#555]"></i>
+          <span class="upload-label">Click or Drag File</span>
+          <span class="upload-hint">PNG, JPG, MP4 — max 50MB</span>
+          <input type="file" id="artworkUpload" accept="image/*,video/*" hidden>
+        </label>
+      </section>
 
-            <!-- Details -->
-            <section class="form-section">
-                <h2 class="section-title">Details</h2>
-                <div class="details-grid">
+      <!-- Title -->
+      <section class="form-section">
+        <h2 class="section-title">Title</h2>
+        <input type="text" class="input-field" placeholder="Enter title...">
+      </section>
 
-                    <div class="input-group">
-                        <label>Search the Skills</label>
-                        <input type="text" class="input-field" placeholder="e.g. Illustration, UI Design...">
-                    </div>
+      <!-- Description -->
+      <section class="form-section">
+        <h2 class="section-title">Description</h2>
+        <textarea class="input-field textarea" placeholder="Describe your work..."></textarea>
+      </section>
 
-                    <div class="input-group">
-                        <label>Account Skills</label>
-                        <input type="text" class="input-field" placeholder="e.g. Photoshop, Figma...">
-                    </div>
+      <!-- Details -->
+      <section class="form-section">
+        <h2 class="section-title">Details</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                    <div class="input-group">
-                        <label>Primary Skills</label>
-                        <input type="text" class="input-field" placeholder="e.g. Digital Art...">
-                    </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="input-label">Search the Skills</label>
+            <input type="text" class="input-field" placeholder="e.g. Illustration, UI Design...">
+          </div>
 
-                    <div class="input-group">
-                        <label>Project Complete Date</label>
-                        <input type="date" class="input-field">
-                    </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="input-label">Account Skills</label>
+            <input type="text" class="input-field" placeholder="e.g. Photoshop, Figma...">
+          </div>
 
-                </div>
-            </section>
+          <div class="flex flex-col gap-1.5">
+            <label class="input-label">Primary Skills</label>
+            <input type="text" class="input-field" placeholder="e.g. Digital Art...">
+          </div>
 
-            <!-- Upload Evidence -->
-            <section class="form-section">
-                <h2 class="section-title">Upload Evidence</h2>
-                <label class="upload-box upload-box--small" for="evidenceUpload">
-                    <i class="fas fa-paperclip"></i>
-                    <span class="upload-label">Click or Drag File</span>
-                    <span class="upload-hint">PDF, PNG, JPG — max 10MB</span>
-                    <input type="file" id="evidenceUpload" accept="image/*,.pdf" hidden>
-                </label>
-            </section>
-
-            <!-- Privacy -->
-            <section class="form-section">
-                <h2 class="section-title">Privacy Setting</h2>
-                <div class="privacy-toggle">
-                    <input type="radio" name="privacy" id="public" value="public" checked>
-                    <label for="public" class="privacy-btn">
-                        <i class="fas fa-globe"></i> Public
-                    </label>
-
-                    <input type="radio" name="privacy" id="private" value="private">
-                    <label for="private" class="privacy-btn">
-                        <i class="fas fa-lock"></i> Private
-                    </label>
-                </div>
-            </section>
-
-            <!-- Publish -->
-            <button class="publish-btn">PUBLISH</button>
+          <div class="flex flex-col gap-1.5">
+            <label class="input-label">Project Complete Date</label>
+            <input type="date" class="input-field">
+          </div>
 
         </div>
-    </main>
+      </section>
 
-    <footer class="footer"></footer>
+      <!-- Upload Evidence -->
+      <section class="form-section">
+        <h2 class="section-title">Upload Evidence</h2>
+        <label class="upload-box upload-box-sm" for="evidenceUpload">
+          <i class="fas fa-paperclip text-xl text-[#555]"></i>
+          <span class="upload-label">Click or Drag File</span>
+          <span class="upload-hint">PDF, PNG, JPG — max 10MB</span>
+          <input type="file" id="evidenceUpload" accept="image/*,.pdf" hidden>
+        </label>
+      </section>
+
+      <!-- Privacy -->
+      <section class="form-section">
+        <h2 class="section-title">Privacy Setting</h2>
+        <div class="flex gap-3">
+          <input type="radio" name="privacy" id="public" value="public" checked hidden>
+          <label for="public" class="privacy-btn">
+            <i class="fas fa-globe text-xs"></i> Public
+          </label>
+          <input type="radio" name="privacy" id="private" value="private" hidden>
+          <label for="private" class="privacy-btn">
+            <i class="fas fa-lock text-xs"></i> Private
+          </label>
+        </div>
+      </section>
+
+      <!-- Publish -->
+      <button class="publish-btn">PUBLISH</button>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[#0d0d0d] border-t border-[#2A2A2A] py-12 px-8">
+    <div class="max-w-5xl mx-auto flex flex-wrap gap-8 justify-between">
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+            <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
+            <polygon points="16,8 26,26 6,26" fill="#121212"/>
+            <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+          </svg>
+          <span class="logo-text">ArtSkillWallet</span>
+        </div>
+        <p class="text-[#555] text-sm max-w-[220px]">Trace your art skills, build your portfolio, and grow your creative career.</p>
+      </div>
+      <div class="flex gap-12 flex-wrap">
+        <div>
+          <p class="footer-col-title">Product</p>
+          <a href="#" class="footer-link">Explore</a>
+          <a href="#" class="footer-link">Skills</a>
+          <a href="#" class="footer-link">Community</a>
+        </div>
+        <div>
+          <p class="footer-col-title">Account</p>
+          <a href="#" class="footer-link">Login</a>
+          <a href="#" class="footer-link">Register</a>
+          <a href="#" class="footer-link">Profile</a>
+        </div>
+        <div>
+          <p class="footer-col-title">Support</p>
+          <a href="#" class="footer-link">FAQ</a>
+          <a href="#" class="footer-link">Contact</a>
+          <a href="#" class="footer-link">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-5xl mx-auto mt-8 pt-8 border-t border-[#2A2A2A] text-center text-[#555] text-sm">
+      © 2025 ArtSkillWallet. All rights reserved.
+    </div>
+  </footer>
 
 </body>
 </html>
