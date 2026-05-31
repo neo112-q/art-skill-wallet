@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 
@@ -11,7 +12,27 @@ import (
 	"art-skill-wallet/pkg/middleware"
 )
 
+
+func projectRoot() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("cannot determine working directory: %v", err)
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			log.Fatalf("could not locate project root (go.mod not found)")
+		}
+		dir = parent
+	}
+}
+
 func main() {
+	root := projectRoot()
+
 	// ── Database ────────────────────────────────────────────────────────
 	if err := db.Connect(); err != nil {
 		log.Fatalf("MongoDB connection failed: %v", err)
@@ -22,24 +43,24 @@ func main() {
 	r := gin.Default()
 
 	// Static assets
-	r.Static("/css", "./css")
-	r.Static("/js", "./js")
-	r.Static("/img", "./img")
+	r.Static("/css", filepath.Join(root, "css"))
+	r.Static("/js", filepath.Join(root, "js"))
+	r.Static("/img", filepath.Join(root, "img"))
 
 	// ── Public HTML pages (no token required) ───────────────────────────
-	r.StaticFile("/", "./home.html")
-	r.StaticFile("/home.html", "./home.html")
-	r.StaticFile("/explore.html", "./explore.html")
+	r.StaticFile("/", filepath.Join(root, "home.html"))
+	r.StaticFile("/home.html", filepath.Join(root, "home.html"))
+	r.StaticFile("/explore.html", filepath.Join(root, "explore.html"))
 
 	// ── Protected HTML pages (JS guard handles redirect) ────────────────
 	// HTML is served freely; the real lock is on the API.
 	// Each page includes auth.js which redirects to home if no valid token.
-	r.StaticFile("/profile.html", "./profile.html")
-	r.StaticFile("/history.html", "./history.html")
-	r.StaticFile("/upload.html", "./upload.html")
-	r.StaticFile("/skillManage.html", "./skillManage.html")
-	r.StaticFile("/editProfile.html", "./editProfile.html")
-	r.StaticFile("/admin.html", "./admin.html")
+	r.StaticFile("/profile.html", filepath.Join(root, "profile.html"))
+	r.StaticFile("/history.html", filepath.Join(root, "history.html"))
+	r.StaticFile("/upload.html", filepath.Join(root, "upload.html"))
+	r.StaticFile("/skillManage.html", filepath.Join(root, "skillManage.html"))
+	r.StaticFile("/editProfile.html", filepath.Join(root, "editProfile.html"))
+	r.StaticFile("/admin.html", filepath.Join(root, "admin.html"))
 
 	// ── API v1 ──────────────────────────────────────────────────────────
 	api := r.Group("/api/v1")
