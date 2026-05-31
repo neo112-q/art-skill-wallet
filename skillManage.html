@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="css/skillManage.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-[#121212] text-white min-h-screen flex flex-col">
 
@@ -16,22 +16,41 @@
     <div class="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
       <a href="home.html" class="flex items-center gap-2">
         <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
-          <polygon points="16,8 26,26 6,26" fill="#121212"/>
-          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
         </svg>
         <span class="logo-text">ArtSkillWallet</span>
       </a>
       <div class="hidden md:flex items-center gap-8">
-        <a href="#" class="nav-link">Explore</a>
-        <a href="#" class="nav-link nav-active">Skills</a>
-        <a href="#" class="nav-link">History</a>
+        <a href="explore.html" class="nav-link">Explore</a>
+        <a href="skillManage.html" class="nav-link active">Skills</a>
+        <a href="history.html" class="nav-link">History</a>
       </div>
-      <img
-        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80"
-        alt="avatar"
-        class="w-11 h-11 rounded-full border-2 border-[#CCFF00] object-cover cursor-pointer"
-      >
+      <div class="avatar-wrapper">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="avatar" class="avatar-sm" id="avatarBtn">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="avatar-dropdown-header">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <div>
+              <p class="avatar-dropdown-name">AneeShan</p>
+              <p class="avatar-dropdown-email">user@artskill.com</p>
+            </div>
+          </div>
+          <div class="avatar-dropdown-divider"></div>
+          <a href="profile.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">👤</span> Profile
+          </a>
+          <a href="admin.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">🛡️</span> Admin
+          </a>
+          <div class="avatar-dropdown-divider"></div>
+          <button class="avatar-dropdown-item" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -44,9 +63,9 @@
         <h1 class="text-2xl font-extrabold text-white">My Skills</h1>
         <p class="text-[#888] text-sm mt-1">Track your skill levels and progress</p>
       </div>
-      <button class="btn-neon">
-        <i class="fas fa-plus text-xs"></i> Add Skill
-      </button>
+      <a href="upload.html" class="btn-neon" >
+        <i class="fas fa-plus text-xs"></i> Add ArtWork
+      </a>
     </div>
 
     <!-- Skills Grid — 3 per row -->
@@ -203,5 +222,85 @@
     </div>
   </footer>
 
+  <!-- Edit Skill Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <button class="modal-close" id="editModalClose">✕</button>
+      <h2 class="modal-title" id="editModalTitle">Edit Skill</h2>
+      <p style="font-size:0.78rem;color:#666;margin:-0.5rem 0 1.25rem;">Select the new level for this skill.</p>
+      <div class="level-radio-group">
+        <div><input type="radio" name="editLevel" id="lvl-beg" value="Beginner"><label for="lvl-beg">🌱 Beginner</label></div>
+        <div><input type="radio" name="editLevel" id="lvl-int" value="Intermediate"><label for="lvl-int">🔥 Intermediate</label></div>
+        <div><input type="radio" name="editLevel" id="lvl-adv" value="Advanced"><label for="lvl-adv">👑 Advanced</label></div>
+      </div>
+      <button class="modal-save-btn" id="editModalSave">SAVE CHANGES</button>
+    </div>
+  </div>
+
+  <script>
+    // Avatar dropdown
+    const avatarBtn = document.getElementById('avatarBtn');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
+    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
+    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    // Edit skill modal
+    const editModal = document.getElementById('editModal');
+    let currentCard = null;
+
+    function openEditModal(card) {
+      currentCard = card;
+      const name  = card.querySelector('h3').textContent;
+      const badge = card.querySelector('.badge');
+      const level = badge.classList.contains('badge-beg') ? 'Beginner'
+                  : badge.classList.contains('badge-inter') ? 'Intermediate' : 'Advanced';
+      document.getElementById('editModalTitle').textContent = 'Edit – ' + name;
+      document.querySelector(`input[name="editLevel"][value="${level}"]`).checked = true;
+      editModal.classList.add('open');
+    }
+
+    function closeEditModal() { editModal.classList.remove('open'); currentCard = null; }
+
+    document.getElementById('editModalClose').addEventListener('click', closeEditModal);
+    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+
+    document.getElementById('editModalSave').addEventListener('click', () => {
+      if (!currentCard) return;
+      const level = document.querySelector('input[name="editLevel"]:checked').value;
+      const segs  = currentCard.querySelectorAll('.seg');
+      const badge = currentCard.querySelector('.badge');
+      const lvlTxt = currentCard.querySelector('p[class*="text-"]');
+
+      // Reset segments
+      segs.forEach(s => { s.className = 'seg seg-empty'; });
+
+      if (level === 'Beginner') {
+        segs[0].className = 'seg seg-neon';
+        badge.className = 'badge badge-beg';
+        badge.innerHTML = '<i class="fas fa-seedling text-xs"></i> Beginner';
+        if (lvlTxt) lvlTxt.textContent = 'Level : 1';
+      } else if (level === 'Intermediate') {
+        segs[0].className = 'seg seg-neon';
+        segs[1].className = 'seg seg-blue';
+        badge.className = 'badge badge-inter';
+        badge.innerHTML = '<i class="fas fa-fire text-xs"></i> Intermediate';
+        if (lvlTxt) lvlTxt.textContent = 'Level : 2';
+      } else {
+        segs[0].className = 'seg seg-neon';
+        segs[1].className = 'seg seg-blue';
+        segs[2].className = 'seg seg-neon';
+        badge.className = 'badge badge-adv';
+        badge.innerHTML = '<i class="fas fa-crown text-xs"></i> Advanced';
+        if (lvlTxt) lvlTxt.textContent = 'Level : 3';
+      }
+      closeEditModal();
+    });
+
+    // Wire up Edit buttons
+    document.querySelectorAll('.btn-edit-sm').forEach(btn => {
+      btn.addEventListener('click', () => openEditModal(btn.closest('.skill-card')));
+    });
+  </script>
 </body>
 </html>

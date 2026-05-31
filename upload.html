@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="css/upload.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-[#121212] text-white min-h-screen flex flex-col">
 
@@ -16,22 +16,41 @@
     <div class="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
       <a href="home.html" class="flex items-center gap-2">
         <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
-          <polygon points="16,8 26,26 6,26" fill="#121212"/>
-          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
         </svg>
         <span class="logo-text">ArtSkillWallet</span>
       </a>
       <div class="hidden md:flex items-center gap-8">
-        <a href="#" class="nav-link">Explore</a>
-        <a href="#" class="nav-link nav-active">Skills</a>
-        <a href="#" class="nav-link">History</a>
+        <a href="explore.html" class="nav-link">Explore</a>
+        <a href="skillManage.html" class="nav-link">Skills</a>
+        <a href="history.html" class="nav-link">History</a>
       </div>
-      <img
-        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80"
-        alt="avatar"
-        class="w-11 h-11 rounded-full border-2 border-[#CCFF00] object-cover cursor-pointer"
-      >
+      <div class="avatar-wrapper">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="avatar" class="avatar-sm" id="avatarBtn">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="avatar-dropdown-header">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <div>
+              <p class="avatar-dropdown-name">AneeShan</p>
+              <p class="avatar-dropdown-email">user@artskill.com</p>
+            </div>
+          </div>
+          <div class="avatar-dropdown-divider"></div>
+          <a href="profile.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">👤</span> Profile
+          </a>
+          <a href="admin.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">🛡️</span> Admin
+          </a>
+          <div class="avatar-dropdown-divider"></div>
+          <button class="avatar-dropdown-item" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -72,23 +91,22 @@
       <!-- Details -->
       <section class="form-section">
         <h2 class="section-title">Details</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-4">
 
+          <!-- Skill in Art -->
           <div class="flex flex-col gap-1.5">
-            <label class="input-label">Search the Skills</label>
-            <input type="text" class="input-field" placeholder="e.g. Illustration, UI Design...">
+            <label class="input-label">Skill in Art</label>
+            <!-- Search box -->
+            <div class="skill-search-wrap">
+              <input type="text" id="skillSearch" class="input-field" placeholder="Search skill...">
+              <!-- Dropdown list -->
+              <div class="skill-dropdown" id="skillDropdown"></div>
+            </div>
+            <!-- Selected skill tags -->
+            <div class="skill-tags" id="skillTags"></div>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="input-label">Account Skills</label>
-            <input type="text" class="input-field" placeholder="e.g. Photoshop, Figma...">
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="input-label">Primary Skills</label>
-            <input type="text" class="input-field" placeholder="e.g. Digital Art...">
-          </div>
-
+          <!-- Project Complete Date -->
           <div class="flex flex-col gap-1.5">
             <label class="input-label">Project Complete Date</label>
             <input type="date" class="input-field">
@@ -169,5 +187,75 @@
     </div>
   </footer>
 
+  <script>
+    // Avatar dropdown
+    const avatarBtn = document.getElementById('avatarBtn');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
+    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
+    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    // Skill selector
+    const SKILLS = [
+      'Illustration', 'Character Design', 'Concept Art', 'Digital Painting',
+      'Storyboarding', '3D Modeling', 'Animation', 'Pixel Art',
+      'UI Design', 'Watercolor', 'Oil Painting', 'Graphic Design',
+      'Typography', 'Photography', 'Video Editing', 'Game Design',
+      'Background Art', 'Botanical Illustration', 'Fine Art', 'Sculpture'
+    ];
+
+    const skillSearch   = document.getElementById('skillSearch');
+    const skillDropdown = document.getElementById('skillDropdown');
+    const skillTags     = document.getElementById('skillTags');
+    let selected = [];
+
+    function renderDropdown(query) {
+      const q = query.toLowerCase();
+      const filtered = SKILLS.filter(s => s.toLowerCase().includes(q));
+      skillDropdown.innerHTML = '';
+      if (!filtered.length) {
+        skillDropdown.innerHTML = '<div class="skill-option" style="opacity:.4;pointer-events:none">No results</div>';
+      } else {
+        filtered.forEach(s => {
+          const div = document.createElement('div');
+          div.className = 'skill-option' + (selected.includes(s) ? ' selected' : '');
+          div.textContent = s;
+          div.addEventListener('click', () => addSkill(s));
+          skillDropdown.appendChild(div);
+        });
+      }
+      skillDropdown.classList.add('open');
+    }
+
+    function addSkill(skill) {
+      if (selected.includes(skill)) return;
+      selected.push(skill);
+      skillSearch.value = '';
+      skillDropdown.classList.remove('open');
+      renderTags();
+    }
+
+    function removeSkill(skill) {
+      selected = selected.filter(s => s !== skill);
+      renderTags();
+    }
+
+    function renderTags() {
+      skillTags.innerHTML = '';
+      selected.forEach(s => {
+        const tag = document.createElement('span');
+        tag.className = 'skill-tag';
+        tag.innerHTML = s + '<button class="skill-tag-remove" title="Remove">✕</button>';
+        tag.querySelector('button').addEventListener('click', () => removeSkill(s));
+        skillTags.appendChild(tag);
+      });
+    }
+
+    skillSearch.addEventListener('focus', () => renderDropdown(skillSearch.value));
+    skillSearch.addEventListener('input', () => renderDropdown(skillSearch.value));
+    skillSearch.addEventListener('click', (e) => e.stopPropagation());
+    skillDropdown.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', () => skillDropdown.classList.remove('open'));
+  </script>
 </body>
 </html>

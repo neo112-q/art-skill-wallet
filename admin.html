@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-[#121212] text-white min-h-screen flex flex-col">
 
@@ -16,22 +16,41 @@
     <div class="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
       <a href="home.html" class="flex items-center gap-2">
         <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
-          <polygon points="16,8 26,26 6,26" fill="#121212"/>
-          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+          <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
         </svg>
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
       <div class="hidden md:flex items-center gap-8">
-        <a href="#" class="nav-link">Explore</a>
-        <a href="#" class="nav-link nav-link-active">Skills</a>
-        <a href="#" class="nav-link">History</a>
+        <a href="explore.html" class="nav-link">Explore</a>
+        <a href="skillManage.html" class="nav-link">Skills</a>
+        <a href="history.html" class="nav-link">History</a>
       </div>
-      <img
-        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80"
-        alt="avatar"
-        class="w-11 h-11 rounded-full border-2 border-[#CCFF00] object-cover cursor-pointer"
-      >
+      <div class="avatar-wrapper">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="avatar" class="avatar-sm" id="avatarBtn">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="avatar-dropdown-header">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <div>
+              <p class="avatar-dropdown-name">AneeShan</p>
+              <p class="avatar-dropdown-email">user@artskill.com</p>
+            </div>
+          </div>
+          <div class="avatar-dropdown-divider"></div>
+          <a href="profile.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">👤</span> Profile
+          </a>
+          <a href="admin.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">🛡️</span> Admin
+          </a>
+          <div class="avatar-dropdown-divider"></div>
+          <button class="avatar-dropdown-item" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -44,7 +63,7 @@
         <h1 class="text-2xl font-extrabold text-white">Skill Submissions</h1>
         <p class="text-[#888] text-sm mt-1">Review and approve artwork uploaded by users</p>
       </div>
-      <span class="bg-[#CCFF00] text-[#121212] text-xs font-bold px-4 py-1.5 rounded-full">6 Pending</span>
+      <span class="bg-[#CCFF00] text-[#121212] text-xs font-bold px-4 py-1.5 rounded-full" id="pendingBadge">6 Pending</span>
     </div>
 
     <!-- Filter bar -->
@@ -52,15 +71,15 @@
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2 bg-[#121212] border border-[#2A2A2A] rounded-lg px-3 py-2">
           <i class="fas fa-search text-[#555] text-sm"></i>
-          <input type="text" placeholder="Search by user or title..." class="bg-transparent outline-none text-sm text-white placeholder-[#555] w-48">
+          <input id="adminSearch" type="text" placeholder="Search by user or title..." class="bg-transparent outline-none text-sm text-white placeholder-[#555] w-48">
         </div>
-        <select class="filter-select">
+        <select id="filterStatus" class="filter-select">
           <option value="">All Status</option>
-          <option selected>Pending</option>
+          <option>Pending</option>
           <option>Approved</option>
           <option>Rejected</option>
         </select>
-        <select class="filter-select">
+        <select id="filterSkill" class="filter-select">
           <option value="">All Skills</option>
           <option>Illustration</option>
           <option>UI Design</option>
@@ -68,14 +87,14 @@
           <option>Photography</option>
           <option>Video Editing</option>
         </select>
-        <select class="filter-select">
+        <select id="filterLevel" class="filter-select">
           <option value="">All Levels</option>
           <option>Beginner</option>
           <option>Intermediate</option>
           <option>Advanced</option>
         </select>
       </div>
-      <select class="filter-select">
+      <select id="sortSelect" class="filter-select">
         <option>Newest First</option>
         <option>Oldest First</option>
       </select>
@@ -95,7 +114,7 @@
             <th class="th-cell">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="submissionsBody">
 
           <tr class="tr-row border-b border-[#2A2A2A]">
             <td class="td-cell"><div class="flex items-center gap-2.5"><div class="avatar-init">JD</div><span class="text-white font-medium whitespace-nowrap">Jane Doe</span></div></td>
@@ -105,9 +124,9 @@
             <td class="td-cell text-[#666] whitespace-nowrap">20 May 2026</td>
             <td class="td-cell"><span class="status status-pending">Pending</span></td>
             <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
+              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
+              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
             </div></td>
           </tr>
 
@@ -119,9 +138,9 @@
             <td class="td-cell text-[#666] whitespace-nowrap">19 May 2026</td>
             <td class="td-cell"><span class="status status-pending">Pending</span></td>
             <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
+              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
+              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
             </div></td>
           </tr>
 
@@ -133,9 +152,9 @@
             <td class="td-cell text-[#666] whitespace-nowrap">18 May 2026</td>
             <td class="td-cell"><span class="status status-pending">Pending</span></td>
             <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
+              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
+              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
             </div></td>
           </tr>
 
@@ -147,8 +166,8 @@
             <td class="td-cell text-[#666] whitespace-nowrap">17 May 2026</td>
             <td class="td-cell"><span class="status status-approved">Approved</span></td>
             <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view"><i class="fas fa-eye"></i></button>
-              <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
+              <button class="btn-reject" onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
             </div></td>
           </tr>
 
@@ -160,8 +179,8 @@
             <td class="td-cell text-[#666] whitespace-nowrap">16 May 2026</td>
             <td class="td-cell"><span class="status status-rejected">Rejected</span></td>
             <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
+              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
+              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
             </div></td>
           </tr>
 
@@ -173,9 +192,9 @@
             <td class="td-cell text-[#666] whitespace-nowrap">15 May 2026</td>
             <td class="td-cell"><span class="status status-pending">Pending</span></td>
             <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
+              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
+              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
             </div></td>
           </tr>
 
@@ -234,5 +253,129 @@
     </div>
   </footer>
 
+  <!-- View Submission Modal -->
+  <div class="modal-overlay" id="viewModal">
+    <div class="modal-box modal-box-wide">
+      <button class="modal-close" id="viewModalClose">✕</button>
+      <h2 class="modal-title" id="viewModalTitle">Submission Detail</h2>
+      <div id="viewModalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // Avatar dropdown
+    const avatarBtn = document.getElementById('avatarBtn');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
+    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
+    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    // ── Approve / Reject ─────────────────────────────────────────────
+    function setStatus(row, newStatus) {
+      const statusEl = row.querySelector('.status');
+      const actionsEl = row.querySelector('.flex.items-center.gap-1\\.5');
+
+      statusEl.className = 'status status-' + newStatus.toLowerCase();
+      statusEl.textContent = newStatus;
+
+      // Rebuild action buttons based on new status
+      let html = `<button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>`;
+      if (newStatus === 'Pending') {
+        html += `<button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>`;
+        html += `<button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>`;
+      } else if (newStatus === 'Approved') {
+        html += `<button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>`;
+      } else {
+        html += `<button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>`;
+      }
+      actionsEl.innerHTML = html;
+
+      updatePendingCount();
+      applyFilters();
+    }
+
+    function updatePendingCount() {
+      const count = document.querySelectorAll('.status-pending').length;
+      document.getElementById('pendingBadge').textContent = count + ' Pending';
+    }
+
+    // ── View modal ────────────────────────────────────────────────────
+    const viewModal = document.getElementById('viewModal');
+    document.getElementById('viewModalClose').addEventListener('click', () => viewModal.classList.remove('open'));
+    viewModal.addEventListener('click', (e) => { if (e.target === viewModal) viewModal.classList.remove('open'); });
+
+    function viewRow(btn) {
+      const row = btn.closest('tr');
+      const cells = row.querySelectorAll('td');
+      const user   = cells[0].querySelector('span:last-child').textContent;
+      const title  = cells[1].textContent.trim();
+      const skill  = cells[2].textContent.trim();
+      const level  = cells[3].textContent.trim();
+      const date   = cells[4].textContent.trim();
+      const status = cells[5].textContent.trim();
+
+      document.getElementById('viewModalTitle').textContent = title;
+      document.getElementById('viewModalBody').innerHTML = `
+        <div class="view-row"><span class="view-label">User</span><span class="view-value">${user}</span></div>
+        <div class="view-row"><span class="view-label">Skill</span><span class="view-value">${skill}</span></div>
+        <div class="view-row"><span class="view-label">Level</span><span class="view-value">${level}</span></div>
+        <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">${date}</span></div>
+        <div class="view-row"><span class="view-label">Status</span><span class="view-value">${status}</span></div>
+      `;
+      viewModal.classList.add('open');
+    }
+
+    // ── Filter / Search / Sort ────────────────────────────────────────
+    const searchInput  = document.getElementById('adminSearch');
+    const filterStatus = document.getElementById('filterStatus');
+    const filterSkill  = document.getElementById('filterSkill');
+    const filterLevel  = document.getElementById('filterLevel');
+    const sortSelect   = document.getElementById('sortSelect');
+
+    function applyFilters() {
+      const q      = searchInput.value.toLowerCase();
+      const status = filterStatus.value.toLowerCase();
+      const skill  = filterSkill.value.toLowerCase();
+      const level  = filterLevel.value.toLowerCase();
+
+      const rows = Array.from(document.querySelectorAll('#submissionsBody tr'));
+
+      rows.forEach(row => {
+        const cells  = row.querySelectorAll('td');
+        const rUser  = cells[0].textContent.toLowerCase();
+        const rTitle = cells[1].textContent.toLowerCase();
+        const rSkill = cells[2].textContent.toLowerCase();
+        const rLevel = cells[3].textContent.toLowerCase();
+        const rStat  = cells[5].textContent.toLowerCase();
+
+        const matchQ      = !q      || rUser.includes(q)  || rTitle.includes(q);
+        const matchStatus = !status || rStat.includes(status);
+        const matchSkill  = !skill  || rSkill.includes(skill);
+        const matchLevel  = !level  || rLevel.includes(level);
+
+        row.style.display = (matchQ && matchStatus && matchSkill && matchLevel) ? '' : 'none';
+      });
+
+      applySort();
+    }
+
+    function applySort() {
+      const tbody = document.getElementById('submissionsBody');
+      const rows  = Array.from(tbody.querySelectorAll('tr'));
+      const dir   = sortSelect.value === 'Oldest First' ? 1 : -1;
+
+      rows.sort((a, b) => {
+        const da = new Date(a.querySelectorAll('td')[4].textContent.trim());
+        const db = new Date(b.querySelectorAll('td')[4].textContent.trim());
+        return dir * (da - db);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    }
+
+    [searchInput, filterStatus, filterSkill, filterLevel, sortSelect].forEach(el => {
+      el.addEventListener('input', applyFilters);
+      el.addEventListener('change', applyFilters);
+    });
+  </script>
 </body>
 </html>

@@ -14,18 +14,41 @@
     <div class="navbar-inner">
       <a href="home.html" class="nav-logo">
         <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
-          <polygon points="16,8 26,26 6,26" fill="#121212"/>
-          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
         </svg>
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
       <div class="nav-links">
         <a href="explore.html" class="nav-link">Explore</a>
-        <a href="#" class="nav-link">Skills</a>
+        <a href="skillManage.html" class="nav-link">Skills</a>
         <a href="history.html" class="nav-link active">History</a>
       </div>
-      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm">
+      <div class="avatar-wrapper">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm" id="avatarBtn">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="avatar-dropdown-header">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <div>
+              <p class="avatar-dropdown-name">AneeShan</p>
+              <p class="avatar-dropdown-email">user@artskill.com</p>
+            </div>
+          </div>
+          <div class="avatar-dropdown-divider"></div>
+          <a href="profile.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">👤</span> Profile
+          </a>
+          <a href="admin.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">🛡️</span> Admin
+          </a>
+          <div class="avatar-dropdown-divider"></div>
+          <button class="avatar-dropdown-item" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -36,6 +59,10 @@
     <aside class="filter-panel">
       <div class="filter-card">
         <h2 class="filter-title">Filter</h2>
+        <div class="filter-group">
+          <label class="filter-label" for="f-name">Name</label>
+          <input type="text" class="filter-input" id="f-name" placeholder="">
+        </div>
         <div class="filter-group">
           <label class="filter-label" for="f-skill">Skill</label>
           <input type="text" class="filter-input" id="f-skill" placeholder="">
@@ -57,7 +84,7 @@
         <div class="timeline-line"></div>
 
         <!-- Dec 2026 -->
-        <div class="timeline-group" data-skill="Character Design" data-level="Advanced" data-tags="digital,character,upload,levelup">
+        <div class="timeline-group" data-name="beauty path to violent,character design is now advanced" data-skill="Character Design" data-level="Advanced" data-tags="digital,character,upload,levelup">
           <div class="timeline-date">26 December<br>2026</div>
           <div class="timeline-dot"></div>
           <div class="timeline-entries">
@@ -83,7 +110,7 @@
         </div>
 
         <!-- Nov 2026 -->
-        <div class="timeline-group" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,moon,upload">
+        <div class="timeline-group" data-name="sloth dream" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,moon,upload">
           <div class="timeline-date">26 November<br>2026</div>
           <div class="timeline-dot"></div>
           <div class="timeline-entries">
@@ -101,7 +128,7 @@
         </div>
 
         <!-- Oct 2026 -->
-        <div class="timeline-group" data-skill="Digital Painting" data-level="Intermediate" data-tags="painting,portrait,upload">
+        <div class="timeline-group" data-name="swallow in the pretty face" data-skill="Digital Painting" data-level="Intermediate" data-tags="painting,portrait,upload">
           <div class="timeline-date">26 October<br>2026</div>
           <div class="timeline-dot"></div>
           <div class="timeline-entries">
@@ -118,7 +145,7 @@
         </div>
 
         <!-- Sep 2026 -->
-        <div class="timeline-group" data-skill="Concept Art" data-level="Advanced" data-tags="concept,environment,upload">
+        <div class="timeline-group" data-name="neon citadel" data-skill="Concept Art" data-level="Advanced" data-tags="concept,environment,upload">
           <div class="timeline-date">14 September<br>2026</div>
           <div class="timeline-dot"></div>
           <div class="timeline-entries">
@@ -136,7 +163,7 @@
         </div>
 
         <!-- Aug 2026 -->
-        <div class="timeline-group" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,nature,upload,levelup">
+        <div class="timeline-group" data-name="forest spirit,illustration is now intermediate" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,nature,upload,levelup">
           <div class="timeline-date">2 August<br>2026</div>
           <div class="timeline-dot"></div>
           <div class="timeline-entries">
@@ -162,7 +189,7 @@
         </div>
 
         <!-- Jul 2026 -->
-        <div class="timeline-group" data-skill="Character Design" data-level="Advanced" data-tags="character,darkfantasy,upload">
+        <div class="timeline-group" data-name="void walker" data-skill="Character Design" data-level="Advanced" data-tags="character,darkfantasy,upload">
           <div class="timeline-date">10 July<br>2026</div>
           <div class="timeline-dot"></div>
           <div class="timeline-entries">
@@ -184,5 +211,12 @@
   </div>
 
   <script src="js/history.js" defer></script>
+  <script>
+    const avatarBtn = document.getElementById('avatarBtn');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
+    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
+    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+  </script>
 </body>
 </html>

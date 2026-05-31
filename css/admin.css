@@ -180,6 +180,43 @@ body { font-family: 'Syne', sans-serif; }
 .page-btn-active:hover { border-color: #CCFF00; color: #121212; }
 .page-btn:disabled { opacity: 0.3; cursor: default; }
 
+/* ===== AVATAR DROPDOWN ===== */
+.avatar-wrapper { position: relative; }
+.avatar-sm { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #CCFF00; object-fit: cover; cursor: pointer; display: block; }
+.avatar-dropdown {
+  position: absolute; top: calc(100% + 12px); right: 0;
+  background: rgba(20,20,20,0.97);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid #2A2A2A; border-radius: 1rem;
+  width: 220px; padding: 0.75rem 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(204,255,0,0.06);
+  opacity: 0; pointer-events: none; transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s; z-index: 200;
+}
+.avatar-dropdown.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.avatar-dropdown-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem 0.75rem; }
+.avatar-dropdown-pic { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #CCFF00; object-fit: cover; flex-shrink: 0; }
+.avatar-dropdown-name { font-size: 0.85rem; font-weight: 700; color: #fff; margin: 0 0 2px; }
+.avatar-dropdown-email { font-size: 0.7rem; color: #666; margin: 0; }
+.avatar-dropdown-divider { height: 1px; background: #2A2A2A; margin: 0.25rem 0; }
+.avatar-dropdown-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  width: 100%; padding: 0.6rem 1rem;
+  background: none; border: none; text-decoration: none;
+  color: #ccc; font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s; text-align: left;
+}
+.avatar-dropdown-item:hover:not([disabled]) { background: rgba(204,255,0,0.07); color: #CCFF00; }
+.avatar-dropdown-item[disabled] { cursor: not-allowed; opacity: 0.45; }
+.avatar-dropdown-icon { font-size: 1rem; width: 20px; text-align: center; }
+.avatar-dropdown-soon {
+  margin-left: auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em;
+  background: rgba(204,255,0,0.1); color: #CCFF00;
+  padding: 0.1rem 0.45rem; border-radius: 99px; text-transform: uppercase;
+}
+.avatar-dropdown-logout { color: #ff6b6b; }
+.avatar-dropdown-logout:hover:not([disabled]) { background: rgba(255,107,107,0.08); color: #ff6b6b; }
+
 /* ===== FOOTER ===== */
 .footer-col-title {
   color: #CCFF00;

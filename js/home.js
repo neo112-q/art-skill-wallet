@@ -10,12 +10,34 @@ function closeAuth() {
 }
 
 function switchAuthTab(tab) {
-  ['login', 'register'].forEach(function(t) {
-    document.getElementById('auth-tab-' + t).classList.toggle('active', t === tab);
-    document.getElementById('auth-tab-' + t).setAttribute('aria-selected', String(t === tab));
-    document.getElementById('auth-panel-' + t).classList.toggle('active', t === tab);
+  ['login', 'register', 'forgot'].forEach(function(t) {
+    var tabEl   = document.getElementById('auth-tab-' + t);
+    var panelEl = document.getElementById('auth-panel-' + t);
+    if (tabEl)   { tabEl.classList.toggle('active', t === tab); tabEl.setAttribute('aria-selected', String(t === tab)); }
+    if (panelEl) { panelEl.classList.toggle('active', t === tab); }
   });
   clearAuthMessages();
+}
+
+function showForgotPassword() {
+  switchAuthTab('forgot');
+}
+
+function handleGoogleAuth() {
+  // TODO: replace with real Google OAuth redirect when backend is ready
+  showAuthMsg('login-msg', 'Google login coming soon.', 'error');
+  showAuthMsg('register-msg', 'Google login coming soon.', 'error');
+}
+
+async function handleForgotPassword() {
+  clearAuthMessages();
+  var email = document.getElementById('forgot-email').value.trim();
+  if (!email) {
+    showAuthMsg('forgot-msg', 'Please enter your email.', 'error');
+    return;
+  }
+  // TODO: call real reset endpoint when backend is ready
+  showAuthMsg('forgot-msg', 'Reset link sent! Check your inbox.', 'success');
 }
 
 function showAuthMsg(id, msg, type) {

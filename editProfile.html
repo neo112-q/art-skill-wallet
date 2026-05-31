@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Profile – ArtSkillWallet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="home.html" class="nav-logo">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
+        </svg>
+        <span class="nav-logo-text">ArtSkillWallet</span>
+      </a>
+      <div class="nav-links">
+        <a href="explore.html" class="nav-link">Explore</a>
+        <a href="skillManage.html" class="nav-link">Skills</a>
+        <a href="history.html" class="nav-link">History</a>
+      </div>
+      <div class="avatar-wrapper">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm" id="avatarBtn">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="avatar-dropdown-header">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <div>
+              <p class="avatar-dropdown-name">AneeShan</p>
+              <p class="avatar-dropdown-email">user@artskill.com</p>
+            </div>
+          </div>
+          <div class="avatar-dropdown-divider"></div>
+          <a href="profile.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">👤</span> Profile
+          </a>
+          <a href="admin.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">🛡️</span> Admin
+          </a>
+          <div class="avatar-dropdown-divider"></div>
+          <button class="avatar-dropdown-item" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="page-main">
+
+    <!-- Page header -->
+    <div class="edit-profile-header fade-in">
+      <a href="profile.html" class="edit-profile-back">← Back to Profile</a>
+      <h1 class="edit-profile-title">Edit Profile</h1>
+    </div>
+
+    <form class="edit-profile-form fade-in-2" id="editProfileForm" onsubmit="saveProfile(event)">
+
+      <!-- Avatar -->
+      <div class="edit-avatar-section">
+        <div class="edit-avatar-wrap">
+          <img id="avatarPreview"
+               src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80"
+               alt="Profile avatar" class="edit-avatar-img">
+          <label for="avatarFileInput" class="edit-avatar-change">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </label>
+          <input type="file" id="avatarFileInput" accept="image/*" hidden>
+        </div>
+        <div>
+          <p class="edit-avatar-hint">Click the pencil to upload a new photo</p>
+          <p class="edit-avatar-hint" style="color:#444;">JPG, PNG — max 5MB</p>
+        </div>
+      </div>
+
+      <!-- Fields -->
+      <div class="edit-profile-fields">
+
+        <div class="edit-field-group">
+          <div class="edit-field">
+            <label class="edit-label" for="ep-username">Username</label>
+            <input type="text" id="ep-username" class="edit-input" value="Navvy_Art" placeholder="your_username">
+          </div>
+          <div class="edit-field">
+            <label class="edit-label" for="ep-email">Email</label>
+            <input type="email" id="ep-email" class="edit-input" value="user@artskill.com" placeholder="you@example.com">
+          </div>
+        </div>
+
+        <div class="edit-field">
+          <label class="edit-label" for="ep-bio">Bio</label>
+          <textarea id="ep-bio" class="edit-input edit-textarea"
+            placeholder="Tell the world about yourself...">Creative digital artist specializing in fantasy and sci-fi concept art. Full-time creator.</textarea>
+        </div>
+
+        <div class="edit-field-group">
+          <div class="edit-field">
+            <label class="edit-label" for="ep-website">Website / Portfolio</label>
+            <input type="url" id="ep-website" class="edit-input" placeholder="https://yoursite.com">
+          </div>
+          <div class="edit-field">
+            <label class="edit-label" for="ep-twitter">Twitter / X</label>
+            <input type="text" id="ep-twitter" class="edit-input" placeholder="@username">
+          </div>
+        </div>
+
+        <div class="edit-field-group">
+          <div class="edit-field">
+            <label class="edit-label" for="ep-instagram">Instagram</label>
+            <input type="text" id="ep-instagram" class="edit-input" placeholder="@username">
+          </div>
+          <div class="edit-field">
+            <label class="edit-label" for="ep-location">Location</label>
+            <input type="text" id="ep-location" class="edit-input" placeholder="City, Country">
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="edit-section-divider">
+          <span>Account</span>
+        </div>
+
+        <div class="edit-field-group">
+          <div class="edit-field">
+            <label class="edit-label" for="ep-current-pw">Current Password</label>
+            <input type="password" id="ep-current-pw" class="edit-input" placeholder="••••••••">
+          </div>
+          <div class="edit-field">
+            <label class="edit-label" for="ep-new-pw">New Password</label>
+            <input type="password" id="ep-new-pw" class="edit-input" placeholder="••••••••">
+          </div>
+        </div>
+
+        <div class="edit-field" style="max-width:340px;">
+          <label class="edit-label" for="ep-confirm-pw">Confirm New Password</label>
+          <input type="password" id="ep-confirm-pw" class="edit-input" placeholder="••••••••">
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="edit-profile-actions">
+        <div id="ep-msg" class="ep-msg" style="display:none;"></div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <a href="profile.html" class="btn-outline">Cancel</a>
+          <button type="submit" class="btn-neon">Save Changes</button>
+        </div>
+      </div>
+
+    </form>
+
+  </main>
+
+  <script>
+    // Avatar dropdown
+    const avatarBtn = document.getElementById('avatarBtn');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
+    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
+    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    // Avatar preview
+    document.getElementById('avatarFileInput').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => { document.getElementById('avatarPreview').src = e.target.result; };
+      reader.readAsDataURL(file);
+    });
+
+    // Save
+    function saveProfile(e) {
+      e.preventDefault();
+      const msgEl  = document.getElementById('ep-msg');
+      const newPw  = document.getElementById('ep-new-pw').value;
+      const confPw = document.getElementById('ep-confirm-pw').value;
+
+      if (newPw && newPw !== confPw) {
+        showMsg('Passwords do not match.', 'error');
+        return;
+      }
+      if (newPw && newPw.length < 6) {
+        showMsg('New password must be at least 6 characters.', 'error');
+        return;
+      }
+
+      // TODO: send to backend API
+      showMsg('Profile saved successfully!', 'success');
+      setTimeout(() => { window.location.href = 'profile.html'; }, 1200);
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById('ep-msg');
+      el.textContent = text;
+      el.className = 'ep-msg ep-msg-' + type;
+      el.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

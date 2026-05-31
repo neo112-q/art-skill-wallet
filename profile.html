@@ -14,18 +14,41 @@
     <div class="navbar-inner">
       <a href="home.html" class="nav-logo">
         <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
-          <polygon points="16,8 26,26 6,26" fill="#121212"/>
-          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
         </svg>
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
       <div class="nav-links">
         <a href="explore.html" class="nav-link">Explore</a>
-        <a href="#" class="nav-link">Skills</a>
+        <a href="skillManage.html" class="nav-link">Skills</a>
         <a href="history.html" class="nav-link">History</a>
       </div>
-      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm">
+      <div class="avatar-wrapper">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm" id="avatarBtn">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="avatar-dropdown-header">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <div>
+              <p class="avatar-dropdown-name">AneeShan</p>
+              <p class="avatar-dropdown-email">user@artskill.com</p>
+            </div>
+          </div>
+          <div class="avatar-dropdown-divider"></div>
+          <a href="profile.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">👤</span> Profile
+          </a>
+          <a href="admin.html" class="avatar-dropdown-item">
+            <span class="avatar-dropdown-icon">🛡️</span> Admin
+          </a>
+          <div class="avatar-dropdown-divider"></div>
+          <button class="avatar-dropdown-item" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
+            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -38,7 +61,7 @@
       <div class="profile-details">
         <div class="profile-name-row">
           <h1 class="profile-name">Navvy_Art</h1>
-          <button class="btn-edit">edit profile</button>
+          <a href="editProfile.html" class="btn-edit">edit profile</a>
         </div>
         <p class="profile-bio">
           Bio: "Creative digital artist specializing in fantasy and sci-fi concept art. Full-time creator."<br>
@@ -62,10 +85,10 @@
     </section>
 
     <!-- Tab Navigation -->
-    <div class="profile-tabs" role="tablist">
+    <!-- <div class="profile-tabs" role="tablist">
       <button class="profile-tab active" data-tab="portfolio" role="tab" aria-selected="true" onclick="switchProfileTab('portfolio')">Portfolio</button>
       <button class="profile-tab" data-tab="history" role="tab" aria-selected="false" onclick="switchProfileTab('history')">History</button>
-    </div>
+    </div> -->
 
     <!-- Portfolio Tab -->
     <div class="tab-panel active fade-in-2" id="panel-portfolio" role="tabpanel">
@@ -74,7 +97,7 @@
       <section aria-label="Skill showcase">
         <div class="section-hd">
           <h2>Skill Showcase</h2>
-          <a href="#" class="btn-neon">View All →</a>
+          <a href="skillManage.html" class="btn-neon">View All →</a>
         </div>
         <div class="skills-grid">
 
@@ -409,7 +432,127 @@
     </div>
   </div>
 
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="editProfileModal">
+    <div class="modal-box" style="max-width:480px;">
+      <button class="modal-close" id="editProfileClose">✕</button>
+      <h2 class="modal-title">Edit Profile</h2>
+
+      <!-- Avatar -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+        <div style="position:relative;display:inline-block;">
+          <img id="editAvatarPreview" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80"
+               alt="Avatar preview"
+               style="width:88px;height:88px;border-radius:50%;border:3px solid var(--neon);object-fit:cover;display:block;">
+          <label for="editAvatarInput"
+                 style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--neon);border-radius:50%;
+                        display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.75rem;color:#121212;">
+            ✎
+          </label>
+          <input type="file" id="editAvatarInput" accept="image/*" hidden>
+        </div>
+        <span style="font-size:0.72rem;color:#555;">Click the pencil to change photo</span>
+      </div>
+
+      <!-- Username -->
+      <div class="auth-field">
+        <label for="editUsername">Username</label>
+        <input type="text" id="editUsername" class="auth-input" placeholder="your_username">
+      </div>
+
+      <!-- Bio -->
+      <div class="auth-field">
+        <label for="editBio">Bio</label>
+        <textarea id="editBio" class="auth-input" rows="3" placeholder="Tell the world about yourself..."></textarea>
+      </div>
+
+      <!-- Social links -->
+      <div class="auth-field">
+        <label for="editWebsite">Website / Portfolio URL</label>
+        <input type="url" id="editWebsite" class="auth-input" placeholder="https://yoursite.com">
+      </div>
+
+      <button class="modal-save-btn" id="editProfileSave">SAVE CHANGES</button>
+    </div>
+  </div>
+
   <script src="js/app.js" defer></script>
   <script src="js/profile.js" defer></script>
+  <script>
+    // Avatar dropdown
+    const avatarBtn = document.getElementById('avatarBtn');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
+    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
+    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    // ── Edit Profile ─────────────────────────────────────────────────
+    const editProfileModal = document.getElementById('editProfileModal');
+    const editAvatarInput  = document.getElementById('editAvatarInput');
+    const editAvatarPreview = document.getElementById('editAvatarPreview');
+    let pendingAvatarSrc = null;
+
+    function openEditProfile() {
+      // Pre-fill with current values
+      document.getElementById('editUsername').value =
+        document.querySelector('.profile-name').textContent.trim();
+      // Strip the Bio: prefix and quotes for editing
+      const rawBio = document.querySelector('.profile-bio').firstChild.textContent
+        .replace(/^Bio:\s*[""]?/, '').replace(/[""]$/, '').trim();
+      document.getElementById('editBio').value = rawBio;
+      // Reset avatar preview to current profile avatar
+      const currentAvatar = document.querySelector('.avatar-lg').src;
+      editAvatarPreview.src = currentAvatar;
+      pendingAvatarSrc = null;
+      editProfileModal.classList.add('open');
+    }
+
+    document.getElementById('editProfileClose').addEventListener('click', () => {
+      editProfileModal.classList.remove('open');
+    });
+    editProfileModal.addEventListener('click', (e) => {
+      if (e.target === editProfileModal) editProfileModal.classList.remove('open');
+    });
+
+    // Avatar file picker → preview
+    editAvatarInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        pendingAvatarSrc = ev.target.result;
+        editAvatarPreview.src = pendingAvatarSrc;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Save → update profile page live
+    document.getElementById('editProfileSave').addEventListener('click', () => {
+      const newName = document.getElementById('editUsername').value.trim();
+      const newBio  = document.getElementById('editBio').value.trim();
+
+      if (!newName) {
+        alert('Username cannot be empty.');
+        return;
+      }
+
+      // Update name everywhere on the page
+      document.querySelector('.profile-name').textContent = newName;
+      document.querySelector('.avatar-dropdown-name').textContent = newName;
+
+      // Update bio
+      const bioEl = document.querySelector('.profile-bio');
+      bioEl.innerHTML = `Bio: "${newBio}"`;
+
+      // Update avatar if changed
+      if (pendingAvatarSrc) {
+        document.querySelector('.avatar-lg').src = pendingAvatarSrc;
+        document.querySelector('.avatar-dropdown-pic').src = pendingAvatarSrc;
+        document.getElementById('avatarBtn').src = pendingAvatarSrc;
+      }
+
+      editProfileModal.classList.remove('open');
+    });
+  </script>
 </body>
 </html>
