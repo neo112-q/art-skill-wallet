@@ -4,125 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile – ArtSkillWallet</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --neon: #CCFF00;
-      --dark: #121212;
-      --card: #1C1C1C;
-      --border: #2A2A2A;
-    }
-    * { box-sizing: border-box; }
-    body { font-family: 'Syne', sans-serif; background: var(--dark); color: #fff; margin: 0; }
-
-    /*Navbar*/
-    .navbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(18,18,18,0.9);
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
-    .navbar-inner { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; }
-    .nav-logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
-    .nav-logo-text { font-family: 'Bebas Neue', cursive; font-size: 1.1rem; color: #fff; letter-spacing: 0.12em; }
-    .nav-links { display: flex; align-items: center; gap: 2rem; }
-    .nav-link { color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s; }
-    .nav-link:hover { color: var(--neon); }
-    .avatar-sm {
-      width: 44px; height: 44px; border-radius: 50%;
-      border: 2px solid var(--neon);
-      object-fit: cover; cursor: pointer; display: block;
-    }
-
-    /*Page*/
-    .page-main { padding-top: 80px; max-width: 1000px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; }
-
-    /*Profile info*/
-    .profile-section { padding: 2rem 0 1.5rem; display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; }
-    .avatar-lg {
-      width: 90px; height: 90px; border-radius: 50%;
-      border: 3px solid var(--neon);
-      object-fit: cover; flex-shrink: 0;
-    }
-    .profile-details { flex: 1; min-width: 220px; }
-    .profile-name-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-    .profile-name { font-size: 1.6rem; font-weight: 800; margin: 0; color: #fff; }
-    .btn-edit { background: none; border: none; color: var(--neon); font-size: 0.8rem; font-weight: 700; cursor: pointer; text-decoration: none; letter-spacing: 0.05em; }
-    .btn-edit:hover { text-decoration: underline; }
-    .profile-bio { color: #aaa; font-size: 0.8rem; margin: 0 0 1rem; line-height: 1.5; max-width: 480px; }
-    .profile-bio small { color: #666; font-size: 0.75rem; }
-
-    .stats-row { display: flex; gap: 2.5rem; flex-wrap: wrap; }
-    .stat-item { text-align: center; }
-    .stat-value { font-family: 'Bebas Neue', cursive; font-size: 1.8rem; color: #fff; display: block; line-height: 1; }
-    .stat-label { font-size: 0.7rem; color: #888; margin: 2px 0 0; }
-
-    /*Section header*/
-    .section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-    .section-hd h2 { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0; }
-    .btn-neon {
-      background: var(--neon); color: #121212;
-      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem;
-      letter-spacing: 0.05em; padding: 0.5rem 1.25rem; border-radius: 9999px;
-      border: none; cursor: pointer; transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-      text-decoration: none; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
-    }
-    .btn-neon:hover { background: #b8e600; box-shadow: 0 4px 20px rgba(204,255,0,0.3); transform: translateY(-1px); }
-
-    /*Skills*/
-    .skills-section { padding: 1.5rem 0; }
-    .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
-    .skill-card {
-      background: var(--card); border-radius: 0.875rem; padding: 1rem;
-      border: 1px solid var(--border); transition: border-color 0.2s, transform 0.2s;
-    }
-    .skill-card:hover { border-color: var(--neon); transform: translateY(-3px); }
-    .skill-card h3 { font-size: 0.85rem; font-weight: 700; color: #fff; margin: 0 0 8px; }
-    .meter { display: flex; gap: 3px; margin-bottom: 6px; }
-    .seg { height: 6px; flex: 1; border-radius: 99px; }
-    .seg-green { background: var(--neon); }
-    .seg-blue  { background: #3B82F6; }
-    .seg-empty { background: #333; }
-    .meter-labels { display: flex; justify-content: space-between; font-size: 0.6rem; color: #555; margin-bottom: 8px; }
-    .level-text { font-size: 0.75rem; color: #aaa; margin: 0; }
-    .badge-icon { font-size: 1.4rem; margin-top: 4px; }
-
-    /*Portfolio*/
-    .portfolio-section { padding: 1.5rem 0 3rem; }
-    .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-    .portfolio-item { position: relative; border-radius: 0.75rem; overflow: hidden; aspect-ratio: 1 / 1; cursor: pointer; }
-    .portfolio-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
-    .portfolio-item:hover img { transform: scale(1.05); }
-    .portfolio-overlay {
-      position: absolute; inset: 0; background: rgba(204,255,0,0);
-      transition: background 0.3s; pointer-events: none;
-    }
-    .portfolio-item:hover .portfolio-overlay { background: rgba(204,255,0,0.08); }
-
-    /*Footer*/
-    .site-footer { background: #0d0d0d; border-top: 1px solid var(--border); padding: 3rem 2rem; }
-    .footer-inner { max-width: 1000px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; }
-    .footer-logo { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
-    .footer-logo-text { font-family: 'Bebas Neue', cursive; color: #fff; font-size: 1rem; letter-spacing: 0.12em; }
-    .footer-desc { color: #555; font-size: 0.8rem; max-width: 220px; }
-    .footer-col-title { color: var(--neon); font-weight: 700; font-size: 0.8rem; margin: 0 0 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
-    .footer-col a { color: #888; font-size: 0.85rem; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color 0.2s; }
-    .footer-col a:hover { color: var(--neon); }
-    .footer-bottom { max-width: 1000px; margin: 2rem auto 0; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; color: #555; font-size: 0.8rem; }
-
-    @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-    .fade-in   { animation: fadeInUp 0.5s ease both; }
-    .fade-in-2 { animation: fadeInUp 0.5s ease 0.1s both; }
-    .fade-in-3 { animation: fadeInUp 0.5s ease 0.2s both; }
-
-    @media (max-width: 640px) {
-      .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
-      .nav-links { display: none; }
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -137,18 +20,12 @@
         </svg>
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
-
       <div class="nav-links">
-        <a href="#" class="nav-link">Explore</a>
+        <a href="explore.html" class="nav-link">Explore</a>
         <a href="#" class="nav-link">Skills</a>
-        <a href="#" class="nav-link">History</a>
+        <a href="history.html" class="nav-link">History</a>
       </div>
-
-      <img
-        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80"
-        alt="User avatar"
-        class="avatar-sm"
-      >
+      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm">
     </div>
   </nav>
 
@@ -157,15 +34,11 @@
 
     <!-- Profile Info -->
     <section class="profile-section fade-in" aria-label="Profile information">
-      <img
-        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80"
-        alt="Navvy_Art profile picture"
-        class="avatar-lg"
-      >
+      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80" alt="Navvy_Art profile picture" class="avatar-lg">
       <div class="profile-details">
         <div class="profile-name-row">
           <h1 class="profile-name">Navvy_Art</h1>
-          <a href="#" class="btn-edit">edit profile</a>
+          <button class="btn-edit">edit profile</button>
         </div>
         <p class="profile-bio">
           Bio: "Creative digital artist specializing in fantasy and sci-fi concept art. Full-time creator."<br>
@@ -188,124 +61,291 @@
       </div>
     </section>
 
-    <!-- Skill Showcase -->
-    <section class="skills-section fade-in-2" aria-label="Skill showcase">
-      <div class="section-hd">
-        <h2>Skill Showcase</h2>
-        <a href="#" class="btn-neon">View Skill →</a>
+    <!-- Tab Navigation -->
+    <div class="profile-tabs" role="tablist">
+      <button class="profile-tab active" data-tab="portfolio" role="tab" aria-selected="true" onclick="switchProfileTab('portfolio')">Portfolio</button>
+      <button class="profile-tab" data-tab="history" role="tab" aria-selected="false" onclick="switchProfileTab('history')">History</button>
+    </div>
+
+    <!-- Portfolio Tab -->
+    <div class="tab-panel active fade-in-2" id="panel-portfolio" role="tabpanel">
+
+      <!-- Skill Showcase -->
+      <section aria-label="Skill showcase">
+        <div class="section-hd">
+          <h2>Skill Showcase</h2>
+          <a href="#" class="btn-neon">View All →</a>
+        </div>
+        <div class="skills-grid">
+
+          <div class="skill-card">
+            <h3>Character Design</h3>
+            <div class="meter" aria-label="Skill level: Intermediate">
+              <div class="seg seg-green"></div>
+              <div class="seg seg-blue"></div>
+              <div class="seg seg-empty"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+            <p class="level-text">Level : 2</p>
+            <div class="badge-icon" aria-hidden="true">🥉</div>
+          </div>
+
+          <div class="skill-card">
+            <h3>Concept Art</h3>
+            <div class="meter" aria-label="Skill level: Advanced">
+              <div class="seg seg-green"></div>
+              <div class="seg seg-blue"></div>
+              <div class="seg seg-green"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+            <p class="level-text">Level : 3</p>
+            <div class="badge-icon" aria-hidden="true">🏅</div>
+          </div>
+
+          <div class="skill-card">
+            <h3>Illustration</h3>
+            <div class="meter" aria-label="Skill level: Beginner">
+              <div class="seg seg-green"></div>
+              <div class="seg seg-empty"></div>
+              <div class="seg seg-empty"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+            <p class="level-text">Level : 1</p>
+            <div class="badge-icon" aria-hidden="true">🥇</div>
+          </div>
+
+          <div class="skill-card">
+            <h3>Digital Painting</h3>
+            <div class="meter" aria-label="Skill level: Intermediate">
+              <div class="seg seg-green"></div>
+              <div class="seg seg-blue"></div>
+              <div class="seg seg-empty"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+            <p class="level-text">Level : 2</p>
+            <div class="badge-icon" aria-hidden="true">🥉</div>
+          </div>
+
+          <div class="skill-card">
+            <h3>Storyboarding</h3>
+            <div class="meter" aria-label="Skill level: Advanced">
+              <div class="seg seg-green"></div>
+              <div class="seg seg-blue"></div>
+              <div class="seg seg-green"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+            <p class="level-text">Level : 3</p>
+            <div class="badge-icon" aria-hidden="true">🏅</div>
+          </div>
+
+          <div class="skill-card">
+            <h3>3D Modeling</h3>
+            <div class="meter" aria-label="Skill level: Beginner">
+              <div class="seg seg-green"></div>
+              <div class="seg seg-empty"></div>
+              <div class="seg seg-empty"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+            <p class="level-text">Level : 1</p>
+            <div class="badge-icon" aria-hidden="true">🥇</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Portfolio Gallery -->
+      <section aria-label="Portfolio gallery" style="padding-bottom:3rem;">
+        <div class="section-hd">
+          <h2>Your Portfolio</h2>
+          <a href="upload.html" class="btn-neon">+ Add Artwork</a>
+        </div>
+        <div class="portfolio-grid">
+
+          <div class="portfolio-item"
+            data-title="Beauty Path to Violent"
+            data-img="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=700&q=80"
+            data-date="26 December 2026"
+            data-skill="Character Design"
+            data-level="Advanced"
+            data-log="This piece explores the contrast between beauty and violence through expressive line work and dynamic composition. Pushed color theory further here."
+            data-privacy="Public">
+            <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80" alt="Beauty Path to Violent">
+            <div class="portfolio-overlay" aria-hidden="true"></div>
+          </div>
+
+          <div class="portfolio-item"
+            data-title="Sloth Dream"
+            data-img="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=700&q=80"
+            data-date="26 November 2026"
+            data-skill="Illustration"
+            data-level="Intermediate"
+            data-log="A dreamlike illustration exploring surrealism and slow movement. Focused on atmospheric lighting and soft gradients."
+            data-privacy="Public">
+            <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80" alt="Sloth Dream">
+            <div class="portfolio-overlay" aria-hidden="true"></div>
+          </div>
+
+          <div class="portfolio-item"
+            data-title="Swallow in the Pretty Face"
+            data-img="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=700&q=80"
+            data-date="26 October 2026"
+            data-skill="Digital Painting"
+            data-level="Intermediate"
+            data-log="Portrait study focused on capturing emotional complexity. Explored layering techniques and texture brushes."
+            data-privacy="Private">
+            <img src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=80" alt="Swallow in the Pretty Face">
+            <div class="portfolio-overlay" aria-hidden="true"></div>
+          </div>
+
+          <div class="portfolio-item"
+            data-title="Neon Citadel"
+            data-img="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=700&q=80"
+            data-date="14 September 2026"
+            data-skill="Concept Art"
+            data-level="Advanced"
+            data-log="Environment concept for a cyberpunk city. Focused on perspective, lighting hierarchy, and mood storytelling."
+            data-privacy="Public">
+            <img src="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=400&q=80" alt="Neon Citadel">
+            <div class="portfolio-overlay" aria-hidden="true"></div>
+          </div>
+
+          <div class="portfolio-item"
+            data-title="Forest Spirit"
+            data-img="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=700&q=80"
+            data-date="2 August 2026"
+            data-skill="Illustration"
+            data-level="Intermediate"
+            data-log="Nature-inspired character design. Practiced integrating organic shapes with fantasy elements."
+            data-privacy="Public">
+            <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=400&q=80" alt="Forest Spirit">
+            <div class="portfolio-overlay" aria-hidden="true"></div>
+          </div>
+
+          <div class="portfolio-item"
+            data-title="Void Walker"
+            data-img="https://images.unsplash.com/photo-1549490349-8643362247b5?w=700&q=80"
+            data-date="10 July 2026"
+            data-skill="Character Design"
+            data-level="Advanced"
+            data-log="Dark fantasy character study. Explored silhouette design and costume detailing with monochromatic palettes."
+            data-privacy="Public">
+            <img src="https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&q=80" alt="Void Walker">
+            <div class="portfolio-overlay" aria-hidden="true"></div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-panel" id="panel-history" role="tabpanel">
+      <div class="two-col-layout" style="padding-top:0; padding-left:0; padding-right:0; max-width:100%;">
+
+        <!-- Filter -->
+        <aside class="filter-panel">
+          <div class="filter-card">
+            <h2 class="filter-title">Filter</h2>
+            <div class="filter-group">
+              <label class="filter-label" for="ph-skill">Skill</label>
+              <input type="text" class="filter-input" id="ph-skill" placeholder="">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label" for="ph-level">Level</label>
+              <input type="text" class="filter-input" id="ph-level" placeholder="">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label" for="ph-tag">Tag</label>
+              <input type="text" class="filter-input" id="ph-tag" placeholder="">
+            </div>
+          </div>
+        </aside>
+
+        <!-- Timeline -->
+        <div class="timeline-area">
+          <div class="timeline-wrap">
+            <div class="timeline-line"></div>
+
+            <div class="timeline-group" data-skill="Character Design" data-level="Advanced" data-tags="digital,character,upload,levelup">
+              <div class="timeline-date">26 December<br>2026</div>
+              <div class="timeline-dot"></div>
+              <div class="timeline-entries">
+                <div class="timeline-card">
+                  <div class="timeline-thumb">
+                    <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=160&q=80" alt="Beauty path to violent">
+                  </div>
+                  <div class="timeline-text">
+                    <p>You upload :<br><strong>Beauty path to violent</strong></p>
+                    <span class="timeline-tag">Character Design</span>
+                  </div>
+                </div>
+                <div class="timeline-card">
+                  <div class="timeline-thumb">
+                    <span class="timeline-icon">⬆️</span>
+                  </div>
+                  <div class="timeline-text">
+                    <p>You level up :<br><strong>Character Design is now Advanced</strong></p>
+                    <span class="timeline-tag">Advanced</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-group" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,upload">
+              <div class="timeline-date">26 November<br>2026</div>
+              <div class="timeline-dot"></div>
+              <div class="timeline-entries">
+                <div class="timeline-card">
+                  <div class="timeline-thumb">
+                    <img src="https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=160&q=80" alt="Sloth dream">
+                  </div>
+                  <div class="timeline-text">
+                    <p>You upload :<br><strong>Sloth dream</strong></p>
+                    <span class="timeline-tag">Illustration</span>
+                    <span class="timeline-tag">Intermediate</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-group" data-skill="Digital Painting" data-level="Intermediate" data-tags="painting,portrait,upload">
+              <div class="timeline-date">26 October<br>2026</div>
+              <div class="timeline-dot"></div>
+              <div class="timeline-entries">
+                <div class="timeline-card">
+                  <div class="timeline-thumb">
+                    <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=160&q=80" alt="Swallow in the pretty face">
+                  </div>
+                  <div class="timeline-text">
+                    <p>You upload :<br><strong>Swallow in the pretty face</strong></p>
+                    <span class="timeline-tag">Digital Painting</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-group" data-skill="Concept Art" data-level="Advanced" data-tags="concept,environment,upload">
+              <div class="timeline-date">14 September<br>2026</div>
+              <div class="timeline-dot"></div>
+              <div class="timeline-entries">
+                <div class="timeline-card">
+                  <div class="timeline-thumb">
+                    <img src="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=160&q=80" alt="Neon Citadel">
+                  </div>
+                  <div class="timeline-text">
+                    <p>You upload :<br><strong>Neon Citadel</strong></p>
+                    <span class="timeline-tag">Concept Art</span>
+                    <span class="timeline-tag">Advanced</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
-
-      <div class="skills-grid">
-
-        <div class="skill-card">
-          <h3>skill name</h3>
-          <div class="meter" aria-label="Skill level: Intermediate">
-            <div class="seg seg-green"></div>
-            <div class="seg seg-blue"></div>
-            <div class="seg seg-empty"></div>
-          </div>
-          <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-          <p class="level-text">Level : 2</p>
-          <div class="badge-icon" aria-hidden="true">🥉</div>
-        </div>
-
-        <div class="skill-card">
-          <h3>skill name</h3>
-          <div class="meter" aria-label="Skill level: Advanced">
-            <div class="seg seg-green"></div>
-            <div class="seg seg-blue"></div>
-            <div class="seg seg-green"></div>
-          </div>
-          <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-          <p class="level-text">Level : 3</p>
-          <div class="badge-icon" aria-hidden="true">🏅</div>
-        </div>
-
-        <div class="skill-card">
-          <h3>skill name</h3>
-          <div class="meter" aria-label="Skill level: Beginner">
-            <div class="seg seg-green"></div>
-            <div class="seg seg-empty"></div>
-            <div class="seg seg-empty"></div>
-          </div>
-          <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-          <p class="level-text">Level : 1</p>
-          <div class="badge-icon" aria-hidden="true">🥇</div>
-        </div>
-
-        <div class="skill-card">
-          <h3>skill name</h3>
-          <div class="meter" aria-label="Skill level: Intermediate">
-            <div class="seg seg-green"></div>
-            <div class="seg seg-blue"></div>
-            <div class="seg seg-empty"></div>
-          </div>
-          <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-          <p class="level-text">Level : 2</p>
-          <div class="badge-icon" aria-hidden="true">🥉</div>
-        </div>
-
-        <div class="skill-card">
-          <h3>skill name</h3>
-          <div class="meter" aria-label="Skill level: Advanced">
-            <div class="seg seg-green"></div>
-            <div class="seg seg-blue"></div>
-            <div class="seg seg-green"></div>
-          </div>
-          <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-          <p class="level-text">Level : 3</p>
-          <div class="badge-icon" aria-hidden="true">🏅</div>
-        </div>
-
-        <div class="skill-card">
-          <h3>skill name</h3>
-          <div class="meter" aria-label="Skill level: Beginner">
-            <div class="seg seg-green"></div>
-            <div class="seg seg-empty"></div>
-            <div class="seg seg-empty"></div>
-          </div>
-          <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-          <p class="level-text">Level : 1</p>
-          <div class="badge-icon" aria-hidden="true">🥇</div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- Portfolio -->
-    <section class="portfolio-section fade-in-3" aria-label="Portfolio">
-      <div class="section-hd">
-        <h2>Your Portfolio</h2>
-        <a href="#" class="btn-neon">View Artwork →</a>
-      </div>
-
-      <div class="portfolio-grid">
-        <div class="portfolio-item">
-          <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80" alt="Artwork 1">
-          <div class="portfolio-overlay" aria-hidden="true"></div>
-        </div>
-        <div class="portfolio-item">
-          <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80" alt="Artwork 2">
-          <div class="portfolio-overlay" aria-hidden="true"></div>
-        </div>
-        <div class="portfolio-item">
-          <img src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=80" alt="Artwork 3">
-          <div class="portfolio-overlay" aria-hidden="true"></div>
-        </div>
-        <div class="portfolio-item">
-          <img src="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=400&q=80" alt="Artwork 4">
-          <div class="portfolio-overlay" aria-hidden="true"></div>
-        </div>
-        <div class="portfolio-item">
-          <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=400&q=80" alt="Artwork 5">
-          <div class="portfolio-overlay" aria-hidden="true"></div>
-        </div>
-        <div class="portfolio-item">
-          <img src="https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&q=80" alt="Artwork 6">
-          <div class="portfolio-overlay" aria-hidden="true"></div>
-        </div>
-      </div>
-    </section>
+    </div>
 
   </main>
 
@@ -323,21 +363,18 @@
         </div>
         <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
       </div>
-
       <div class="footer-col">
         <p class="footer-col-title">Product</p>
-        <a href="#">Explore</a>
+        <a href="explore.html">Explore</a>
         <a href="#">Skills</a>
-        <a href="#">Community</a>
+        <a href="explore.html">Community</a>
       </div>
-
       <div class="footer-col">
         <p class="footer-col-title">Account</p>
-        <a href="login.html">Login</a>
-        <a href="register.html">Register</a>
+        <a href="home.html">Login</a>
+        <a href="home.html">Register</a>
         <a href="profile.html">Profile</a>
       </div>
-
       <div class="footer-col">
         <p class="footer-col-title">Support</p>
         <a href="#">FAQ</a>
@@ -348,5 +385,31 @@
     <div class="footer-bottom">© 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
+  <!-- Artwork Detail Popup -->
+  <div id="artworkOverlay" class="artwork-overlay" role="dialog" aria-modal="true" aria-label="Artwork detail">
+    <div class="artwork-modal">
+      <button class="artwork-modal-close" onclick="closeArtwork()" aria-label="Close">✕</button>
+      <img id="artwork-img" class="artwork-modal-img" src="" alt="">
+      <div class="artwork-modal-body">
+        <h2 id="artwork-title" class="artwork-modal-title"></h2>
+        <div class="artwork-meta">
+          <span id="artwork-date" class="artwork-meta-item"></span>
+          <span id="artwork-skill" class="artwork-meta-tag"></span>
+          <span id="artwork-level" class="artwork-meta-tag"></span>
+        </div>
+        <p id="artwork-log" class="artwork-log"></p>
+        <div class="privacy-row">
+          <span class="privacy-label">Privacy</span>
+          <div class="privacy-toggle">
+            <button class="privacy-btn active" data-privacy="Public" onclick="setPrivacy('Public')">Public</button>
+            <button class="privacy-btn" data-privacy="Private" onclick="setPrivacy('Private')">Private</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js" defer></script>
+  <script src="js/profile.js" defer></script>
 </body>
 </html>

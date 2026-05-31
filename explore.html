@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore – ArtSkillWallet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="home.html" class="nav-logo">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
+          <polygon points="16,8 26,26 6,26" fill="#121212"/>
+          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+        </svg>
+        <span class="nav-logo-text">ArtSkillWallet</span>
+      </a>
+      <div class="nav-links">
+        <a href="explore.html" class="nav-link active">Explore</a>
+        <a href="#" class="nav-link">Skills</a>
+        <a href="history.html" class="nav-link">History</a>
+      </div>
+      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm">
+    </div>
+  </nav>
+
+  <!-- Two-column layout -->
+  <div class="two-col-layout">
+
+    <!-- Filter Panel -->
+    <aside class="filter-panel">
+      <div class="filter-card">
+        <h2 class="filter-title">Filter</h2>
+        <div class="filter-group">
+          <label class="filter-label" for="f-name">Name</label>
+          <input type="text" class="filter-input" id="f-name" placeholder="">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="f-skill">Skill</label>
+          <input type="text" class="filter-input" id="f-skill" placeholder="">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="f-level">Level</label>
+          <input type="text" class="filter-input" id="f-level" placeholder="">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="f-tag">Tag</label>
+          <input type="text" class="filter-input" id="f-tag" placeholder="">
+        </div>
+      </div>
+    </aside>
+
+    <!-- Artists Grid -->
+    <main class="explore-area">
+      <h1 class="explore-heading">Explore</h1>
+
+      <div class="artist-grid" id="artistsGrid">
+
+        <div class="artist-card" data-name="aneeShan" data-skills="character design,concept art" data-level="advanced" data-tags="digital,anime">
+          <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80" alt="AneeShan" class="artist-thumb">
+          <div class="artist-body">
+            <h3 class="artist-name">AneeShan</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Character Design</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Concept Art</span>
+            </div>
+            <p class="artist-bio">Bio : hello just man love art age 24</p>
+          </div>
+        </div>
+
+        <div class="artist-card" data-name="man behind the slaughter" data-skills="pixel art,game design" data-level="intermediate" data-tags="pixel,game,indie">
+          <div class="artist-thumb-placeholder">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+              <rect x="20" y="8" width="40" height="38" fill="#7B52F6" rx="4"/>
+              <rect x="24" y="20" width="9" height="9" fill="rgba(255,255,255,0.35)" rx="1"/>
+              <rect x="47" y="20" width="9" height="9" fill="rgba(255,255,255,0.35)" rx="1"/>
+              <rect x="29" y="36" width="22" height="4" fill="#3a2a8a" rx="2"/>
+              <rect x="10" y="48" width="60" height="22" fill="#7B52F6" rx="4"/>
+            </svg>
+          </div>
+          <div class="artist-body">
+            <h3 class="artist-name">man behind the slaughter</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Pixel Art</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Game Design</span>
+            </div>
+            <p class="artist-bio">Bio : dont care at my profile to must it just joke</p>
+          </div>
+        </div>
+
+        <div class="artist-card" data-name="maestro callisto" data-skills="oil painting,fine art" data-level="advanced" data-tags="oil,classical,fine">
+          <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80" alt="Maestro Callisto" class="artist-thumb">
+          <div class="artist-body">
+            <h3 class="artist-name">Maestro Callisto</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Oil Painting</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Fine Art</span>
+            </div>
+            <p class="artist-bio">Bio : After all, art is a culmination of moments and choices, and the suffering therein...</p>
+          </div>
+        </div>
+
+        <div class="artist-card" data-name="back ground" data-skills="background art,environment design" data-level="beginner" data-tags="background,environment">
+          <div class="artist-thumb-placeholder" style="background:#111;">
+          </div>
+          <div class="artist-body">
+            <h3 class="artist-name">back ground</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Background Art</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Environment</span>
+            </div>
+            <p class="artist-bio">Bio : just back ground</p>
+          </div>
+        </div>
+
+        <div class="artist-card" data-name="pixel fox" data-skills="pixel art,animation" data-level="intermediate" data-tags="pixel,animation,indie">
+          <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80" alt="Pixel Fox" class="artist-thumb">
+          <div class="artist-body">
+            <h3 class="artist-name">Pixel Fox</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Pixel Art</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Animation</span>
+            </div>
+            <p class="artist-bio">Bio : Making pixel art and short loops for indie games.</p>
+          </div>
+        </div>
+
+        <div class="artist-card" data-name="nora lin" data-skills="watercolor,botanical illustration" data-level="advanced" data-tags="watercolor,botanical,nature">
+          <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80" alt="Nora Lin" class="artist-thumb">
+          <div class="artist-body">
+            <h3 class="artist-name">Nora Lin</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Watercolor</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Botanical</span>
+            </div>
+            <p class="artist-bio">Bio : Botanical illustrator and watercolor enthusiast from Chiang Mai.</p>
+          </div>
+        </div>
+
+        <div class="artist-card" data-name="kiro blade" data-skills="digital painting,character design" data-level="advanced" data-tags="digital,dark,fantasy">
+          <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80" alt="Kiro Blade" class="artist-thumb">
+          <div class="artist-body">
+            <h3 class="artist-name">Kiro Blade</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Digital Painting</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Character Design</span>
+            </div>
+            <p class="artist-bio">Bio : Dark fantasy concept artist. Swords, shadows, and stormy skies.</p>
+          </div>
+        </div>
+
+        <div class="artist-card" data-name="sol artes" data-skills="illustration,typography" data-level="intermediate" data-tags="illustration,type,graphic">
+          <img src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80" alt="Sol Artes" class="artist-thumb">
+          <div class="artist-body">
+            <h3 class="artist-name">Sol Artes</h3>
+            <div class="artist-skills">
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Illustration</span>
+              <span class="skill-badge"><span class="skill-badge-dot"></span>Typography</span>
+            </div>
+            <p class="artist-bio">Bio : Illustrator blending type and imagery into visual poetry.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="js/explore.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History – ArtSkillWallet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="home.html" class="nav-logo">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <polygon points="16,2 30,28 2,28" fill="#CCFF00" opacity="0.9"/>
+          <polygon points="16,8 26,26 6,26" fill="#121212"/>
+          <circle cx="16" cy="19" r="3" fill="#CCFF00"/>
+        </svg>
+        <span class="nav-logo-text">ArtSkillWallet</span>
+      </a>
+      <div class="nav-links">
+        <a href="explore.html" class="nav-link">Explore</a>
+        <a href="#" class="nav-link">Skills</a>
+        <a href="history.html" class="nav-link active">History</a>
+      </div>
+      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm">
+    </div>
+  </nav>
+
+  <!-- Two-column layout -->
+  <div class="two-col-layout">
+
+    <!-- Filter Panel -->
+    <aside class="filter-panel">
+      <div class="filter-card">
+        <h2 class="filter-title">Filter</h2>
+        <div class="filter-group">
+          <label class="filter-label" for="f-skill">Skill</label>
+          <input type="text" class="filter-input" id="f-skill" placeholder="">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="f-level">Level</label>
+          <input type="text" class="filter-input" id="f-level" placeholder="">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="f-tag">Tag</label>
+          <input type="text" class="filter-input" id="f-tag" placeholder="">
+        </div>
+      </div>
+    </aside>
+
+    <!-- Timeline -->
+    <main class="timeline-area">
+      <div class="timeline-wrap">
+        <div class="timeline-line"></div>
+
+        <!-- Dec 2026 -->
+        <div class="timeline-group" data-skill="Character Design" data-level="Advanced" data-tags="digital,character,upload,levelup">
+          <div class="timeline-date">26 December<br>2026</div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-entries">
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=160&q=80" alt="Beauty path to violent">
+              </div>
+              <div class="timeline-text">
+                <p>You upload :<br><strong>Beauty path to violent</strong></p>
+                <span class="timeline-tag">Character Design</span>
+              </div>
+            </div>
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <span class="timeline-icon">⬆️</span>
+              </div>
+              <div class="timeline-text">
+                <p>You level up :<br><strong>Character Design is now Advanced</strong></p>
+                <span class="timeline-tag">Advanced</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nov 2026 -->
+        <div class="timeline-group" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,moon,upload">
+          <div class="timeline-date">26 November<br>2026</div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-entries">
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <img src="https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=160&q=80" alt="Sloth dream">
+              </div>
+              <div class="timeline-text">
+                <p>You upload :<br><strong>Sloth dream</strong></p>
+                <span class="timeline-tag">Illustration</span>
+                <span class="timeline-tag">Intermediate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oct 2026 -->
+        <div class="timeline-group" data-skill="Digital Painting" data-level="Intermediate" data-tags="painting,portrait,upload">
+          <div class="timeline-date">26 October<br>2026</div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-entries">
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=160&q=80" alt="Swallow in the pretty face">
+              </div>
+              <div class="timeline-text">
+                <p>You upload :<br><strong>Swallow in the pretty face</strong></p>
+                <span class="timeline-tag">Digital Painting</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sep 2026 -->
+        <div class="timeline-group" data-skill="Concept Art" data-level="Advanced" data-tags="concept,environment,upload">
+          <div class="timeline-date">14 September<br>2026</div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-entries">
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <img src="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=160&q=80" alt="Neon Citadel">
+              </div>
+              <div class="timeline-text">
+                <p>You upload :<br><strong>Neon Citadel</strong></p>
+                <span class="timeline-tag">Concept Art</span>
+                <span class="timeline-tag">Advanced</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aug 2026 -->
+        <div class="timeline-group" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,nature,upload,levelup">
+          <div class="timeline-date">2 August<br>2026</div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-entries">
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=160&q=80" alt="Forest Spirit">
+              </div>
+              <div class="timeline-text">
+                <p>You upload :<br><strong>Forest Spirit</strong></p>
+                <span class="timeline-tag">Illustration</span>
+              </div>
+            </div>
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <span class="timeline-icon">⬆️</span>
+              </div>
+              <div class="timeline-text">
+                <p>You level up :<br><strong>Illustration is now Intermediate</strong></p>
+                <span class="timeline-tag">Intermediate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jul 2026 -->
+        <div class="timeline-group" data-skill="Character Design" data-level="Advanced" data-tags="character,darkfantasy,upload">
+          <div class="timeline-date">10 July<br>2026</div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-entries">
+            <div class="timeline-card">
+              <div class="timeline-thumb">
+                <img src="https://images.unsplash.com/photo-1549490349-8643362247b5?w=160&q=80" alt="Void Walker">
+              </div>
+              <div class="timeline-text">
+                <p>You upload :<br><strong>Void Walker</strong></p>
+                <span class="timeline-tag">Character Design</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="js/history.js" defer></script>
+</body>
+</html>
