@@ -48,15 +48,31 @@ func CreateIndexes() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// Unique index on username
 	Database.Collection("users").Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "username", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	})
+
 	Database.Collection("skills").Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{{Key: "user_id", Value: 1}},
 	})
+
 	Database.Collection("artworks").Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{{Key: "user_id", Value: 1}},
 	})
+
+	// Unique index on token_hash for fast revocation lookups
+	Database.Collection("refresh_tokens").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "token_hash", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+
+	// TTL index — MongoDB auto-deletes expired refresh tokens
+	Database.Collection("refresh_tokens").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "expires_at", Value: 1}},
+		Options: options.Index().SetExpireAfterSeconds(0),
+	})
+
 	log.Println("MongoDB indexes ensured")
 }
