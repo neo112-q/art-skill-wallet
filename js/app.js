@@ -5,16 +5,16 @@ const API_BASE = '/api/v1';
 // ── Token Storage ─────────────────────────────────────────────────────────────
 
 const TokenStore = {
-  getAccess()          { return localStorage.getItem('access_token'); },
-  getRefresh()         { return localStorage.getItem('refresh_token'); },
-  getRole()            { return localStorage.getItem('role'); },
-  getUsername()        { return localStorage.getItem('username'); },
+  getAccess()   { return localStorage.getItem('access_token'); },
+  getRefresh()  { return localStorage.getItem('refresh_token'); },
+  getRole()     { return localStorage.getItem('role'); },
+  getUsername() { return localStorage.getItem('username'); },
 
   set(accessToken, refreshToken, role, username) {
     localStorage.setItem('access_token',  accessToken);
     localStorage.setItem('refresh_token', refreshToken);
-    localStorage.setItem('role',          role);
-    localStorage.setItem('username',      username);
+    localStorage.setItem('role',          role     || 'user');
+    localStorage.setItem('username',      username || '');
   },
 
   setAccess(accessToken) {
@@ -28,17 +28,14 @@ const TokenStore = {
     localStorage.removeItem('username');
   },
 
-  isLoggedIn() {
-    return !!this.getAccess();
-  },
-
-  isAdmin() {
-    return this.getRole() === 'admin';
-  },
+  isLoggedIn() { return !!this.getAccess(); },
+  isAdmin()    { return this.getRole() === 'admin'; },
 };
 
-// ── JWT Decode (client-side only — for role/exp reading) ──────────────────────
-// NOTE: This does NOT verify the signature. Verification happens server-side.
+// ── JWT Decode ────────────────────────────────────────────────────────────────
+// Client-side only — reads payload without verifying signature.
+// Real verification always happens on the server.
+
 function decodeJWT(token) {
   try {
     const payload = token.split('.')[1];
@@ -68,7 +65,6 @@ async function refreshAccessToken() {
     });
 
     if (!res.ok) {
-      // Refresh token expired or revoked — force logout
       TokenStore.clear();
       window.location.href = '/home.html';
       return false;
@@ -84,31 +80,33 @@ async function refreshAccessToken() {
 }
 
 // ── apiFetch ──────────────────────────────────────────────────────────────────
-// Attaches Bearer token automatically.
-// If the access token is expired, silently refreshes it and retries once.
+// Automatically attaches Bearer token.
+// Silently refreshes and retries once on 401.
 
 async function apiFetch(path, opts = {}) {
   let accessToken = TokenStore.getAccess();
 
-  // Proactively refresh if the access token is expired
+  // Proactively refresh if token is already expired
   if (accessToken && tokenIsExpired(accessToken)) {
     const ok = await refreshAccessToken();
     if (!ok) return { ok: false, status: 401, data: { error_message: 'Session expired' } };
     accessToken = TokenStore.getAccess();
   }
 
-  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(opts.headers || {}),
+  };
   if (accessToken) {
     headers['Authorization'] = 'Bearer ' + accessToken;
   }
 
   let res = await fetch(API_BASE + path, { ...opts, headers });
 
-  // If 401, try one silent refresh then retry
+  // Silent refresh + one retry on 401
   if (res.status === 401) {
     const ok = await refreshAccessToken();
     if (!ok) return { ok: false, status: 401, data: { error_message: 'Session expired' } };
-
     headers['Authorization'] = 'Bearer ' + TokenStore.getAccess();
     res = await fetch(API_BASE + path, { ...opts, headers });
   }
@@ -119,7 +117,7 @@ async function apiFetch(path, opts = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
-// ── Auth Actions ──────────────────────────────────────────────────────────────
+// ── Logout ────────────────────────────────────────────────────────────────────
 
 async function logout() {
   const refreshToken = TokenStore.getRefresh();
