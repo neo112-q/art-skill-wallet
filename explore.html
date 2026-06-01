@@ -22,15 +22,12 @@
         <a href="/skillManage.html" class="nav-link">Skills</a>
         <a href="/history.html" class="nav-link">History</a>
       </div>
-      <!-- Logged-in: avatar dropdown -->
       <div class="avatar-wrapper" v-if="loggedIn">
         <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
         <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
             <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
-            <div>
-              <p class="avatar-dropdown-name">{{ username }}</p>
-            </div>
+            <div><p class="avatar-dropdown-name">{{ username }}</p></div>
           </div>
           <div class="avatar-dropdown-divider"></div>
           <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
@@ -39,7 +36,6 @@
           <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
-      <!-- Logged-out: login button -->
       <a v-else href="/home.html" class="btn-outline">Login / Register</a>
     </div>
   </nav>
@@ -75,16 +71,13 @@
     <main class="explore-area">
       <h1 class="explore-heading">Explore</h1>
 
-      <!-- Loading -->
       <div v-if="loading" style="text-align:center; padding:3rem; color:#888;">Loading artists...</div>
 
-      <!-- Empty -->
       <div v-else-if="!filteredArtists.length" style="text-align:center; padding:3rem; color:#555;">
         <p v-if="artists.length">No artists match your filters.</p>
         <p v-else>No artists have registered yet. Be the first!</p>
       </div>
 
-      <!-- Artist cards -->
       <div v-else class="artist-grid">
         <div class="artist-card" v-for="a in filteredArtists" :key="a.id">
           <img v-if="a.profile_picture" :src="a.profile_picture" :alt="a.username" class="artist-thumb">
@@ -101,6 +94,18 @@
             </div>
             <p class="artist-bio" v-if="a.bio">Bio : {{ a.bio }}</p>
             <p class="artist-bio" v-else style="color:#444;">No bio</p>
+            <!-- Public approved artwork count -->
+            <p v-if="a.artwork_count" style="color:#CCFF00; font-size:0.72rem; margin-top:0.4rem;">
+              {{ a.artwork_count }} approved work{{ a.artwork_count > 1 ? 's' : '' }}
+            </p>
+            <!-- Public artwork titles -->
+            <div v-if="a.artworks && a.artworks.length" style="margin-top:0.4rem; display:flex; flex-wrap:wrap; gap:0.3rem;">
+              <span v-for="art in a.artworks.slice(0, 3)" :key="art.id"
+                style="font-size:0.68rem; background:#2A2A2A; color:#ccc; padding:0.15rem 0.5rem; border-radius:4px;">
+                {{ art.title }}
+              </span>
+              <span v-if="a.artworks.length > 3" style="font-size:0.68rem; color:#555;">+{{ a.artworks.length - 3 }} more</span>
+            </div>
           </div>
         </div>
       </div>
@@ -124,9 +129,7 @@ createApp({
       dropdownOpen: false,
       loading: true,
       artists: [],
-      filterName: '',
-      filterSkill: '',
-      filterLevel: '',
+      filterName: '', filterSkill: '', filterLevel: '',
     };
   },
   computed: {
@@ -136,14 +139,8 @@ createApp({
       const l = this.filterLevel;
       return this.artists.filter(a => {
         if (n && !a.username.toLowerCase().includes(n)) return false;
-        if (s) {
-          const hasSkill = a.skills.some(sk => sk.skill_name.toLowerCase().includes(s));
-          if (!hasSkill) return false;
-        }
-        if (l) {
-          const hasLevel = a.skills.some(sk => sk.level === l);
-          if (!hasLevel) return false;
-        }
+        if (s && !a.skills.some(sk => sk.skill_name.toLowerCase().includes(s))) return false;
+        if (l && !a.skills.some(sk => sk.level === l)) return false;
         return true;
       });
     },
@@ -153,39 +150,26 @@ createApp({
     initials(name) {
       if (!name) return '?';
       const parts = name.trim().split(/\s+/);
-      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-      return name.slice(0, 2).toUpperCase();
+      return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
     },
     avatarColor(name) {
-      // Simple hash → hue
       let hash = 0;
       for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-      const hue = Math.abs(hash) % 360;
-      return 'hsl(' + hue + ', 50%, 25%)';
-    },
-
-    async fetchExplore() {
-      console.log('[EXPLORE] Fetching GET /explore …');
-      try {
-        const res = await fetch(API_BASE + '/explore');
-        const body = await res.json();
-        console.log('[EXPLORE] Response:', res.status, body);
-
-        if (res.ok && body.data) {
-          this.artists = body.data;
-          console.log('[EXPLORE] Loaded', this.artists.length, 'artists');
-        } else {
-          console.error('[EXPLORE] Failed:', body.error_message);
-        }
-      } catch (e) {
-        console.error('[EXPLORE] Network error:', e);
-      }
-      this.loading = false;
+      return 'hsl(' + (Math.abs(hash) % 360) + ', 50%, 25%)';
     },
   },
-  mounted() {
+  async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
-    this.fetchExplore();
+    console.log('[EXPLORE] Fetching GET /explore …');
+    try {
+      const res = await fetch(API_BASE + '/explore');
+      const body = await res.json();
+      if (res.ok && body.data) {
+        this.artists = body.data;
+        console.log('[EXPLORE] Loaded', this.artists.length, 'artists (only Public+Approved artworks shown)');
+      }
+    } catch (e) { console.error('[EXPLORE] Error:', e); }
+    this.loading = false;
   }
 }).mount('#app');
 </script>

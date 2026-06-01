@@ -21,3 +21,20 @@ type SkillRequest struct {
 	Level            string `json:"level"             binding:"required,oneof=Beginner Intermediate Advanced"`
 	DevelopmentGuide string `json:"development_guide"`
 }
+
+// DefaultGuide returns a built-in development guide when the user leaves it empty.
+func DefaultGuide(level string) string {
+	switch level {
+	case "Beginner":
+		return "Start with the fundamentals: study basic shapes, proportions, and composition. " +
+			"Practice daily sketches (15-30 min). Follow beginner tutorials and copy master works to build muscle memory."
+	case "Intermediate":
+		return "Deepen your understanding: study anatomy, color theory, and lighting. " +
+			"Take on personal projects with deadlines. Seek feedback from peers and iterate on your weaknesses."
+	case "Advanced":
+		return "Refine your style and push boundaries: develop a signature aesthetic. " +
+			"Build a professional portfolio. Mentor others, contribute to community critiques, and explore cross-disciplinary techniques."
+	default:
+		return ""
+	}
+}

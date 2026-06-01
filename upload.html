@@ -28,10 +28,7 @@
         <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
             <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
-            <div>
-              <p class="avatar-dropdown-name">{{ username }}</p>
-              <p class="avatar-dropdown-email">{{ email }}</p>
-            </div>
+            <div><p class="avatar-dropdown-name">{{ username }}</p></div>
           </div>
           <div class="avatar-dropdown-divider"></div>
           <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
@@ -55,7 +52,7 @@
 
       <!-- Artwork File -->
       <section class="form-section">
-        <h2 class="section-title">Artwork</h2>
+        <h2 class="section-title">Artwork <span style="color:#f55;">*</span></h2>
         <label class="upload-box" for="artworkUpload" @dragover.prevent @drop.prevent="onDropArtwork">
           <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem; color:#555;"></i>
           <span class="upload-label" v-if="!artworkFile">Click or Drag File</span>
@@ -67,7 +64,7 @@
 
       <!-- Title -->
       <section class="form-section">
-        <h2 class="section-title">Title</h2>
+        <h2 class="section-title">Title <span style="color:#f55;">*</span></h2>
         <input type="text" class="input-field" v-model="form.title" placeholder="Enter title...">
       </section>
 
@@ -79,7 +76,7 @@
 
       <!-- Skill Selector -->
       <section class="form-section">
-        <h2 class="section-title">Skill in Art</h2>
+        <h2 class="section-title">Skill in Art <span style="color:#f55;">*</span></h2>
         <div style="display:flex; flex-direction:column; gap:0.4rem;">
           <select class="input-field" v-model="form.skill_id" v-if="userSkills.length">
             <option value="" disabled>Select a skill...</option>
@@ -89,15 +86,16 @@
         </div>
       </section>
 
-      <!-- Evidence -->
+      <!-- Evidence / Proof (REQUIRED — #2) -->
       <section class="form-section">
-        <h2 class="section-title">Upload Evidence (Process Proof)</h2>
+        <h2 class="section-title">Upload Evidence (Process Proof) <span style="color:#f55;">*</span></h2>
+        <p style="color:#888; font-size:0.78rem; margin-bottom:0.5rem;">Required: before-after images or process video to verify your skill.</p>
         <label class="upload-box upload-box-sm" for="evidenceUpload" @dragover.prevent @drop.prevent="onDropEvidence">
           <i class="fas fa-paperclip" style="font-size:1.1rem; color:#555;"></i>
           <span class="upload-label" v-if="!evidenceFile">Click or Drag File</span>
           <span class="upload-label" v-else style="color:#CCFF00;">{{ evidenceFile.name }} ({{ formatSize(evidenceFile.size) }})</span>
-          <span class="upload-hint">PDF, PNG, JPG — max 10MB</span>
-          <input type="file" id="evidenceUpload" accept="image/*,.pdf" hidden @change="onEvidenceSelect">
+          <span class="upload-hint">Image, Video, or PDF — max 10MB</span>
+          <input type="file" id="evidenceUpload" accept="image/*,video/*,.pdf" hidden @change="onEvidenceSelect">
         </label>
       </section>
 
@@ -114,9 +112,15 @@
         </div>
       </section>
 
+      <!-- Status info -->
+      <div style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:8px; padding:0.75rem 1rem; font-size:0.78rem; color:#888;">
+        <i class="fas fa-info-circle" style="color:#CCFF00;"></i>
+        Your submission will be reviewed by an admin before appearing publicly. Status: <strong style="color:#CCFF00;">Pending</strong>
+      </div>
+
       <!-- Publish -->
       <button class="publish-btn" @click="publish" :disabled="publishing">
-        {{ publishing ? 'Uploading...' : 'PUBLISH' }}
+        {{ publishing ? publishStatus : 'PUBLISH' }}
       </button>
     </div>
   </main>
@@ -165,14 +169,14 @@ createApp({
     return {
       isAdmin: TokenStore.isAdmin(),
       username: TokenStore.getUsername() || 'User',
-      email: '',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
+      avatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
       dropdownOpen: false,
       form: { title: '', description: '', skill_id: '', privacy: 'Public' },
       artworkFile: null,
       evidenceFile: null,
       userSkills: [],
       publishing: false,
+      publishStatus: 'Uploading...',
     };
   },
   methods: {
@@ -182,86 +186,70 @@ createApp({
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     },
-
-    // ── File selection ─────────────────────────────────────────────────
     onArtworkSelect(e) { this.artworkFile = e.target.files[0] || null; },
     onDropArtwork(e) { this.artworkFile = e.dataTransfer.files[0] || null; },
     onEvidenceSelect(e) { this.evidenceFile = e.target.files[0] || null; },
     onDropEvidence(e) { this.evidenceFile = e.dataTransfer.files[0] || null; },
 
-    // ── PUBLISH ────────────────────────────────────────────────────────
-    // Step 1: Upload the main artwork file → POST /uploads (multipart)
-    // Step 2: Create the artwork record    → POST /artworks (JSON)
-    // Step 3: Upload evidence (if any)     → POST /uploads (multipart)
     async publish() {
       // ── Validation ────────────────────────────────────────────────
       if (!this.artworkFile) { alert('Please select an artwork file.'); return; }
       if (!this.form.title)  { alert('Title is required.'); return; }
       if (!this.form.skill_id) { alert('Please select a skill.'); return; }
+      // #2 — Enforce proof upload
+      if (!this.evidenceFile) { alert('Evidence file is required. Please attach a before-after image or process video as proof of your work.'); return; }
 
       this.publishing = true;
-      console.log('[UPLOAD] Starting publish flow …');
 
       try {
-        // ── Step 1: Upload artwork file ─────────────────────────────
-        const artFormData = new FormData();
-        artFormData.append('file', this.artworkFile);
-        artFormData.append('title', this.form.title);
-        artFormData.append('description', this.form.description || '');
+        // ── Step 1: Upload artwork file → POST /uploads ─────────────
+        this.publishStatus = 'Uploading artwork...';
+        console.log('[UPLOAD] Step 1 — POST /uploads (artwork)');
+        const artFD = new FormData();
+        artFD.append('file', this.artworkFile);
+        artFD.append('title', this.form.title);
+        artFD.append('description', this.form.description || '');
 
-        console.log('[UPLOAD] Step 1 — POST /uploads (artwork file) …');
-        const uploadRes = await apiUpload('/uploads', artFormData);
-        console.log('[UPLOAD] Step 1 Response:', uploadRes.status, uploadRes.data);
+        const upRes = await apiUpload('/uploads', artFD);
+        console.log('[UPLOAD] Step 1:', upRes.status, upRes.data);
+        if (!upRes.ok) { alert('Artwork upload failed: ' + (upRes.data.error_message || 'Unknown')); this.publishing = false; return; }
 
-        if (!uploadRes.ok) {
-          alert('File upload failed: ' + (uploadRes.data.error_message || 'Unknown error'));
-          this.publishing = false;
-          return;
-        }
-
-        const uploadRecord = uploadRes.data.data;
-        console.log('[UPLOAD] File saved. ID:', uploadRecord.id);
-
-        // ── Step 2: Create artwork record ───────────────────────────
-        const artworkPayload = {
-          skill_id: this.form.skill_id,
-          title: this.form.title,
-          description: this.form.description || '',
-          privacy_status: this.form.privacy,
-        };
-
-        console.log('[UPLOAD] Step 2 — POST /artworks …', artworkPayload);
+        // ── Step 2: Create artwork record → POST /artworks ──────────
+        this.publishStatus = 'Creating record...';
+        console.log('[UPLOAD] Step 2 — POST /artworks');
         const artRes = await apiFetch('/artworks', {
           method: 'POST',
-          body: JSON.stringify(artworkPayload),
+          body: JSON.stringify({
+            skill_id: this.form.skill_id,
+            title: this.form.title,
+            description: this.form.description || '',
+            privacy_status: this.form.privacy,
+          }),
         });
-        console.log('[UPLOAD] Step 2 Response:', artRes.status, artRes.data);
+        console.log('[UPLOAD] Step 2:', artRes.status, artRes.data);
+        if (!artRes.ok) { alert('Artwork creation failed: ' + (artRes.data.error_message || 'Unknown')); this.publishing = false; return; }
 
-        if (!artRes.ok) {
-          alert('Artwork record creation failed: ' + (artRes.data.error_message || 'Unknown error'));
+        const artworkId = artRes.data.data.id;
+
+        // ── Step 3: Upload proof → POST /proofs (linked to artwork) ──
+        this.publishStatus = 'Uploading proof...';
+        console.log('[UPLOAD] Step 3 — POST /proofs (evidence linked to artwork ' + artworkId + ')');
+        const proofFD = new FormData();
+        proofFD.append('file', this.evidenceFile);
+        proofFD.append('artwork_id', artworkId);
+
+        const proofRes = await apiUpload('/proofs', proofFD);
+        console.log('[UPLOAD] Step 3:', proofRes.status, proofRes.data);
+        if (!proofRes.ok) {
+          alert('Proof upload failed: ' + (proofRes.data.error_message || 'Unknown') + '\nYour artwork was created but has no proof. Please add proof from your profile.');
           this.publishing = false;
+          window.location.href = '/profile.html';
           return;
-        }
-
-        // ── Step 3: Upload evidence (optional) ──────────────────────
-        if (this.evidenceFile) {
-          const evFormData = new FormData();
-          evFormData.append('file', this.evidenceFile);
-          evFormData.append('title', 'Evidence for: ' + this.form.title);
-          evFormData.append('description', 'Process proof');
-
-          console.log('[UPLOAD] Step 3 — POST /uploads (evidence file) …');
-          const evRes = await apiUpload('/uploads', evFormData);
-          console.log('[UPLOAD] Step 3 Response:', evRes.status, evRes.data);
-
-          if (!evRes.ok) {
-            console.warn('[UPLOAD] Evidence upload failed (non-fatal):', evRes.data.error_message);
-          }
         }
 
         // ── Done ────────────────────────────────────────────────────
-        alert('Artwork published successfully!');
-        console.log('[UPLOAD] Full publish flow complete — redirecting to profile');
+        alert('Artwork published successfully! It will be reviewed by an admin.');
+        console.log('[UPLOAD] Complete — redirecting');
         window.location.href = '/profile.html';
 
       } catch (e) {
@@ -273,16 +261,8 @@ createApp({
   },
   mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
-
-    // Load user's skills for the dropdown
-    console.log('[UPLOAD] Fetching user skills for dropdown …');
     apiFetch('/skills').then(r => {
-      if (r.ok) {
-        this.userSkills = r.data.data || [];
-        console.log('[UPLOAD] Loaded', this.userSkills.length, 'skills for dropdown');
-      } else {
-        console.error('[UPLOAD] Failed to load skills:', r.data.error_message);
-      }
+      if (r.ok) { this.userSkills = r.data.data || []; }
     });
   }
 }).mount('#app');

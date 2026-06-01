@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,19 @@ import (
 
 // maxUploadSize is 50 MB.
 const maxUploadSize = 50 << 20
+
+// allowedUploadMIME lists accepted MIME prefixes for artwork uploads.
+var allowedUploadMIME = []string{"image/", "video/"}
+
+func isAllowedUploadMIME(mime string) bool {
+	lower := strings.ToLower(mime)
+	for _, prefix := range allowedUploadMIME {
+		if strings.HasPrefix(lower, prefix) {
+			return true
+		}
+	}
+	return false
+}
 
 // uploadsDir returns the absolute path to the uploads folder,
 // creating it if it doesn't exist.
@@ -67,6 +81,14 @@ func CreateUpload(c *gin.Context) {
 		return
 	}
 	defer file.Close()
+
+	// ── Validate MIME type (#5 — backend file type validation) ──────────
+	mime := header.Header.Get("Content-Type")
+	if !isAllowedUploadMIME(mime) {
+		response.Error(c, http.StatusBadRequest,
+			"Invalid file type. Allowed: image/* and video/* only")
+		return
+	}
 
 	title := c.PostForm("title")
 	if title == "" {

@@ -83,12 +83,17 @@ func CreateSkill(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	guide := req.DevelopmentGuide
+	if guide == "" {
+		guide = models.DefaultGuide(req.Level)
+	}
+
 	skill := models.Skill{
 		ID:               primitive.NewObjectID(),
 		UserID:           objID,
 		SkillName:        req.SkillName,
 		Level:            req.Level,
-		DevelopmentGuide: req.DevelopmentGuide,
+		DevelopmentGuide: guide,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
@@ -137,11 +142,16 @@ func UpdateSkill(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	guide := req.DevelopmentGuide
+	if guide == "" {
+		guide = models.DefaultGuide(req.Level)
+	}
+
 	filter := bson.M{"_id": skillID, "user_id": objID}
 	update := bson.M{"$set": bson.M{
 		"skill_name":        req.SkillName,
 		"level":             req.Level,
-		"development_guide": req.DevelopmentGuide,
+		"development_guide": guide,
 		"updated_at":        time.Now(),
 	}}
 

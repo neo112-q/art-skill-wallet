@@ -142,9 +142,19 @@
         <div><input type="radio" v-model="modalForm.level" value="Advanced" id="lvl-adv"><label for="lvl-adv">👑 Advanced</label></div>
       </div>
 
-      <div class="auth-field" style="margin-top:1rem;">
-        <label class="edit-label">Development Guide (optional)</label>
-        <textarea class="auth-input" v-model="modalForm.development_guide" rows="2" placeholder="Tips, resources, next steps..."></textarea>
+      <!-- Default guide hint (#4) -->
+      <div v-if="defaultGuideForLevel" style="margin-top:0.75rem; background:#1a1a1a; border:1px solid #2A2A2A; border-radius:8px; padding:0.6rem 0.8rem; font-size:0.72rem; color:#888; line-height:1.5;">
+        <strong style="color:#CCFF00;">Suggested guide for {{ modalForm.level }}:</strong><br>
+        {{ defaultGuideForLevel }}
+        <button type="button" @click="modalForm.development_guide = defaultGuideForLevel"
+          style="display:block; margin-top:0.4rem; background:none; border:1px solid #CCFF00; color:#CCFF00; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.7rem; cursor:pointer;">
+          Use this guide
+        </button>
+      </div>
+
+      <div class="auth-field" style="margin-top:0.75rem;">
+        <label class="edit-label">Development Guide (optional — auto-filled if left empty)</label>
+        <textarea class="auth-input" v-model="modalForm.development_guide" rows="2" placeholder="Leave empty to use the default guide for your level..."></textarea>
       </div>
 
       <button class="modal-save-btn" @click="saveSkill" :disabled="saving" style="margin-top:1.25rem;">
@@ -175,6 +185,16 @@ createApp({
       modalForm: { id: '', skill_name: '', level: 'Beginner', development_guide: '' },
       saving: false,
     };
+  },
+  computed: {
+    defaultGuideForLevel() {
+      const guides = {
+        'Beginner': 'Start with the fundamentals: study basic shapes, proportions, and composition. Practice daily sketches (15-30 min). Follow beginner tutorials and copy master works to build muscle memory.',
+        'Intermediate': 'Deepen your understanding: study anatomy, color theory, and lighting. Take on personal projects with deadlines. Seek feedback from peers and iterate on your weaknesses.',
+        'Advanced': 'Refine your style and push boundaries: develop a signature aesthetic. Build a professional portfolio. Mentor others, contribute to community critiques, and explore cross-disciplinary techniques.',
+      };
+      return guides[this.modalForm.level] || '';
+    },
   },
   methods: {
     doLogout() { logout(); },

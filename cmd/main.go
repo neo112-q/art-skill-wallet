@@ -102,6 +102,9 @@ func main() {
 		protected.POST("/uploads", handlers.CreateUpload)
 		protected.PUT("/uploads/:id", handlers.UpdateUpload)
 		protected.DELETE("/uploads/:id", handlers.DeleteUpload)
+		protected.GET("/proofs", handlers.GetProofs)
+		protected.POST("/proofs", handlers.CreateProof)
+		protected.DELETE("/proofs/:id", handlers.DeleteProof)
 	}
 
 	// Admin-only endpoints — valid JWT + role:"admin" required
