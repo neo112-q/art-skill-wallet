@@ -1,6 +1,9 @@
 # Secrets
 .env
 
+# User uploads
+uploads/
+
 # Binaries
 *.exe
 *.exe~

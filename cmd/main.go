@@ -52,6 +52,7 @@ func main() {
 	r.Static("/css", filepath.Join(root, "css"))
 	r.Static("/js", filepath.Join(root, "js"))
 	r.Static("/img", filepath.Join(root, "img"))
+	r.Static("/uploads", filepath.Join(root, "uploads"))
 
 	// ── Public HTML pages (no token required) ───────────────────────────
 	r.StaticFile("/", filepath.Join(root, "home.html"))
@@ -91,6 +92,10 @@ func main() {
 		protected.DELETE("/skills/:id", handlers.DeleteSkill)
 		protected.GET("/artworks", handlers.GetArtworks)
 		protected.POST("/artworks", handlers.CreateArtwork)
+		protected.GET("/uploads", handlers.GetUploads)
+		protected.POST("/uploads", handlers.CreateUpload)
+		protected.PUT("/uploads/:id", handlers.UpdateUpload)
+		protected.DELETE("/uploads/:id", handlers.DeleteUpload)
 	}
 
 	// Admin-only endpoints — valid JWT + role:"admin" required

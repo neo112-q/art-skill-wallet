@@ -78,6 +78,11 @@ func CreateIndexes() {
 		Keys: bson.D{{Key: "skill_id", Value: 1}},
 	})
 
+	// ── uploads ─────────────────────────────────────────────────────────
+	Database.Collection("uploads").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: "user_id", Value: 1}},
+	})
+
 	// ── proofs ──────────────────────────────────────────────────────────
 	Database.Collection("proofs").Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{{Key: "artwork_id", Value: 1}},
