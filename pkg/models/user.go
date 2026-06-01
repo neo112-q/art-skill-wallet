@@ -21,17 +21,17 @@ type RegisterRequest struct {
 	Username string `json:"username" binding:"required,min=3,max=30"`
 	Email    string `json:"email"    binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
-	Bio      string `json:"bio"`
 }
 
 type LoginRequest struct {
-	Username string `json:"username" binding:"required"`
+	Email    string `json:"email"    binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
 
 type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	Username     string `json:"username"`
 }
 
 type RefreshRequest struct {

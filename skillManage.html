@@ -4,305 +4,166 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Skills – ArtSkillWallet</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="bg-[#121212] text-white min-h-screen flex flex-col">
+<body>
+<div id="app">
 
-  <!-- Navbar -->
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-[#2A2A2A] bg-[rgba(18,18,18,0.9)] backdrop-blur-md">
-    <div class="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
-      <a href="home.html" class="flex items-center gap-2">
-        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
-        </svg>
-        <span class="logo-text">ArtSkillWallet</span>
+  <!-- Navbar (unified with home.html) -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="/home.html" class="nav-logo">
+        <img src="/img/logoartskill.png" height="32" alt="ArtSkillWallet Logo">
+        <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="explore.html" class="nav-link">Explore</a>
-        <a href="skillManage.html" class="nav-link active">Skills</a>
-        <a href="history.html" class="nav-link">History</a>
+      <div class="nav-links">
+        <a href="/explore.html" class="nav-link">Explore</a>
+        <a href="/skillManage.html" class="nav-link active">Skills</a>
+        <a href="/history.html" class="nav-link">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="avatar" class="avatar-sm" id="avatarBtn">
-        <div class="avatar-dropdown" id="avatarDropdown">
+        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
             <div>
-              <p class="avatar-dropdown-name">AneeShan</p>
-              <p class="avatar-dropdown-email">user@artskill.com</p>
+              <p class="avatar-dropdown-name">{{ username }}</p>
+              <p class="avatar-dropdown-email">{{ email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
-          <a href="profile.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">👤</span> Profile
-          </a>
-          <a href="admin.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">🛡️</span> Admin
-          </a>
+          <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
+          <a v-if="isAdmin" href="/admin.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">🛡️</span> Admin</a>
           <div class="avatar-dropdown-divider"></div>
-          <button class="avatar-dropdown-item" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
-          </button>
-          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
-          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
     </div>
   </nav>
 
   <!-- Main -->
-  <main class="flex-1 max-w-5xl mx-auto w-full px-6 pt-28 pb-16">
+  <main class="page-main" style="max-width:960px; margin:0 auto;">
 
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8 fade-in">
+    <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem;">
       <div>
-        <h1 class="text-2xl font-extrabold text-white">My Skills</h1>
-        <p class="text-[#888] text-sm mt-1">Track your skill levels and progress</p>
+        <h1 style="font-size:1.5rem; font-weight:800;">My Skills</h1>
+        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Track your skill levels and progress</p>
       </div>
-      <a href="upload.html" class="btn-neon" >
-        <i class="fas fa-plus text-xs"></i> Add ArtWork
-      </a>
+      <a href="/upload.html" class="btn-neon"><i class="fas fa-plus" style="font-size:0.7rem;"></i> Add ArtWork</a>
     </div>
 
-    <!-- Skills Grid — 3 per row -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 fade-in-2">
-
-      <!-- Illustration — Beginner -->
-      <div class="skill-card">
-        <h3 class="text-base font-bold text-white mb-3">Illustration</h3>
-        <div class="meter mb-1">
-          <div class="seg seg-neon"></div>
-          <div class="seg seg-empty"></div>
-          <div class="seg seg-empty"></div>
+    <!-- Skills Grid -->
+    <div class="skills-grid fade-in-2">
+      <div class="skill-card" v-for="s in skills" :key="s.skill_name">
+        <h3>{{ s.skill_name }}</h3>
+        <div class="meter" style="margin-bottom:0.25rem;">
+          <div class="seg" :class="'seg-neon'"></div>
+          <div class="seg" :class="s.level === 'Intermediate' || s.level === 'Advanced' ? 'seg-blue' : 'seg-empty'"></div>
+          <div class="seg" :class="s.level === 'Advanced' ? 'seg-neon' : 'seg-empty'"></div>
         </div>
-        <div class="meter-labels">
-          <span>Beginner</span><span>Intermediate</span><span>Advanced</span>
-        </div>
-        <p class="text-[#aaa] text-xs mt-2">Level : 1</p>
-        <div class="flex items-center justify-between mt-4">
-          <span class="badge badge-beg"><i class="fas fa-seedling text-xs"></i> Beginner</span>
-          <button class="btn-edit-sm"><i class="fas fa-pen text-xs"></i> Edit</button>
+        <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+        <p style="color:#aaa; font-size:0.75rem; margin-top:0.5rem;">Level : {{ levelNum(s.level) }}</p>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:1rem;">
+          <span class="badge" :class="badgeClass(s.level)">
+            <i class="fas" :class="badgeIcon(s.level)" style="font-size:0.7rem;"></i> {{ s.level }}
+          </span>
+          <button class="btn-edit-sm" @click="openEdit(s)"><i class="fas fa-pen" style="font-size:0.7rem;"></i> Edit</button>
         </div>
       </div>
-
-      <!-- UI Design — Intermediate -->
-      <div class="skill-card">
-        <h3 class="text-base font-bold text-white mb-3">UI Design</h3>
-        <div class="meter mb-1">
-          <div class="seg seg-neon"></div>
-          <div class="seg seg-blue"></div>
-          <div class="seg seg-empty"></div>
-        </div>
-        <div class="meter-labels">
-          <span>Beginner</span><span>Intermediate</span><span>Advanced</span>
-        </div>
-        <p class="text-[#aaa] text-xs mt-2">Level : 2</p>
-        <div class="flex items-center justify-between mt-4">
-          <span class="badge badge-inter"><i class="fas fa-fire text-xs"></i> Intermediate</span>
-          <button class="btn-edit-sm"><i class="fas fa-pen text-xs"></i> Edit</button>
-        </div>
-      </div>
-
-      <!-- 3D Modeling — Advanced -->
-      <div class="skill-card">
-        <h3 class="text-base font-bold text-white mb-3">3D Modeling</h3>
-        <div class="meter mb-1">
-          <div class="seg seg-neon"></div>
-          <div class="seg seg-blue"></div>
-          <div class="seg seg-neon"></div>
-        </div>
-        <div class="meter-labels">
-          <span>Beginner</span><span>Intermediate</span><span>Advanced</span>
-        </div>
-        <p class="text-[#aaa] text-xs mt-2">Level : 3</p>
-        <div class="flex items-center justify-between mt-4">
-          <span class="badge badge-adv"><i class="fas fa-crown text-xs"></i> Advanced</span>
-          <button class="btn-edit-sm"><i class="fas fa-pen text-xs"></i> Edit</button>
-        </div>
-      </div>
-
-      <!-- Photography — Intermediate -->
-      <div class="skill-card">
-        <h3 class="text-base font-bold text-white mb-3">Photography</h3>
-        <div class="meter mb-1">
-          <div class="seg seg-neon"></div>
-          <div class="seg seg-blue"></div>
-          <div class="seg seg-empty"></div>
-        </div>
-        <div class="meter-labels">
-          <span>Beginner</span><span>Intermediate</span><span>Advanced</span>
-        </div>
-        <p class="text-[#aaa] text-xs mt-2">Level : 2</p>
-        <div class="flex items-center justify-between mt-4">
-          <span class="badge badge-inter"><i class="fas fa-fire text-xs"></i> Intermediate</span>
-          <button class="btn-edit-sm"><i class="fas fa-pen text-xs"></i> Edit</button>
-        </div>
-      </div>
-
-      <!-- Video Editing — Beginner -->
-      <div class="skill-card">
-        <h3 class="text-base font-bold text-white mb-3">Video Editing</h3>
-        <div class="meter mb-1">
-          <div class="seg seg-neon"></div>
-          <div class="seg seg-empty"></div>
-          <div class="seg seg-empty"></div>
-        </div>
-        <div class="meter-labels">
-          <span>Beginner</span><span>Intermediate</span><span>Advanced</span>
-        </div>
-        <p class="text-[#aaa] text-xs mt-2">Level : 1</p>
-        <div class="flex items-center justify-between mt-4">
-          <span class="badge badge-beg"><i class="fas fa-seedling text-xs"></i> Beginner</span>
-          <button class="btn-edit-sm"><i class="fas fa-pen text-xs"></i> Edit</button>
-        </div>
-      </div>
-
-      <!-- Concept Art — Advanced -->
-      <div class="skill-card">
-        <h3 class="text-base font-bold text-white mb-3">Concept Art</h3>
-        <div class="meter mb-1">
-          <div class="seg seg-neon"></div>
-          <div class="seg seg-blue"></div>
-          <div class="seg seg-neon"></div>
-        </div>
-        <div class="meter-labels">
-          <span>Beginner</span><span>Intermediate</span><span>Advanced</span>
-        </div>
-        <p class="text-[#aaa] text-xs mt-2">Level : 3</p>
-        <div class="flex items-center justify-between mt-4">
-          <span class="badge badge-adv"><i class="fas fa-crown text-xs"></i> Advanced</span>
-          <button class="btn-edit-sm"><i class="fas fa-pen text-xs"></i> Edit</button>
-        </div>
-      </div>
-
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-[#0d0d0d] border-t border-[#2A2A2A] py-12 px-8">
-    <div class="max-w-5xl mx-auto flex flex-wrap gap-8 justify-between">
+  <!-- Footer (unified with home.html) -->
+  <footer class="site-footer">
+    <div class="footer-inner">
       <div>
-        <div class="flex items-center gap-2 mb-3">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-          </svg>
-          <span class="logo-text">ArtSkillWallet</span>
+        <div class="footer-logo">
+          <img src="/img/logoartskill.png" height="26" alt="ArtSkillWallet Logo">
+          <span class="footer-logo-text">ArtSkillWallet</span>
         </div>
-        <p class="text-[#555] text-sm max-w-[220px]">Trace your art skills, build your portfolio, and grow your creative career.</p>
+        <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
       </div>
-      <div class="flex gap-12 flex-wrap">
-        <div>
-          <p class="footer-col-title">Product</p>
-          <a href="#" class="footer-link">Explore</a>
-          <a href="#" class="footer-link">Skills</a>
-          <a href="#" class="footer-link">Community</a>
-        </div>
-        <div>
-          <p class="footer-col-title">Account</p>
-          <a href="#" class="footer-link">Login</a>
-          <a href="#" class="footer-link">Register</a>
-          <a href="#" class="footer-link">Profile</a>
-        </div>
-        <div>
-          <p class="footer-col-title">Support</p>
-          <a href="#" class="footer-link">FAQ</a>
-          <a href="#" class="footer-link">Contact</a>
-          <a href="#" class="footer-link">Privacy Policy</a>
-        </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Product</p>
+        <a href="/explore.html">Explore</a>
+        <a href="/skillManage.html">Skills</a>
+        <a href="/explore.html">Community</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Account</p>
+        <a href="/home.html">Login</a>
+        <a href="/home.html">Register</a>
+        <a href="/profile.html">Profile</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Support</p>
+        <a href="#">FAQ</a>
+        <a href="#">Contact</a>
+        <a href="#">Privacy Policy</a>
       </div>
     </div>
-    <div class="max-w-5xl mx-auto mt-8 pt-8 border-t border-[#2A2A2A] text-center text-[#555] text-sm">
-      © 2025 ArtSkillWallet. All rights reserved.
-    </div>
+    <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
-  <script>requireAuth();</script>
-
   <!-- Edit Skill Modal -->
-  <div class="modal-overlay" id="editModal">
+  <div class="modal-overlay" :class="{ open: editOpen }" @click.self="editOpen=false">
     <div class="modal-box">
-      <button class="modal-close" id="editModalClose">✕</button>
-      <h2 class="modal-title" id="editModalTitle">Edit Skill</h2>
-      <p style="font-size:0.78rem;color:#666;margin:-0.5rem 0 1.25rem;">Select the new level for this skill.</p>
+      <button class="modal-close" @click="editOpen=false">&times;</button>
+      <h2 class="modal-title">Edit – {{ editSkill.skill_name }}</h2>
+      <p style="font-size:0.78rem; color:#666; margin:-0.5rem 0 1.25rem;">Select the new level for this skill.</p>
       <div class="level-radio-group">
-        <div><input type="radio" name="editLevel" id="lvl-beg" value="Beginner"><label for="lvl-beg">🌱 Beginner</label></div>
-        <div><input type="radio" name="editLevel" id="lvl-int" value="Intermediate"><label for="lvl-int">🔥 Intermediate</label></div>
-        <div><input type="radio" name="editLevel" id="lvl-adv" value="Advanced"><label for="lvl-adv">👑 Advanced</label></div>
+        <div><input type="radio" v-model="editLevel" value="Beginner" id="lvl-beg"><label for="lvl-beg">🌱 Beginner</label></div>
+        <div><input type="radio" v-model="editLevel" value="Intermediate" id="lvl-int"><label for="lvl-int">🔥 Intermediate</label></div>
+        <div><input type="radio" v-model="editLevel" value="Advanced" id="lvl-adv"><label for="lvl-adv">👑 Advanced</label></div>
       </div>
-      <button class="modal-save-btn" id="editModalSave">SAVE CHANGES</button>
+      <button class="modal-save-btn" @click="saveEdit">SAVE CHANGES</button>
     </div>
   </div>
 
-  <script>
-    // Avatar dropdown
-    const avatarBtn = document.getElementById('avatarBtn');
-    const avatarDropdown = document.getElementById('avatarDropdown');
-    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
-    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
-    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+</div>
 
-    // Edit skill modal
-    const editModal = document.getElementById('editModal');
-    let currentCard = null;
-
-    function openEditModal(card) {
-      currentCard = card;
-      const name  = card.querySelector('h3').textContent;
-      const badge = card.querySelector('.badge');
-      const level = badge.classList.contains('badge-beg') ? 'Beginner'
-                  : badge.classList.contains('badge-inter') ? 'Intermediate' : 'Advanced';
-      document.getElementById('editModalTitle').textContent = 'Edit – ' + name;
-      document.querySelector(`input[name="editLevel"][value="${level}"]`).checked = true;
-      editModal.classList.add('open');
-    }
-
-    function closeEditModal() { editModal.classList.remove('open'); currentCard = null; }
-
-    document.getElementById('editModalClose').addEventListener('click', closeEditModal);
-    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
-
-    document.getElementById('editModalSave').addEventListener('click', () => {
-      if (!currentCard) return;
-      const level = document.querySelector('input[name="editLevel"]:checked').value;
-      const segs  = currentCard.querySelectorAll('.seg');
-      const badge = currentCard.querySelector('.badge');
-      const lvlTxt = currentCard.querySelector('p[class*="text-"]');
-
-      // Reset segments
-      segs.forEach(s => { s.className = 'seg seg-empty'; });
-
-      if (level === 'Beginner') {
-        segs[0].className = 'seg seg-neon';
-        badge.className = 'badge badge-beg';
-        badge.innerHTML = '<i class="fas fa-seedling text-xs"></i> Beginner';
-        if (lvlTxt) lvlTxt.textContent = 'Level : 1';
-      } else if (level === 'Intermediate') {
-        segs[0].className = 'seg seg-neon';
-        segs[1].className = 'seg seg-blue';
-        badge.className = 'badge badge-inter';
-        badge.innerHTML = '<i class="fas fa-fire text-xs"></i> Intermediate';
-        if (lvlTxt) lvlTxt.textContent = 'Level : 2';
-      } else {
-        segs[0].className = 'seg seg-neon';
-        segs[1].className = 'seg seg-blue';
-        segs[2].className = 'seg seg-neon';
-        badge.className = 'badge badge-adv';
-        badge.innerHTML = '<i class="fas fa-crown text-xs"></i> Advanced';
-        if (lvlTxt) lvlTxt.textContent = 'Level : 3';
-      }
-      closeEditModal();
-    });
-
-    // Wire up Edit buttons
-    document.querySelectorAll('.btn-edit-sm').forEach(btn => {
-      btn.addEventListener('click', () => openEditModal(btn.closest('.skill-card')));
-    });
-  </script>
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+if (!TokenStore.isLoggedIn()) { window.location.replace('/home.html'); }
+const { createApp } = Vue;
+createApp({
+  data() {
+    return {
+      isAdmin: TokenStore.isAdmin(),
+      username: TokenStore.getUsername() || 'User',
+      email: '',
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
+      dropdownOpen: false,
+      skills: [
+        { skill_name: 'Illustration', level: 'Beginner' },
+        { skill_name: 'UI Design', level: 'Intermediate' },
+        { skill_name: '3D Modeling', level: 'Advanced' },
+        { skill_name: 'Photography', level: 'Intermediate' },
+        { skill_name: 'Video Editing', level: 'Beginner' },
+        { skill_name: 'Concept Art', level: 'Advanced' },
+      ],
+      editOpen: false,
+      editSkill: {},
+      editLevel: 'Beginner',
+    };
+  },
+  methods: {
+    doLogout() { logout(); },
+    levelNum(l) { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
+    badgeClass(l) { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
+    badgeIcon(l) { return l === 'Beginner' ? 'fa-seedling' : l === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
+    openEdit(s) { this.editSkill = s; this.editLevel = s.level; this.editOpen = true; },
+    saveEdit() { this.editSkill.level = this.editLevel; this.editOpen = false; },
+  },
+  mounted() {
+    document.addEventListener('click', () => { this.dropdownOpen = false; });
+    apiFetch('/skills').then(r => { if (r.ok && r.data.data && r.data.data.length) this.skills = r.data.data; });
+  }
+}).mount('#app');
+</script>
 </body>
 </html>

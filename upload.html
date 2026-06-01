@@ -4,72 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upload – ArtSkillWallet</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="bg-[#121212] text-white min-h-screen flex flex-col">
+<body>
+<div id="app">
 
-  <!-- Navbar -->
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-[#2A2A2A] bg-[rgba(18,18,18,0.9)] backdrop-blur-md">
-    <div class="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
-      <a href="home.html" class="flex items-center gap-2">
-        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
-        </svg>
-        <span class="logo-text">ArtSkillWallet</span>
+  <!-- Navbar (unified with home.html) -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="/home.html" class="nav-logo">
+        <img src="/img/logoartskill.png" height="32" alt="ArtSkillWallet Logo">
+        <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="explore.html" class="nav-link">Explore</a>
-        <a href="skillManage.html" class="nav-link">Skills</a>
-        <a href="history.html" class="nav-link">History</a>
+      <div class="nav-links">
+        <a href="/explore.html" class="nav-link">Explore</a>
+        <a href="/skillManage.html" class="nav-link">Skills</a>
+        <a href="/history.html" class="nav-link">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="avatar" class="avatar-sm" id="avatarBtn">
-        <div class="avatar-dropdown" id="avatarDropdown">
+        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
             <div>
-              <p class="avatar-dropdown-name">AneeShan</p>
-              <p class="avatar-dropdown-email">user@artskill.com</p>
+              <p class="avatar-dropdown-name">{{ username }}</p>
+              <p class="avatar-dropdown-email">{{ email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
-          <a href="profile.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">👤</span> Profile
-          </a>
-          <a href="admin.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">🛡️</span> Admin
-          </a>
+          <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
+          <a v-if="isAdmin" href="/admin.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">🛡️</span> Admin</a>
           <div class="avatar-dropdown-divider"></div>
-          <button class="avatar-dropdown-item" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
-          </button>
-          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
-          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
     </div>
   </nav>
 
   <!-- Main -->
-  <main class="flex-1 max-w-2xl mx-auto w-full px-6 pt-28 pb-16">
+  <main class="page-main" style="max-width:680px; margin:0 auto; padding-top:96px;">
 
-    <!-- Page title -->
-    <div class="mb-8 fade-in">
-      <h1 class="text-2xl font-extrabold text-white">Upload Artwork</h1>
-      <p class="text-[#888] text-sm mt-1">Submit your work for skill verification</p>
+    <div class="fade-in" style="margin-bottom:2rem;">
+      <h1 style="font-size:1.5rem; font-weight:800;">Upload Artwork</h1>
+      <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Submit your work for skill verification</p>
     </div>
 
-    <div class="flex flex-col gap-5 fade-in-2">
+    <div class="fade-in-2" style="display:flex; flex-direction:column; gap:1.25rem;">
 
       <!-- Artwork Upload -->
       <section class="form-section">
         <h2 class="section-title">Artwork</h2>
         <label class="upload-box" for="artworkUpload">
-          <i class="fas fa-cloud-upload-alt text-3xl text-[#555]"></i>
+          <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem; color:#555;"></i>
           <span class="upload-label">Click or Drag File</span>
           <span class="upload-hint">PNG, JPG, MP4 — max 50MB</span>
           <input type="file" id="artworkUpload" accept="image/*,video/*" hidden>
@@ -79,47 +67,48 @@
       <!-- Title -->
       <section class="form-section">
         <h2 class="section-title">Title</h2>
-        <input type="text" class="input-field" placeholder="Enter title...">
+        <input type="text" class="input-field" v-model="form.title" placeholder="Enter title...">
       </section>
 
       <!-- Description -->
       <section class="form-section">
         <h2 class="section-title">Description</h2>
-        <textarea class="input-field textarea" placeholder="Describe your work..."></textarea>
+        <textarea class="input-field textarea" v-model="form.description" placeholder="Describe your work..."></textarea>
       </section>
 
       <!-- Details -->
       <section class="form-section">
         <h2 class="section-title">Details</h2>
-        <div class="flex flex-col gap-4">
+        <div style="display:flex; flex-direction:column; gap:1rem;">
 
-          <!-- Skill in Art -->
-          <div class="flex flex-col gap-1.5">
+          <!-- Skill Search -->
+          <div style="display:flex; flex-direction:column; gap:0.4rem;">
             <label class="input-label">Skill in Art</label>
-            <!-- Search box -->
             <div class="skill-search-wrap">
-              <input type="text" id="skillSearch" class="input-field" placeholder="Search skill...">
-              <!-- Dropdown list -->
-              <div class="skill-dropdown" id="skillDropdown"></div>
+              <input type="text" class="input-field" v-model="skillQuery" placeholder="Search skill..." @focus="skillDropOpen=true" @input="skillDropOpen=true" @click.stop>
+              <div class="skill-dropdown" :class="{ open: skillDropOpen }" @click.stop>
+                <div v-if="!filteredSkills.length" class="skill-option" style="opacity:.4; pointer-events:none;">No results</div>
+                <div v-for="s in filteredSkills" :key="s" class="skill-option" :class="{ selected: selectedSkills.includes(s) }" @click="addSkill(s)">{{ s }}</div>
+              </div>
             </div>
-            <!-- Selected skill tags -->
-            <div class="skill-tags" id="skillTags"></div>
+            <div class="skill-tags">
+              <span class="skill-tag" v-for="s in selectedSkills" :key="s">{{ s }} <button class="skill-tag-remove" @click="removeSkill(s)">&times;</button></span>
+            </div>
           </div>
 
-          <!-- Project Complete Date -->
-          <div class="flex flex-col gap-1.5">
+          <!-- Date -->
+          <div style="display:flex; flex-direction:column; gap:0.4rem;">
             <label class="input-label">Project Complete Date</label>
-            <input type="date" class="input-field">
+            <input type="date" class="input-field" v-model="form.date">
           </div>
-
         </div>
       </section>
 
-      <!-- Upload Evidence -->
+      <!-- Evidence -->
       <section class="form-section">
         <h2 class="section-title">Upload Evidence</h2>
         <label class="upload-box upload-box-sm" for="evidenceUpload">
-          <i class="fas fa-paperclip text-xl text-[#555]"></i>
+          <i class="fas fa-paperclip" style="font-size:1.1rem; color:#555;"></i>
           <span class="upload-label">Click or Drag File</span>
           <span class="upload-hint">PDF, PNG, JPG — max 10MB</span>
           <input type="file" id="evidenceUpload" accept="image/*,.pdf" hidden>
@@ -129,134 +118,95 @@
       <!-- Privacy -->
       <section class="form-section">
         <h2 class="section-title">Privacy Setting</h2>
-        <div class="flex gap-3">
-          <input type="radio" name="privacy" id="public" value="public" checked hidden>
-          <label for="public" class="privacy-btn">
-            <i class="fas fa-globe text-xs"></i> Public
+        <div style="display:flex; gap:0.75rem;">
+          <label class="privacy-btn" :class="{ active: form.privacy === 'Public' }" @click="form.privacy='Public'">
+            <i class="fas fa-globe" style="font-size:0.7rem;"></i> Public
           </label>
-          <input type="radio" name="privacy" id="private" value="private" hidden>
-          <label for="private" class="privacy-btn">
-            <i class="fas fa-lock text-xs"></i> Private
+          <label class="privacy-btn" :class="{ active: form.privacy === 'Private' }" @click="form.privacy='Private'">
+            <i class="fas fa-lock" style="font-size:0.7rem;"></i> Private
           </label>
         </div>
       </section>
 
-      <!-- Publish -->
-      <button class="publish-btn">PUBLISH</button>
-
+      <button class="publish-btn" @click="publish">PUBLISH</button>
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-[#0d0d0d] border-t border-[#2A2A2A] py-12 px-8">
-    <div class="max-w-5xl mx-auto flex flex-wrap gap-8 justify-between">
+  <!-- Footer (unified with home.html) -->
+  <footer class="site-footer">
+    <div class="footer-inner">
       <div>
-        <div class="flex items-center gap-2 mb-3">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-          </svg>
-          <span class="logo-text">ArtSkillWallet</span>
+        <div class="footer-logo">
+          <img src="/img/logoartskill.png" height="26" alt="ArtSkillWallet Logo">
+          <span class="footer-logo-text">ArtSkillWallet</span>
         </div>
-        <p class="text-[#555] text-sm max-w-[220px]">Trace your art skills, build your portfolio, and grow your creative career.</p>
+        <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
       </div>
-      <div class="flex gap-12 flex-wrap">
-        <div>
-          <p class="footer-col-title">Product</p>
-          <a href="#" class="footer-link">Explore</a>
-          <a href="#" class="footer-link">Skills</a>
-          <a href="#" class="footer-link">Community</a>
-        </div>
-        <div>
-          <p class="footer-col-title">Account</p>
-          <a href="#" class="footer-link">Login</a>
-          <a href="#" class="footer-link">Register</a>
-          <a href="#" class="footer-link">Profile</a>
-        </div>
-        <div>
-          <p class="footer-col-title">Support</p>
-          <a href="#" class="footer-link">FAQ</a>
-          <a href="#" class="footer-link">Contact</a>
-          <a href="#" class="footer-link">Privacy Policy</a>
-        </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Product</p>
+        <a href="/explore.html">Explore</a>
+        <a href="/skillManage.html">Skills</a>
+        <a href="/explore.html">Community</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Account</p>
+        <a href="/home.html">Login</a>
+        <a href="/home.html">Register</a>
+        <a href="/profile.html">Profile</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Support</p>
+        <a href="#">FAQ</a>
+        <a href="#">Contact</a>
+        <a href="#">Privacy Policy</a>
       </div>
     </div>
-    <div class="max-w-5xl mx-auto mt-8 pt-8 border-t border-[#2A2A2A] text-center text-[#555] text-sm">
-      © 2025 ArtSkillWallet. All rights reserved.
-    </div>
+    <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
-  <script>requireAuth();</script>
-  <script>
-    // Avatar dropdown
-    const avatarBtn = document.getElementById('avatarBtn');
-    const avatarDropdown = document.getElementById('avatarDropdown');
-    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
-    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
-    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+</div>
 
-    // Skill selector
-    const SKILLS = [
-      'Illustration', 'Character Design', 'Concept Art', 'Digital Painting',
-      'Storyboarding', '3D Modeling', 'Animation', 'Pixel Art',
-      'UI Design', 'Watercolor', 'Oil Painting', 'Graphic Design',
-      'Typography', 'Photography', 'Video Editing', 'Game Design',
-      'Background Art', 'Botanical Illustration', 'Fine Art', 'Sculpture'
-    ];
-
-    const skillSearch   = document.getElementById('skillSearch');
-    const skillDropdown = document.getElementById('skillDropdown');
-    const skillTags     = document.getElementById('skillTags');
-    let selected = [];
-
-    function renderDropdown(query) {
-      const q = query.toLowerCase();
-      const filtered = SKILLS.filter(s => s.toLowerCase().includes(q));
-      skillDropdown.innerHTML = '';
-      if (!filtered.length) {
-        skillDropdown.innerHTML = '<div class="skill-option" style="opacity:.4;pointer-events:none">No results</div>';
-      } else {
-        filtered.forEach(s => {
-          const div = document.createElement('div');
-          div.className = 'skill-option' + (selected.includes(s) ? ' selected' : '');
-          div.textContent = s;
-          div.addEventListener('click', () => addSkill(s));
-          skillDropdown.appendChild(div);
-        });
-      }
-      skillDropdown.classList.add('open');
-    }
-
-    function addSkill(skill) {
-      if (selected.includes(skill)) return;
-      selected.push(skill);
-      skillSearch.value = '';
-      skillDropdown.classList.remove('open');
-      renderTags();
-    }
-
-    function removeSkill(skill) {
-      selected = selected.filter(s => s !== skill);
-      renderTags();
-    }
-
-    function renderTags() {
-      skillTags.innerHTML = '';
-      selected.forEach(s => {
-        const tag = document.createElement('span');
-        tag.className = 'skill-tag';
-        tag.innerHTML = s + '<button class="skill-tag-remove" title="Remove">✕</button>';
-        tag.querySelector('button').addEventListener('click', () => removeSkill(s));
-        skillTags.appendChild(tag);
-      });
-    }
-
-    skillSearch.addEventListener('focus', () => renderDropdown(skillSearch.value));
-    skillSearch.addEventListener('input', () => renderDropdown(skillSearch.value));
-    skillSearch.addEventListener('click', (e) => e.stopPropagation());
-    skillDropdown.addEventListener('click', (e) => e.stopPropagation());
-    document.addEventListener('click', () => skillDropdown.classList.remove('open'));
-  </script>
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+if (!TokenStore.isLoggedIn()) { window.location.replace('/home.html'); }
+const { createApp } = Vue;
+const ALL_SKILLS = ['Illustration','Character Design','Concept Art','Digital Painting','Storyboarding','3D Modeling','Animation','Pixel Art','UI Design','Watercolor','Oil Painting','Graphic Design','Typography','Photography','Video Editing','Game Design','Background Art','Botanical Illustration','Fine Art','Sculpture'];
+createApp({
+  data() {
+    return {
+      isAdmin: TokenStore.isAdmin(),
+      username: TokenStore.getUsername() || 'User',
+      email: '',
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
+      dropdownOpen: false,
+      form: { title: '', description: '', date: '', privacy: 'Public' },
+      skillQuery: '',
+      skillDropOpen: false,
+      selectedSkills: [],
+    };
+  },
+  computed: {
+    filteredSkills() {
+      const q = this.skillQuery.toLowerCase();
+      return ALL_SKILLS.filter(s => s.toLowerCase().includes(q));
+    },
+  },
+  methods: {
+    doLogout() { logout(); },
+    addSkill(s) { if (!this.selectedSkills.includes(s)) this.selectedSkills.push(s); this.skillQuery = ''; this.skillDropOpen = false; },
+    removeSkill(s) { this.selectedSkills = this.selectedSkills.filter(x => x !== s); },
+    async publish() {
+      if (!this.form.title || !this.selectedSkills.length) { alert('Title and at least one skill are required.'); return; }
+      // TODO: wire to real API with file upload
+      alert('Artwork published successfully!');
+      window.location.href = '/profile.html';
+    },
+  },
+  mounted() {
+    document.addEventListener('click', () => { this.dropdownOpen = false; this.skillDropOpen = false; });
+  }
+}).mount('#app');
+</script>
 </body>
 </html>

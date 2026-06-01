@@ -5,48 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+<div id="app">
 
   <!-- Navbar -->
   <nav class="navbar" aria-label="Main navigation">
     <div class="navbar-inner">
-      <a href="home.html" class="nav-logo">
-        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
-        </svg>
+      <a href="/home.html" class="nav-logo">
+        <img src="/img/logoartskill.png" height="32" alt="ArtSkillWallet Logo">
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
       <div class="nav-links">
-        <a href="explore.html" class="nav-link">Explore</a>
-        <a href="skillManage.html" class="nav-link">Skills</a>
-        <a href="history.html" class="nav-link">History</a>
+        <a href="/explore.html" class="nav-link">Explore</a>
+        <a href="/skillManage.html" class="nav-link">Skills</a>
+        <a href="/history.html" class="nav-link">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm" id="avatarBtn">
-        <div class="avatar-dropdown" id="avatarDropdown">
+        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
             <div>
-              <p class="avatar-dropdown-name">AneeShan</p>
-              <p class="avatar-dropdown-email">user@artskill.com</p>
+              <p class="avatar-dropdown-name">{{ user.username }}</p>
+              <p class="avatar-dropdown-email">{{ user.email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
-          <a href="profile.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">👤</span> Profile
-          </a>
-          <a href="admin.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">🛡️</span> Admin
-          </a>
+          <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
+          <a v-if="isAdmin" href="/admin.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">🛡️</span> Admin</a>
           <div class="avatar-dropdown-divider"></div>
-          <button class="avatar-dropdown-item" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
-          </button>
-          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
-          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
     </div>
@@ -57,122 +47,41 @@
 
     <!-- Profile Info -->
     <section class="profile-section fade-in" aria-label="Profile information">
-      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80" alt="Navvy_Art profile picture" class="avatar-lg">
+      <img :src="avatarUrl" :alt="user.username" class="avatar-lg">
       <div class="profile-details">
         <div class="profile-name-row">
-          <h1 class="profile-name">Navvy_Art</h1>
-          <a href="editProfile.html" class="btn-edit">edit profile</a>
+          <h1 class="profile-name">{{ user.username }}</h1>
+          <a href="/editProfile.html" class="btn-edit">edit profile</a>
         </div>
-        <p class="profile-bio">
-          Bio: "Creative digital artist specializing in fantasy and sci-fi concept art. Full-time creator."<br>
-          <small>(สเก็ตช์สร้างสรรค์ผลงานศิลปะดิจิทัลด้านนิยายวิทยาศาสตร์และแฟนตาซีชั้นนำในวงการแอนิเมชัน)</small>
-        </p>
+        <p class="profile-bio">Bio: "{{ user.bio }}"</p>
         <div class="stats-row">
-          <div class="stat-item">
-            <span class="stat-value">2,450</span>
-            <p class="stat-label">Total Points</p>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">8</span>
-            <p class="stat-label">Skills</p>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">24</span>
-            <p class="stat-label">Artworks</p>
-          </div>
+          <div class="stat-item"><span class="stat-value">{{ stats.points }}</span><p class="stat-label">Total Points</p></div>
+          <div class="stat-item"><span class="stat-value">{{ skills.length }}</span><p class="stat-label">Skills</p></div>
+          <div class="stat-item"><span class="stat-value">{{ artworks.length }}</span><p class="stat-label">Artworks</p></div>
         </div>
       </div>
     </section>
 
-    <!-- Tab Navigation -->
-    <!-- <div class="profile-tabs" role="tablist">
-      <button class="profile-tab active" data-tab="portfolio" role="tab" aria-selected="true" onclick="switchProfileTab('portfolio')">Portfolio</button>
-      <button class="profile-tab" data-tab="history" role="tab" aria-selected="false" onclick="switchProfileTab('history')">History</button>
-    </div> -->
-
     <!-- Portfolio Tab -->
-    <div class="tab-panel active fade-in-2" id="panel-portfolio" role="tabpanel">
+    <div class="tab-panel active fade-in-2">
 
       <!-- Skill Showcase -->
       <section aria-label="Skill showcase">
         <div class="section-hd">
           <h2>Skill Showcase</h2>
-          <a href="skillManage.html" class="btn-neon">View All →</a>
+          <a href="/skillManage.html" class="btn-neon">View All &rarr;</a>
         </div>
         <div class="skills-grid">
-
-          <div class="skill-card">
-            <h3>Character Design</h3>
-            <div class="meter" aria-label="Skill level: Intermediate">
-              <div class="seg seg-green"></div>
-              <div class="seg seg-blue"></div>
-              <div class="seg seg-empty"></div>
+          <div class="skill-card" v-for="s in skills.slice(0, 6)" :key="s.skill_name">
+            <h3>{{ s.skill_name }}</h3>
+            <div class="meter" :aria-label="'Skill level: ' + s.level">
+              <div class="seg" :class="s.level === 'Beginner' ? 'seg-green' : 'seg-green'"></div>
+              <div class="seg" :class="s.level === 'Intermediate' || s.level === 'Advanced' ? 'seg-blue' : 'seg-empty'"></div>
+              <div class="seg" :class="s.level === 'Advanced' ? 'seg-green' : 'seg-empty'"></div>
             </div>
             <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p class="level-text">Level : 2</p>
-            <div class="badge-icon" aria-hidden="true">🥉</div>
+            <p class="level-text">Level : {{ levelNum(s.level) }}</p>
           </div>
-
-          <div class="skill-card">
-            <h3>Concept Art</h3>
-            <div class="meter" aria-label="Skill level: Advanced">
-              <div class="seg seg-green"></div>
-              <div class="seg seg-blue"></div>
-              <div class="seg seg-green"></div>
-            </div>
-            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p class="level-text">Level : 3</p>
-            <div class="badge-icon" aria-hidden="true">🏅</div>
-          </div>
-
-          <div class="skill-card">
-            <h3>Illustration</h3>
-            <div class="meter" aria-label="Skill level: Beginner">
-              <div class="seg seg-green"></div>
-              <div class="seg seg-empty"></div>
-              <div class="seg seg-empty"></div>
-            </div>
-            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p class="level-text">Level : 1</p>
-            <div class="badge-icon" aria-hidden="true">🥇</div>
-          </div>
-
-          <div class="skill-card">
-            <h3>Digital Painting</h3>
-            <div class="meter" aria-label="Skill level: Intermediate">
-              <div class="seg seg-green"></div>
-              <div class="seg seg-blue"></div>
-              <div class="seg seg-empty"></div>
-            </div>
-            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p class="level-text">Level : 2</p>
-            <div class="badge-icon" aria-hidden="true">🥉</div>
-          </div>
-
-          <div class="skill-card">
-            <h3>Storyboarding</h3>
-            <div class="meter" aria-label="Skill level: Advanced">
-              <div class="seg seg-green"></div>
-              <div class="seg seg-blue"></div>
-              <div class="seg seg-green"></div>
-            </div>
-            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p class="level-text">Level : 3</p>
-            <div class="badge-icon" aria-hidden="true">🏅</div>
-          </div>
-
-          <div class="skill-card">
-            <h3>3D Modeling</h3>
-            <div class="meter" aria-label="Skill level: Beginner">
-              <div class="seg seg-green"></div>
-              <div class="seg seg-empty"></div>
-              <div class="seg seg-empty"></div>
-            </div>
-            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p class="level-text">Level : 1</p>
-            <div class="badge-icon" aria-hidden="true">🥇</div>
-          </div>
-
         </div>
       </section>
 
@@ -180,196 +89,17 @@
       <section aria-label="Portfolio gallery" style="padding-bottom:3rem;">
         <div class="section-hd">
           <h2>Your Portfolio</h2>
-          <a href="upload.html" class="btn-neon">+ Add Artwork</a>
+          <a href="/upload.html" class="btn-neon">+ Add Artwork</a>
         </div>
         <div class="portfolio-grid">
-
-          <div class="portfolio-item"
-            data-title="Beauty Path to Violent"
-            data-img="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=700&q=80"
-            data-date="26 December 2026"
-            data-skill="Character Design"
-            data-level="Advanced"
-            data-log="This piece explores the contrast between beauty and violence through expressive line work and dynamic composition. Pushed color theory further here."
-            data-privacy="Public">
-            <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80" alt="Beauty Path to Violent">
+          <div class="portfolio-item" v-for="a in artworks" :key="a.id" @click="openArtwork(a)">
+            <img :src="a.thumb" :alt="a.title">
             <div class="portfolio-overlay" aria-hidden="true"></div>
           </div>
-
-          <div class="portfolio-item"
-            data-title="Sloth Dream"
-            data-img="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=700&q=80"
-            data-date="26 November 2026"
-            data-skill="Illustration"
-            data-level="Intermediate"
-            data-log="A dreamlike illustration exploring surrealism and slow movement. Focused on atmospheric lighting and soft gradients."
-            data-privacy="Public">
-            <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80" alt="Sloth Dream">
-            <div class="portfolio-overlay" aria-hidden="true"></div>
-          </div>
-
-          <div class="portfolio-item"
-            data-title="Swallow in the Pretty Face"
-            data-img="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=700&q=80"
-            data-date="26 October 2026"
-            data-skill="Digital Painting"
-            data-level="Intermediate"
-            data-log="Portrait study focused on capturing emotional complexity. Explored layering techniques and texture brushes."
-            data-privacy="Private">
-            <img src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=80" alt="Swallow in the Pretty Face">
-            <div class="portfolio-overlay" aria-hidden="true"></div>
-          </div>
-
-          <div class="portfolio-item"
-            data-title="Neon Citadel"
-            data-img="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=700&q=80"
-            data-date="14 September 2026"
-            data-skill="Concept Art"
-            data-level="Advanced"
-            data-log="Environment concept for a cyberpunk city. Focused on perspective, lighting hierarchy, and mood storytelling."
-            data-privacy="Public">
-            <img src="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=400&q=80" alt="Neon Citadel">
-            <div class="portfolio-overlay" aria-hidden="true"></div>
-          </div>
-
-          <div class="portfolio-item"
-            data-title="Forest Spirit"
-            data-img="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=700&q=80"
-            data-date="2 August 2026"
-            data-skill="Illustration"
-            data-level="Intermediate"
-            data-log="Nature-inspired character design. Practiced integrating organic shapes with fantasy elements."
-            data-privacy="Public">
-            <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=400&q=80" alt="Forest Spirit">
-            <div class="portfolio-overlay" aria-hidden="true"></div>
-          </div>
-
-          <div class="portfolio-item"
-            data-title="Void Walker"
-            data-img="https://images.unsplash.com/photo-1549490349-8643362247b5?w=700&q=80"
-            data-date="10 July 2026"
-            data-skill="Character Design"
-            data-level="Advanced"
-            data-log="Dark fantasy character study. Explored silhouette design and costume detailing with monochromatic palettes."
-            data-privacy="Public">
-            <img src="https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&q=80" alt="Void Walker">
-            <div class="portfolio-overlay" aria-hidden="true"></div>
-          </div>
-
         </div>
       </section>
 
     </div>
-
-    <!-- History Tab -->
-    <div class="tab-panel" id="panel-history" role="tabpanel">
-      <div class="two-col-layout" style="padding-top:0; padding-left:0; padding-right:0; max-width:100%;">
-
-        <!-- Filter -->
-        <aside class="filter-panel">
-          <div class="filter-card">
-            <h2 class="filter-title">Filter</h2>
-            <div class="filter-group">
-              <label class="filter-label" for="ph-skill">Skill</label>
-              <input type="text" class="filter-input" id="ph-skill" placeholder="">
-            </div>
-            <div class="filter-group">
-              <label class="filter-label" for="ph-level">Level</label>
-              <input type="text" class="filter-input" id="ph-level" placeholder="">
-            </div>
-            <div class="filter-group">
-              <label class="filter-label" for="ph-tag">Tag</label>
-              <input type="text" class="filter-input" id="ph-tag" placeholder="">
-            </div>
-          </div>
-        </aside>
-
-        <!-- Timeline -->
-        <div class="timeline-area">
-          <div class="timeline-wrap">
-            <div class="timeline-line"></div>
-
-            <div class="timeline-group" data-skill="Character Design" data-level="Advanced" data-tags="digital,character,upload,levelup">
-              <div class="timeline-date">26 December<br>2026</div>
-              <div class="timeline-dot"></div>
-              <div class="timeline-entries">
-                <div class="timeline-card">
-                  <div class="timeline-thumb">
-                    <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=160&q=80" alt="Beauty path to violent">
-                  </div>
-                  <div class="timeline-text">
-                    <p>You upload :<br><strong>Beauty path to violent</strong></p>
-                    <span class="timeline-tag">Character Design</span>
-                  </div>
-                </div>
-                <div class="timeline-card">
-                  <div class="timeline-thumb">
-                    <span class="timeline-icon">⬆️</span>
-                  </div>
-                  <div class="timeline-text">
-                    <p>You level up :<br><strong>Character Design is now Advanced</strong></p>
-                    <span class="timeline-tag">Advanced</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="timeline-group" data-skill="Illustration" data-level="Intermediate" data-tags="illustration,upload">
-              <div class="timeline-date">26 November<br>2026</div>
-              <div class="timeline-dot"></div>
-              <div class="timeline-entries">
-                <div class="timeline-card">
-                  <div class="timeline-thumb">
-                    <img src="https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=160&q=80" alt="Sloth dream">
-                  </div>
-                  <div class="timeline-text">
-                    <p>You upload :<br><strong>Sloth dream</strong></p>
-                    <span class="timeline-tag">Illustration</span>
-                    <span class="timeline-tag">Intermediate</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="timeline-group" data-skill="Digital Painting" data-level="Intermediate" data-tags="painting,portrait,upload">
-              <div class="timeline-date">26 October<br>2026</div>
-              <div class="timeline-dot"></div>
-              <div class="timeline-entries">
-                <div class="timeline-card">
-                  <div class="timeline-thumb">
-                    <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=160&q=80" alt="Swallow in the pretty face">
-                  </div>
-                  <div class="timeline-text">
-                    <p>You upload :<br><strong>Swallow in the pretty face</strong></p>
-                    <span class="timeline-tag">Digital Painting</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="timeline-group" data-skill="Concept Art" data-level="Advanced" data-tags="concept,environment,upload">
-              <div class="timeline-date">14 September<br>2026</div>
-              <div class="timeline-dot"></div>
-              <div class="timeline-entries">
-                <div class="timeline-card">
-                  <div class="timeline-thumb">
-                    <img src="https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=160&q=80" alt="Neon Citadel">
-                  </div>
-                  <div class="timeline-text">
-                    <p>You upload :<br><strong>Neon Citadel</strong></p>
-                    <span class="timeline-tag">Concept Art</span>
-                    <span class="timeline-tag">Advanced</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
-    </div>
-
   </main>
 
   <!-- Footer -->
@@ -377,24 +107,22 @@
     <div class="footer-inner">
       <div>
         <div class="footer-logo">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-          </svg>
+          <img src="/img/logoartskill.png" height="26" alt="ArtSkillWallet Logo">
           <span class="footer-logo-text">ArtSkillWallet</span>
         </div>
         <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
       </div>
       <div class="footer-col">
         <p class="footer-col-title">Product</p>
-        <a href="explore.html">Explore</a>
-        <a href="#">Skills</a>
-        <a href="explore.html">Community</a>
+        <a href="/explore.html">Explore</a>
+        <a href="/skillManage.html">Skills</a>
+        <a href="/explore.html">Community</a>
       </div>
       <div class="footer-col">
         <p class="footer-col-title">Account</p>
-        <a href="home.html">Login</a>
-        <a href="home.html">Register</a>
-        <a href="profile.html">Profile</a>
+        <a href="/home.html">Login</a>
+        <a href="/home.html">Register</a>
+        <a href="/profile.html">Profile</a>
       </div>
       <div class="footer-col">
         <p class="footer-col-title">Support</p>
@@ -403,156 +131,83 @@
         <a href="#">Privacy Policy</a>
       </div>
     </div>
-    <div class="footer-bottom">© 2025 ArtSkillWallet. All rights reserved.</div>
+    <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
   <!-- Artwork Detail Popup -->
-  <div id="artworkOverlay" class="artwork-overlay" role="dialog" aria-modal="true" aria-label="Artwork detail">
-    <div class="artwork-modal">
-      <button class="artwork-modal-close" onclick="closeArtwork()" aria-label="Close">✕</button>
-      <img id="artwork-img" class="artwork-modal-img" src="" alt="">
+  <div class="artwork-overlay" :class="{ open: artworkOpen }" @click.self="artworkOpen=false">
+    <div class="artwork-modal" v-if="selectedArt">
+      <button class="artwork-modal-close" @click="artworkOpen=false">&times;</button>
+      <img :src="selectedArt.img" :alt="selectedArt.title" class="artwork-modal-img">
       <div class="artwork-modal-body">
-        <h2 id="artwork-title" class="artwork-modal-title"></h2>
+        <h2 class="artwork-modal-title">{{ selectedArt.title }}</h2>
         <div class="artwork-meta">
-          <span id="artwork-date" class="artwork-meta-item"></span>
-          <span id="artwork-skill" class="artwork-meta-tag"></span>
-          <span id="artwork-level" class="artwork-meta-tag"></span>
+          <span class="artwork-meta-item">{{ selectedArt.date }}</span>
+          <span class="artwork-meta-tag">{{ selectedArt.skill }}</span>
+          <span class="artwork-meta-tag">{{ selectedArt.level }}</span>
         </div>
-        <p id="artwork-log" class="artwork-log"></p>
+        <p class="artwork-log">{{ selectedArt.description }}</p>
         <div class="privacy-row">
           <span class="privacy-label">Privacy</span>
           <div class="privacy-toggle">
-            <button class="privacy-btn active" data-privacy="Public" onclick="setPrivacy('Public')">Public</button>
-            <button class="privacy-btn" data-privacy="Private" onclick="setPrivacy('Private')">Private</button>
+            <button class="privacy-btn" :class="{ active: selectedArt.privacy === 'Public' }" @click="selectedArt.privacy='Public'">Public</button>
+            <button class="privacy-btn" :class="{ active: selectedArt.privacy === 'Private' }" @click="selectedArt.privacy='Private'">Private</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Edit Profile Modal -->
-  <div class="modal-overlay" id="editProfileModal">
-    <div class="modal-box" style="max-width:480px;">
-      <button class="modal-close" id="editProfileClose">✕</button>
-      <h2 class="modal-title">Edit Profile</h2>
+</div>
 
-      <!-- Avatar -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
-        <div style="position:relative;display:inline-block;">
-          <img id="editAvatarPreview" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80"
-               alt="Avatar preview"
-               style="width:88px;height:88px;border-radius:50%;border:3px solid var(--neon);object-fit:cover;display:block;">
-          <label for="editAvatarInput"
-                 style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--neon);border-radius:50%;
-                        display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.75rem;color:#121212;">
-            ✎
-          </label>
-          <input type="file" id="editAvatarInput" accept="image/*" hidden>
-        </div>
-        <span style="font-size:0.72rem;color:#555;">Click the pencil to change photo</span>
-      </div>
-
-      <!-- Username -->
-      <div class="auth-field">
-        <label for="editUsername">Username</label>
-        <input type="text" id="editUsername" class="auth-input" placeholder="your_username">
-      </div>
-
-      <!-- Bio -->
-      <div class="auth-field">
-        <label for="editBio">Bio</label>
-        <textarea id="editBio" class="auth-input" rows="3" placeholder="Tell the world about yourself..."></textarea>
-      </div>
-
-      <!-- Social links -->
-      <div class="auth-field">
-        <label for="editWebsite">Website / Portfolio URL</label>
-        <input type="url" id="editWebsite" class="auth-input" placeholder="https://yoursite.com">
-      </div>
-
-      <button class="modal-save-btn" id="editProfileSave">SAVE CHANGES</button>
-    </div>
-  </div>
-
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
-  <script>requireAuth();</script>
-  <script src="js/profile.js" defer></script>
-  <script>
-    // Avatar dropdown
-    const avatarBtn = document.getElementById('avatarBtn');
-    const avatarDropdown = document.getElementById('avatarDropdown');
-    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
-    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
-    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
-
-    // ── Edit Profile ─────────────────────────────────────────────────
-    const editProfileModal = document.getElementById('editProfileModal');
-    const editAvatarInput  = document.getElementById('editAvatarInput');
-    const editAvatarPreview = document.getElementById('editAvatarPreview');
-    let pendingAvatarSrc = null;
-
-    function openEditProfile() {
-      // Pre-fill with current values
-      document.getElementById('editUsername').value =
-        document.querySelector('.profile-name').textContent.trim();
-      // Strip the Bio: prefix and quotes for editing
-      const rawBio = document.querySelector('.profile-bio').firstChild.textContent
-        .replace(/^Bio:\s*[""]?/, '').replace(/[""]$/, '').trim();
-      document.getElementById('editBio').value = rawBio;
-      // Reset avatar preview to current profile avatar
-      const currentAvatar = document.querySelector('.avatar-lg').src;
-      editAvatarPreview.src = currentAvatar;
-      pendingAvatarSrc = null;
-      editProfileModal.classList.add('open');
-    }
-
-    document.getElementById('editProfileClose').addEventListener('click', () => {
-      editProfileModal.classList.remove('open');
-    });
-    editProfileModal.addEventListener('click', (e) => {
-      if (e.target === editProfileModal) editProfileModal.classList.remove('open');
-    });
-
-    // Avatar file picker → preview
-    editAvatarInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        pendingAvatarSrc = ev.target.result;
-        editAvatarPreview.src = pendingAvatarSrc;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Save → update profile page live
-    document.getElementById('editProfileSave').addEventListener('click', () => {
-      const newName = document.getElementById('editUsername').value.trim();
-      const newBio  = document.getElementById('editBio').value.trim();
-
-      if (!newName) {
-        alert('Username cannot be empty.');
-        return;
-      }
-
-      // Update name everywhere on the page
-      document.querySelector('.profile-name').textContent = newName;
-      document.querySelector('.avatar-dropdown-name').textContent = newName;
-
-      // Update bio
-      const bioEl = document.querySelector('.profile-bio');
-      bioEl.innerHTML = `Bio: "${newBio}"`;
-
-      // Update avatar if changed
-      if (pendingAvatarSrc) {
-        document.querySelector('.avatar-lg').src = pendingAvatarSrc;
-        document.querySelector('.avatar-dropdown-pic').src = pendingAvatarSrc;
-        document.getElementById('avatarBtn').src = pendingAvatarSrc;
-      }
-
-      editProfileModal.classList.remove('open');
-    });
-  </script>
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+if (!TokenStore.isLoggedIn()) { window.location.replace('/home.html'); }
+const { createApp } = Vue;
+createApp({
+  data() {
+    return {
+      isAdmin: TokenStore.isAdmin(),
+      dropdownOpen: false,
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80',
+      user: { username: TokenStore.getUsername() || 'User', email: '', bio: 'Creative digital artist specializing in fantasy and sci-fi concept art.' },
+      stats: { points: 2450 },
+      skills: [
+        { skill_name: 'Character Design', level: 'Intermediate' },
+        { skill_name: 'Concept Art', level: 'Advanced' },
+        { skill_name: 'Illustration', level: 'Beginner' },
+        { skill_name: 'Digital Painting', level: 'Intermediate' },
+        { skill_name: 'Storyboarding', level: 'Advanced' },
+        { skill_name: '3D Modeling', level: 'Beginner' },
+      ],
+      artworks: [
+        { id: 1, title: 'Beauty Path to Violent', thumb: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80', img: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=700&q=80', date: '26 December 2026', skill: 'Character Design', level: 'Advanced', description: 'This piece explores the contrast between beauty and violence through expressive line work.', privacy: 'Public' },
+        { id: 2, title: 'Sloth Dream', thumb: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80', img: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=700&q=80', date: '26 November 2026', skill: 'Illustration', level: 'Intermediate', description: 'A dreamlike illustration exploring surrealism and slow movement.', privacy: 'Public' },
+        { id: 3, title: 'Swallow in the Pretty Face', thumb: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=80', img: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=700&q=80', date: '26 October 2026', skill: 'Digital Painting', level: 'Intermediate', description: 'Portrait study focused on capturing emotional complexity.', privacy: 'Private' },
+        { id: 4, title: 'Neon Citadel', thumb: 'https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=400&q=80', img: 'https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=700&q=80', date: '14 September 2026', skill: 'Concept Art', level: 'Advanced', description: 'Environment concept for a cyberpunk city.', privacy: 'Public' },
+        { id: 5, title: 'Forest Spirit', thumb: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=400&q=80', img: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=700&q=80', date: '2 August 2026', skill: 'Illustration', level: 'Intermediate', description: 'Nature-inspired character design.', privacy: 'Public' },
+        { id: 6, title: 'Void Walker', thumb: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&q=80', img: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=700&q=80', date: '10 July 2026', skill: 'Character Design', level: 'Advanced', description: 'Dark fantasy character study.', privacy: 'Public' },
+      ],
+      artworkOpen: false,
+      selectedArt: null,
+    };
+  },
+  methods: {
+    doLogout() { logout(); },
+    levelNum(l) { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
+    openArtwork(a) { this.selectedArt = { ...a }; this.artworkOpen = true; document.body.style.overflow = 'hidden'; },
+  },
+  watch: { artworkOpen(v) { if (!v) document.body.style.overflow = ''; } },
+  mounted() {
+    document.addEventListener('click', () => { this.dropdownOpen = false; });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.artworkOpen = false; });
+    // Fetch real user data
+    apiFetch('/me').then(r => { if (r.ok && r.data.data) { Object.assign(this.user, r.data.data); } });
+    apiFetch('/skills').then(r => { if (r.ok && r.data.data && r.data.data.length) this.skills = r.data.data; });
+    apiFetch('/artworks').then(r => { if (r.ok && r.data.data && r.data.data.length) this.artworks = r.data.data; });
+  }
+}).mount('#app');
+</script>
 </body>
 </html>

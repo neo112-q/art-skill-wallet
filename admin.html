@@ -3,107 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skill Manage – ArtSkillWallet</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Admin – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="bg-[#121212] text-white min-h-screen flex flex-col">
+<body>
+<div id="app">
 
-  <!-- Navbar -->
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-[#2A2A2A] bg-[rgba(18,18,18,0.9)] backdrop-blur-md">
-    <div class="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
-      <a href="home.html" class="flex items-center gap-2">
-        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-          <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-        </svg>
+  <!-- Navbar (unified with home.html) -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="/home.html" class="nav-logo">
+        <img src="/img/logoartskill.png" height="32" alt="ArtSkillWallet Logo">
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="explore.html" class="nav-link">Explore</a>
-        <a href="skillManage.html" class="nav-link">Skills</a>
-        <a href="history.html" class="nav-link">History</a>
+      <div class="nav-links">
+        <a href="/explore.html" class="nav-link">Explore</a>
+        <a href="/skillManage.html" class="nav-link">Skills</a>
+        <a href="/history.html" class="nav-link">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="avatar" class="avatar-sm" id="avatarBtn">
-        <div class="avatar-dropdown" id="avatarDropdown">
+        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
             <div>
-              <p class="avatar-dropdown-name">AneeShan</p>
-              <p class="avatar-dropdown-email">user@artskill.com</p>
+              <p class="avatar-dropdown-name">{{ username }}</p>
+              <p class="avatar-dropdown-email">{{ email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
-          <a href="profile.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">👤</span> Profile
-          </a>
-          <a href="admin.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">🛡️</span> Admin
-          </a>
+          <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
+          <a href="/admin.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">🛡️</span> Admin</a>
           <div class="avatar-dropdown-divider"></div>
-          <button class="avatar-dropdown-item" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
-          </button>
-          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
-          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
     </div>
   </nav>
 
   <!-- Main -->
-  <main class="flex-1 max-w-5xl mx-auto w-full px-6 pt-28 pb-16">
+  <main class="page-main" style="max-width:960px; margin:0 auto;">
 
-    <!-- Page header -->
-    <div class="flex items-center justify-between mb-8 fade-in">
+    <!-- Header -->
+    <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem;">
       <div>
-        <h1 class="text-2xl font-extrabold text-white">Skill Submissions</h1>
-        <p class="text-[#888] text-sm mt-1">Review and approve artwork uploaded by users</p>
+        <h1 style="font-size:1.5rem; font-weight:800;">Skill Submissions</h1>
+        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Review and approve artwork uploaded by users</p>
       </div>
-      <span class="bg-[#CCFF00] text-[#121212] text-xs font-bold px-4 py-1.5 rounded-full" id="pendingBadge">6 Pending</span>
+      <span style="background:#CCFF00; color:#121212; font-size:0.75rem; font-weight:700; padding:0.35rem 1rem; border-radius:999px;">{{ pendingCount }} Pending</span>
     </div>
 
     <!-- Filter bar -->
-    <div class="bg-[#1C1C1C] border border-[#2A2A2A] rounded-xl px-5 py-4 flex flex-wrap items-center justify-between gap-3 mb-6 fade-in-2">
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2 bg-[#121212] border border-[#2A2A2A] rounded-lg px-3 py-2">
-          <i class="fas fa-search text-[#555] text-sm"></i>
-          <input id="adminSearch" type="text" placeholder="Search by user or title..." class="bg-transparent outline-none text-sm text-white placeholder-[#555] w-48">
+    <div class="filter-bar fade-in-2" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; padding:1rem 1.25rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:1.5rem;">
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem; background:#121212; border:1px solid #2A2A2A; border-radius:8px; padding:0.5rem 0.75rem;">
+          <i class="fas fa-search" style="color:#555; font-size:0.85rem;"></i>
+          <input type="text" v-model="search" placeholder="Search by user or title..." style="background:transparent; border:none; outline:none; color:white; font-size:0.85rem; width:12rem;">
         </div>
-        <select id="filterStatus" class="filter-select">
-          <option value="">All Status</option>
-          <option>Pending</option>
-          <option>Approved</option>
-          <option>Rejected</option>
-        </select>
-        <select id="filterSkill" class="filter-select">
-          <option value="">All Skills</option>
-          <option>Illustration</option>
-          <option>UI Design</option>
-          <option>3D Modeling</option>
-          <option>Photography</option>
-          <option>Video Editing</option>
-        </select>
-        <select id="filterLevel" class="filter-select">
-          <option value="">All Levels</option>
-          <option>Beginner</option>
-          <option>Intermediate</option>
-          <option>Advanced</option>
-        </select>
+        <select v-model="fStatus" class="filter-select"><option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+        <select v-model="fSkill" class="filter-select"><option value="">All Skills</option><option>Illustration</option><option>UI Design</option><option>3D Modeling</option><option>Photography</option><option>Video Editing</option></select>
+        <select v-model="fLevel" class="filter-select"><option value="">All Levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
       </div>
-      <select id="sortSelect" class="filter-select">
-        <option>Newest First</option>
-        <option>Oldest First</option>
-      </select>
+      <select v-model="sortDir" class="filter-select"><option>Newest First</option><option>Oldest First</option></select>
     </div>
 
     <!-- Table -->
-    <div class="bg-[#1C1C1C] border border-[#2A2A2A] rounded-xl overflow-x-auto fade-in-3">
-      <table class="w-full text-sm border-collapse">
-        <thead class="bg-[#161616] border-b border-[#2A2A2A]">
+    <div class="fade-in-3" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; overflow-x:auto;">
+      <table style="width:100%; font-size:0.85rem; border-collapse:collapse;">
+        <thead style="background:#161616; border-bottom:1px solid #2A2A2A;">
           <tr>
             <th class="th-cell">User</th>
             <th class="th-cell">Title</th>
@@ -114,270 +83,129 @@
             <th class="th-cell">Action</th>
           </tr>
         </thead>
-        <tbody id="submissionsBody">
-
-          <tr class="tr-row border-b border-[#2A2A2A]">
-            <td class="td-cell"><div class="flex items-center gap-2.5"><div class="avatar-init">JD</div><span class="text-white font-medium whitespace-nowrap">Jane Doe</span></div></td>
-            <td class="td-cell font-semibold text-white">Fantasy Forest Scene</td>
-            <td class="td-cell text-[#aaa]">Illustration</td>
-            <td class="td-cell"><span class="badge badge-inter">Intermediate</span></td>
-            <td class="td-cell text-[#666] whitespace-nowrap">20 May 2026</td>
-            <td class="td-cell"><span class="status status-pending">Pending</span></td>
-            <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
-            </div></td>
+        <tbody>
+          <tr v-for="row in filteredRows" :key="row.id" class="tr-row" style="border-bottom:1px solid #2A2A2A;">
+            <td class="td-cell">
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                <div class="avatar-init">{{ row.initials }}</div>
+                <span style="color:white; font-weight:500; white-space:nowrap;">{{ row.user }}</span>
+              </div>
+            </td>
+            <td class="td-cell" style="font-weight:600; color:white;">{{ row.title }}</td>
+            <td class="td-cell" style="color:#aaa;">{{ row.skill }}</td>
+            <td class="td-cell"><span class="badge" :class="badgeClass(row.level)">{{ row.level }}</span></td>
+            <td class="td-cell" style="color:#666; white-space:nowrap;">{{ row.date }}</td>
+            <td class="td-cell"><span class="status" :class="'status-' + row.status.toLowerCase()">{{ row.status }}</span></td>
+            <td class="td-cell">
+              <div style="display:flex; align-items:center; gap:0.4rem;">
+                <button class="btn-view" @click="viewRow(row)"><i class="fas fa-eye"></i></button>
+                <button v-if="row.status !== 'Approved'" class="btn-approve" @click="row.status='Approved'"><i class="fas fa-check"></i> Approve</button>
+                <button v-if="row.status !== 'Rejected'" class="btn-reject" @click="row.status='Rejected'"><i class="fas fa-times"></i> Reject</button>
+              </div>
+            </td>
           </tr>
-
-          <tr class="tr-row border-b border-[#2A2A2A]">
-            <td class="td-cell"><div class="flex items-center gap-2.5"><div class="avatar-init">MS</div><span class="text-white font-medium whitespace-nowrap">Mark S.</span></div></td>
-            <td class="td-cell font-semibold text-white">Product Dashboard UI</td>
-            <td class="td-cell text-[#aaa]">UI Design</td>
-            <td class="td-cell"><span class="badge badge-adv">Advanced</span></td>
-            <td class="td-cell text-[#666] whitespace-nowrap">19 May 2026</td>
-            <td class="td-cell"><span class="status status-pending">Pending</span></td>
-            <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
-            </div></td>
-          </tr>
-
-          <tr class="tr-row border-b border-[#2A2A2A]">
-            <td class="td-cell"><div class="flex items-center gap-2.5"><div class="avatar-init">AL</div><span class="text-white font-medium whitespace-nowrap">Amy Lee</span></div></td>
-            <td class="td-cell font-semibold text-white">City Street Photography</td>
-            <td class="td-cell text-[#aaa]">Photography</td>
-            <td class="td-cell"><span class="badge badge-beg">Beginner</span></td>
-            <td class="td-cell text-[#666] whitespace-nowrap">18 May 2026</td>
-            <td class="td-cell"><span class="status status-pending">Pending</span></td>
-            <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
-            </div></td>
-          </tr>
-
-          <tr class="tr-row border-b border-[#2A2A2A]">
-            <td class="td-cell"><div class="flex items-center gap-2.5"><div class="avatar-init">TK</div><span class="text-white font-medium whitespace-nowrap">Tom K.</span></div></td>
-            <td class="td-cell font-semibold text-white">Sci-Fi Character Model</td>
-            <td class="td-cell text-[#aaa]">3D Modeling</td>
-            <td class="td-cell"><span class="badge badge-adv">Advanced</span></td>
-            <td class="td-cell text-[#666] whitespace-nowrap">17 May 2026</td>
-            <td class="td-cell"><span class="status status-approved">Approved</span></td>
-            <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
-              <button class="btn-reject" onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
-            </div></td>
-          </tr>
-
-          <tr class="tr-row border-b border-[#2A2A2A]">
-            <td class="td-cell"><div class="flex items-center gap-2.5"><div class="avatar-init">NP</div><span class="text-white font-medium whitespace-nowrap">Nina P.</span></div></td>
-            <td class="td-cell font-semibold text-white">Travel Vlog Reel</td>
-            <td class="td-cell text-[#aaa]">Video Editing</td>
-            <td class="td-cell"><span class="badge badge-inter">Intermediate</span></td>
-            <td class="td-cell text-[#666] whitespace-nowrap">16 May 2026</td>
-            <td class="td-cell"><span class="status status-rejected">Rejected</span></td>
-            <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
-            </div></td>
-          </tr>
-
-          <tr class="tr-row">
-            <td class="td-cell"><div class="flex items-center gap-2.5"><div class="avatar-init">RW</div><span class="text-white font-medium whitespace-nowrap">Ryan W.</span></div></td>
-            <td class="td-cell font-semibold text-white">Dragon Concept Art</td>
-            <td class="td-cell text-[#aaa]">Illustration</td>
-            <td class="td-cell"><span class="badge badge-adv">Advanced</span></td>
-            <td class="td-cell text-[#666] whitespace-nowrap">15 May 2026</td>
-            <td class="td-cell"><span class="status status-pending">Pending</span></td>
-            <td class="td-cell"><div class="flex items-center gap-1.5">
-              <button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>
-              <button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>
-            </div></td>
-          </tr>
-
         </tbody>
       </table>
     </div>
 
-    <!-- Pagination -->
-    <div class="flex items-center justify-center gap-2 mt-6">
-      <button class="page-btn" disabled><i class="fas fa-chevron-left text-xs"></i></button>
-      <button class="page-btn page-btn-active">1</button>
-      <button class="page-btn">2</button>
-      <button class="page-btn">3</button>
-      <button class="page-btn"><i class="fas fa-chevron-right text-xs"></i></button>
-    </div>
-
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-[#0d0d0d] border-t border-[#2A2A2A] py-12 px-8">
-    <div class="max-w-5xl mx-auto flex flex-wrap gap-8 justify-between">
+  <!-- Footer (unified with home.html) -->
+  <footer class="site-footer">
+    <div class="footer-inner">
       <div>
-        <div class="flex items-center gap-2 mb-3">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-          </svg>
-          <span class="nav-logo-text">ArtSkillWallet</span>
+        <div class="footer-logo">
+          <img src="/img/logoartskill.png" height="26" alt="ArtSkillWallet Logo">
+          <span class="footer-logo-text">ArtSkillWallet</span>
         </div>
-        <p class="text-[#555] text-sm max-w-[220px]">Trace your art skills, build your portfolio, and grow your creative career.</p>
+        <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
       </div>
-      <div class="flex gap-12 flex-wrap">
-        <div>
-          <p class="footer-col-title">Product</p>
-          <a href="#" class="footer-link">Explore</a>
-          <a href="#" class="footer-link">Skills</a>
-          <a href="#" class="footer-link">Community</a>
-        </div>
-        <div>
-          <p class="footer-col-title">Account</p>
-          <a href="#" class="footer-link">Login</a>
-          <a href="#" class="footer-link">Register</a>
-          <a href="#" class="footer-link">Profile</a>
-        </div>
-        <div>
-          <p class="footer-col-title">Support</p>
-          <a href="#" class="footer-link">FAQ</a>
-          <a href="#" class="footer-link">Contact</a>
-          <a href="#" class="footer-link">Privacy Policy</a>
-        </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Product</p>
+        <a href="/explore.html">Explore</a>
+        <a href="/skillManage.html">Skills</a>
+        <a href="/explore.html">Community</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Account</p>
+        <a href="/home.html">Login</a>
+        <a href="/home.html">Register</a>
+        <a href="/profile.html">Profile</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-title">Support</p>
+        <a href="#">FAQ</a>
+        <a href="#">Contact</a>
+        <a href="#">Privacy Policy</a>
       </div>
     </div>
-    <div class="max-w-5xl mx-auto mt-8 pt-8 border-t border-[#2A2A2A] text-center text-[#555] text-sm">
-      © 2025 ArtSkillWallet. All rights reserved.
-    </div>
+    <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
-  <script>requireAdmin();</script>
-
-  <!-- View Submission Modal -->
-  <div class="modal-overlay" id="viewModal">
+  <!-- View Modal -->
+  <div class="modal-overlay" :class="{ open: viewOpen }" @click.self="viewOpen=false">
     <div class="modal-box modal-box-wide">
-      <button class="modal-close" id="viewModalClose">✕</button>
-      <h2 class="modal-title" id="viewModalTitle">Submission Detail</h2>
-      <div id="viewModalBody"></div>
+      <button class="modal-close" @click="viewOpen=false">&times;</button>
+      <h2 class="modal-title">{{ viewData.title }}</h2>
+      <div v-if="viewData.title">
+        <div class="view-row"><span class="view-label">User</span><span class="view-value">{{ viewData.user }}</span></div>
+        <div class="view-row"><span class="view-label">Skill</span><span class="view-value">{{ viewData.skill }}</span></div>
+        <div class="view-row"><span class="view-label">Level</span><span class="view-value">{{ viewData.level }}</span></div>
+        <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">{{ viewData.date }}</span></div>
+        <div class="view-row"><span class="view-label">Status</span><span class="view-value">{{ viewData.status }}</span></div>
+      </div>
     </div>
   </div>
 
-  <script>
-    // Avatar dropdown
-    const avatarBtn = document.getElementById('avatarBtn');
-    const avatarDropdown = document.getElementById('avatarDropdown');
-    avatarBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdown.classList.toggle('open'); });
-    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
-    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
+</div>
 
-    // ── Approve / Reject ─────────────────────────────────────────────
-    function setStatus(row, newStatus) {
-      const statusEl = row.querySelector('.status');
-      const actionsEl = row.querySelector('.flex.items-center.gap-1\\.5');
-
-      statusEl.className = 'status status-' + newStatus.toLowerCase();
-      statusEl.textContent = newStatus;
-
-      // Rebuild action buttons based on new status
-      let html = `<button class="btn-view" onclick="viewRow(this)"><i class="fas fa-eye"></i></button>`;
-      if (newStatus === 'Pending') {
-        html += `<button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>`;
-        html += `<button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>`;
-      } else if (newStatus === 'Approved') {
-        html += `<button class="btn-reject"  onclick="setStatus(this.closest('tr'),'Rejected')"><i class="fas fa-times"></i> Reject</button>`;
-      } else {
-        html += `<button class="btn-approve" onclick="setStatus(this.closest('tr'),'Approved')"><i class="fas fa-check"></i> Approve</button>`;
-      }
-      actionsEl.innerHTML = html;
-
-      updatePendingCount();
-      applyFilters();
-    }
-
-    function updatePendingCount() {
-      const count = document.querySelectorAll('.status-pending').length;
-      document.getElementById('pendingBadge').textContent = count + ' Pending';
-    }
-
-    // ── View modal ────────────────────────────────────────────────────
-    const viewModal = document.getElementById('viewModal');
-    document.getElementById('viewModalClose').addEventListener('click', () => viewModal.classList.remove('open'));
-    viewModal.addEventListener('click', (e) => { if (e.target === viewModal) viewModal.classList.remove('open'); });
-
-    function viewRow(btn) {
-      const row = btn.closest('tr');
-      const cells = row.querySelectorAll('td');
-      const user   = cells[0].querySelector('span:last-child').textContent;
-      const title  = cells[1].textContent.trim();
-      const skill  = cells[2].textContent.trim();
-      const level  = cells[3].textContent.trim();
-      const date   = cells[4].textContent.trim();
-      const status = cells[5].textContent.trim();
-
-      document.getElementById('viewModalTitle').textContent = title;
-      document.getElementById('viewModalBody').innerHTML = `
-        <div class="view-row"><span class="view-label">User</span><span class="view-value">${user}</span></div>
-        <div class="view-row"><span class="view-label">Skill</span><span class="view-value">${skill}</span></div>
-        <div class="view-row"><span class="view-label">Level</span><span class="view-value">${level}</span></div>
-        <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">${date}</span></div>
-        <div class="view-row"><span class="view-label">Status</span><span class="view-value">${status}</span></div>
-      `;
-      viewModal.classList.add('open');
-    }
-
-    // ── Filter / Search / Sort ────────────────────────────────────────
-    const searchInput  = document.getElementById('adminSearch');
-    const filterStatus = document.getElementById('filterStatus');
-    const filterSkill  = document.getElementById('filterSkill');
-    const filterLevel  = document.getElementById('filterLevel');
-    const sortSelect   = document.getElementById('sortSelect');
-
-    function applyFilters() {
-      const q      = searchInput.value.toLowerCase();
-      const status = filterStatus.value.toLowerCase();
-      const skill  = filterSkill.value.toLowerCase();
-      const level  = filterLevel.value.toLowerCase();
-
-      const rows = Array.from(document.querySelectorAll('#submissionsBody tr'));
-
-      rows.forEach(row => {
-        const cells  = row.querySelectorAll('td');
-        const rUser  = cells[0].textContent.toLowerCase();
-        const rTitle = cells[1].textContent.toLowerCase();
-        const rSkill = cells[2].textContent.toLowerCase();
-        const rLevel = cells[3].textContent.toLowerCase();
-        const rStat  = cells[5].textContent.toLowerCase();
-
-        const matchQ      = !q      || rUser.includes(q)  || rTitle.includes(q);
-        const matchStatus = !status || rStat.includes(status);
-        const matchSkill  = !skill  || rSkill.includes(skill);
-        const matchLevel  = !level  || rLevel.includes(level);
-
-        row.style.display = (matchQ && matchStatus && matchSkill && matchLevel) ? '' : 'none';
-      });
-
-      applySort();
-    }
-
-    function applySort() {
-      const tbody = document.getElementById('submissionsBody');
-      const rows  = Array.from(tbody.querySelectorAll('tr'));
-      const dir   = sortSelect.value === 'Oldest First' ? 1 : -1;
-
-      rows.sort((a, b) => {
-        const da = new Date(a.querySelectorAll('td')[4].textContent.trim());
-        const db = new Date(b.querySelectorAll('td')[4].textContent.trim());
-        return dir * (da - db);
-      });
-      rows.forEach(r => tbody.appendChild(r));
-    }
-
-    [searchInput, filterStatus, filterSkill, filterLevel, sortSelect].forEach(el => {
-      el.addEventListener('input', applyFilters);
-      el.addEventListener('change', applyFilters);
-    });
-  </script>
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+if (!TokenStore.isLoggedIn() || !TokenStore.isAdmin()) { window.location.replace('/home.html'); }
+const { createApp } = Vue;
+createApp({
+  data() {
+    return {
+      username: TokenStore.getUsername() || 'Admin',
+      email: '',
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
+      dropdownOpen: false,
+      search: '', fStatus: '', fSkill: '', fLevel: '', sortDir: 'Newest First',
+      rows: [
+        { id: 1, user: 'Jane Doe', initials: 'JD', title: 'Fantasy Forest Scene', skill: 'Illustration', level: 'Intermediate', date: '20 May 2026', status: 'Pending' },
+        { id: 2, user: 'Mark S.', initials: 'MS', title: 'Product Dashboard UI', skill: 'UI Design', level: 'Advanced', date: '19 May 2026', status: 'Pending' },
+        { id: 3, user: 'Amy Lee', initials: 'AL', title: 'City Street Photography', skill: 'Photography', level: 'Beginner', date: '18 May 2026', status: 'Pending' },
+        { id: 4, user: 'Tom K.', initials: 'TK', title: 'Sci-Fi Character Model', skill: '3D Modeling', level: 'Advanced', date: '17 May 2026', status: 'Approved' },
+        { id: 5, user: 'Nina P.', initials: 'NP', title: 'Travel Vlog Reel', skill: 'Video Editing', level: 'Intermediate', date: '16 May 2026', status: 'Rejected' },
+        { id: 6, user: 'Ryan W.', initials: 'RW', title: 'Dragon Concept Art', skill: 'Illustration', level: 'Advanced', date: '15 May 2026', status: 'Pending' },
+      ],
+      viewOpen: false,
+      viewData: {},
+    };
+  },
+  computed: {
+    pendingCount() { return this.rows.filter(r => r.status === 'Pending').length; },
+    filteredRows() {
+      const q = this.search.toLowerCase(), st = this.fStatus, sk = this.fSkill, lv = this.fLevel;
+      let res = this.rows.filter(r =>
+        (!q || r.user.toLowerCase().includes(q) || r.title.toLowerCase().includes(q)) &&
+        (!st || r.status === st) && (!sk || r.skill === sk) && (!lv || r.level === lv)
+      );
+      const dir = this.sortDir === 'Oldest First' ? 1 : -1;
+      res.sort((a, b) => dir * (new Date(a.date) - new Date(b.date)));
+      return res;
+    },
+  },
+  methods: {
+    doLogout() { logout(); },
+    badgeClass(l) { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
+    viewRow(r) { this.viewData = { ...r }; this.viewOpen = true; },
+  },
+  mounted() {
+    document.addEventListener('click', () => { this.dropdownOpen = false; });
+  }
+}).mount('#app');
+</script>
 </body>
 </html>

@@ -147,7 +147,6 @@ func Register(c *gin.Context) {
 		Username:     req.Username,
 		Email:        req.Email,
 		PasswordHash: string(hash),
-		Bio:          req.Bio,
 		Role:         "user",
 		CreatedAt:    time.Now(),
 	}
@@ -183,10 +182,10 @@ func Login(c *gin.Context) {
 	defer cancel()
 
 	var user models.User
-	err := db.Col("users").FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
+	err := db.Col("users").FindOne(ctx, bson.M{"email": req.Email}).Decode(&user)
 
 	// Always run bcrypt.CompareHashAndPassword to prevent timing attacks
-	// that reveal whether a username exists in the database.
+	// that reveal whether an email exists in the database.
 	dummyHash, _ := bcrypt.GenerateFromPassword([]byte("dummy"), bcryptCost)
 	compareHash := user.PasswordHash
 	if err != nil {
@@ -194,7 +193,7 @@ func Login(c *gin.Context) {
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(compareHash), []byte(req.Password)) != nil || err != nil {
-		response.Error(c, http.StatusUnauthorized, "Invalid username or password")
+		response.Error(c, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
 
@@ -227,6 +226,7 @@ func Login(c *gin.Context) {
 	response.Success(c, http.StatusOK, models.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		Username:     user.Username,
 	})
 }
 

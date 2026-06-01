@@ -5,50 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Explore – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+<div id="app">
 
   <!-- Navbar -->
   <nav class="navbar" aria-label="Main navigation">
     <div class="navbar-inner">
-      <a href="home.html" class="nav-logo">
-        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
-        </svg>
+      <a href="/home.html" class="nav-logo">
+        <img src="/img/logoartskill.png" height="32" alt="ArtSkillWallet Logo">
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
       <div class="nav-links">
-        <a href="explore.html" class="nav-link active">Explore</a>
-        <a href="skillManage.html" class="nav-link">Skills</a>
-        <a href="history.html" class="nav-link">History</a>
+        <a href="/explore.html" class="nav-link active">Explore</a>
+        <a href="/skillManage.html" class="nav-link">Skills</a>
+        <a href="/history.html" class="nav-link">History</a>
       </div>
-      <div class="avatar-wrapper">
-        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-sm" id="avatarBtn">
-        <div class="avatar-dropdown" id="avatarDropdown">
+      <div class="avatar-wrapper" v-if="loggedIn">
+        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
             <div>
-              <p class="avatar-dropdown-name">AneeShan</p>
-              <p class="avatar-dropdown-email">user@artskill.com</p>
+              <p class="avatar-dropdown-name">{{ username }}</p>
+              <p class="avatar-dropdown-email">{{ email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
-          <a href="profile.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">👤</span> Profile
-          </a>
-          <a href="admin.html" class="avatar-dropdown-item">
-            <span class="avatar-dropdown-icon">🛡️</span> Admin
-          </a>
+          <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
+          <a v-if="isAdmin" href="/admin.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">🛡️</span> Admin</a>
           <div class="avatar-dropdown-divider"></div>
-          <button class="avatar-dropdown-item" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">⚙️</span> Settings <span class="avatar-dropdown-soon">Soon</span>
-          </button>
-          <button class="avatar-dropdown-item avatar-dropdown-logout" disabled title="Coming soon">
-            <span class="avatar-dropdown-icon">🚪</span> Logout <span class="avatar-dropdown-soon">Soon</span>
-          </button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
+      <a v-else href="/home.html" class="btn-outline">Login / Register</a>
     </div>
   </nav>
 
@@ -60,20 +51,20 @@
       <div class="filter-card">
         <h2 class="filter-title">Filter</h2>
         <div class="filter-group">
-          <label class="filter-label" for="f-name">Name</label>
-          <input type="text" class="filter-input" id="f-name" placeholder="">
+          <label class="filter-label">Name</label>
+          <input type="text" class="filter-input" v-model="filterName">
         </div>
         <div class="filter-group">
-          <label class="filter-label" for="f-skill">Skill</label>
-          <input type="text" class="filter-input" id="f-skill" placeholder="">
+          <label class="filter-label">Skill</label>
+          <input type="text" class="filter-input" v-model="filterSkill">
         </div>
         <div class="filter-group">
-          <label class="filter-label" for="f-level">Level</label>
-          <input type="text" class="filter-input" id="f-level" placeholder="">
+          <label class="filter-label">Level</label>
+          <input type="text" class="filter-input" v-model="filterLevel">
         </div>
         <div class="filter-group">
-          <label class="filter-label" for="f-tag">Tag</label>
-          <input type="text" class="filter-input" id="f-tag" placeholder="">
+          <label class="filter-label">Tag</label>
+          <input type="text" class="filter-input" v-model="filterTag">
         </div>
       </div>
     </aside>
@@ -81,129 +72,71 @@
     <!-- Artists Grid -->
     <main class="explore-area">
       <h1 class="explore-heading">Explore</h1>
-
-      <div class="artist-grid" id="artistsGrid">
-
-        <div class="artist-card" data-name="aneeShan" data-skills="character design,concept art" data-level="advanced" data-tags="digital,anime">
-          <img src="https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80" alt="AneeShan" class="artist-thumb">
-          <div class="artist-body">
-            <h3 class="artist-name">AneeShan</h3>
-            <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Character Design</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Concept Art</span>
-            </div>
-            <p class="artist-bio">Bio : hello just man love art age 24</p>
-          </div>
-        </div>
-
-        <div class="artist-card" data-name="man behind the slaughter" data-skills="pixel art,game design" data-level="intermediate" data-tags="pixel,game,indie">
-          <div class="artist-thumb-placeholder">
-            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" aria-hidden="true">
-              <rect x="20" y="8" width="40" height="38" fill="#7B52F6" rx="4"/>
-              <rect x="24" y="20" width="9" height="9" fill="rgba(255,255,255,0.35)" rx="1"/>
-              <rect x="47" y="20" width="9" height="9" fill="rgba(255,255,255,0.35)" rx="1"/>
-              <rect x="29" y="36" width="22" height="4" fill="#3a2a8a" rx="2"/>
-              <rect x="10" y="48" width="60" height="22" fill="#7B52F6" rx="4"/>
-            </svg>
+      <div class="artist-grid">
+        <div class="artist-card" v-for="a in filteredArtists" :key="a.name">
+          <img v-if="a.img" :src="a.img" :alt="a.name" class="artist-thumb">
+          <div v-else class="artist-thumb-placeholder">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><rect x="20" y="8" width="40" height="38" fill="#7B52F6" rx="4"/><rect x="10" y="48" width="60" height="22" fill="#7B52F6" rx="4"/></svg>
           </div>
           <div class="artist-body">
-            <h3 class="artist-name">man behind the slaughter</h3>
+            <h3 class="artist-name">{{ a.name }}</h3>
             <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Pixel Art</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Game Design</span>
+              <span class="skill-badge" v-for="s in a.skills" :key="s"><span class="skill-badge-dot"></span>{{ s }}</span>
             </div>
-            <p class="artist-bio">Bio : dont care at my profile to must it just joke</p>
+            <p class="artist-bio">Bio : {{ a.bio }}</p>
           </div>
         </div>
-
-        <div class="artist-card" data-name="maestro callisto" data-skills="oil painting,fine art" data-level="advanced" data-tags="oil,classical,fine">
-          <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80" alt="Maestro Callisto" class="artist-thumb">
-          <div class="artist-body">
-            <h3 class="artist-name">Maestro Callisto</h3>
-            <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Oil Painting</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Fine Art</span>
-            </div>
-            <p class="artist-bio">Bio : After all, art is a culmination of moments and choices, and the suffering therein...</p>
-          </div>
-        </div>
-
-        <div class="artist-card" data-name="back ground" data-skills="background art,environment design" data-level="beginner" data-tags="background,environment">
-          <div class="artist-thumb-placeholder" style="background:#111;">
-          </div>
-          <div class="artist-body">
-            <h3 class="artist-name">back ground</h3>
-            <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Background Art</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Environment</span>
-            </div>
-            <p class="artist-bio">Bio : just back ground</p>
-          </div>
-        </div>
-
-        <div class="artist-card" data-name="pixel fox" data-skills="pixel art,animation" data-level="intermediate" data-tags="pixel,animation,indie">
-          <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80" alt="Pixel Fox" class="artist-thumb">
-          <div class="artist-body">
-            <h3 class="artist-name">Pixel Fox</h3>
-            <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Pixel Art</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Animation</span>
-            </div>
-            <p class="artist-bio">Bio : Making pixel art and short loops for indie games.</p>
-          </div>
-        </div>
-
-        <div class="artist-card" data-name="nora lin" data-skills="watercolor,botanical illustration" data-level="advanced" data-tags="watercolor,botanical,nature">
-          <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80" alt="Nora Lin" class="artist-thumb">
-          <div class="artist-body">
-            <h3 class="artist-name">Nora Lin</h3>
-            <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Watercolor</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Botanical</span>
-            </div>
-            <p class="artist-bio">Bio : Botanical illustrator and watercolor enthusiast from Chiang Mai.</p>
-          </div>
-        </div>
-
-        <div class="artist-card" data-name="kiro blade" data-skills="digital painting,character design" data-level="advanced" data-tags="digital,dark,fantasy">
-          <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80" alt="Kiro Blade" class="artist-thumb">
-          <div class="artist-body">
-            <h3 class="artist-name">Kiro Blade</h3>
-            <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Digital Painting</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Character Design</span>
-            </div>
-            <p class="artist-bio">Bio : Dark fantasy concept artist. Swords, shadows, and stormy skies.</p>
-          </div>
-        </div>
-
-        <div class="artist-card" data-name="sol artes" data-skills="illustration,typography" data-level="intermediate" data-tags="illustration,type,graphic">
-          <img src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80" alt="Sol Artes" class="artist-thumb">
-          <div class="artist-body">
-            <h3 class="artist-name">Sol Artes</h3>
-            <div class="artist-skills">
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Illustration</span>
-              <span class="skill-badge"><span class="skill-badge-dot"></span>Typography</span>
-            </div>
-            <p class="artist-bio">Bio : Illustrator blending type and imagery into visual poetry.</p>
-          </div>
-        </div>
-
       </div>
     </main>
 
   </div>
 
-  <script src="js/explore.js" defer></script>
-  <script>
-    const avatarBtn = document.getElementById('avatarBtn');
-    const avatarDropdown = document.getElementById('avatarDropdown');
-    avatarBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      avatarDropdown.classList.toggle('open');
-    });
-    document.addEventListener('click', () => avatarDropdown.classList.remove('open'));
-    avatarDropdown.addEventListener('click', (e) => e.stopPropagation());
-  </script>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const { createApp } = Vue;
+createApp({
+  data() {
+    return {
+      loggedIn: TokenStore.isLoggedIn(),
+      isAdmin: TokenStore.isAdmin(),
+      username: TokenStore.getUsername() || 'User',
+      email: '',
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
+      dropdownOpen: false,
+      filterName: '', filterSkill: '', filterLevel: '', filterTag: '',
+      artists: [
+        { name: 'AneeShan', img: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80', skills: ['Character Design','Concept Art'], level: 'advanced', tags: 'digital,anime', bio: 'hello just man love art age 24' },
+        { name: 'man behind the slaughter', img: '', skills: ['Pixel Art','Game Design'], level: 'intermediate', tags: 'pixel,game,indie', bio: 'dont care at my profile to must it just joke' },
+        { name: 'Maestro Callisto', img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80', skills: ['Oil Painting','Fine Art'], level: 'advanced', tags: 'oil,classical,fine', bio: 'After all, art is a culmination of moments and choices...' },
+        { name: 'back ground', img: '', skills: ['Background Art','Environment'], level: 'beginner', tags: 'background,environment', bio: 'just back ground' },
+        { name: 'Pixel Fox', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80', skills: ['Pixel Art','Animation'], level: 'intermediate', tags: 'pixel,animation,indie', bio: 'Making pixel art and short loops for indie games.' },
+        { name: 'Nora Lin', img: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80', skills: ['Watercolor','Botanical'], level: 'advanced', tags: 'watercolor,botanical,nature', bio: 'Botanical illustrator and watercolor enthusiast from Chiang Mai.' },
+        { name: 'Kiro Blade', img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80', skills: ['Digital Painting','Character Design'], level: 'advanced', tags: 'digital,dark,fantasy', bio: 'Dark fantasy concept artist. Swords, shadows, and stormy skies.' },
+        { name: 'Sol Artes', img: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80', skills: ['Illustration','Typography'], level: 'intermediate', tags: 'illustration,type,graphic', bio: 'Illustrator blending type and imagery into visual poetry.' },
+      ],
+    };
+  },
+  computed: {
+    filteredArtists() {
+      const n = this.filterName.toLowerCase(), s = this.filterSkill.toLowerCase(), l = this.filterLevel.toLowerCase(), t = this.filterTag.toLowerCase();
+      return this.artists.filter(a =>
+        (!n || a.name.toLowerCase().includes(n)) &&
+        (!s || a.skills.join(',').toLowerCase().includes(s)) &&
+        (!l || a.level.includes(l)) &&
+        (!t || a.tags.toLowerCase().includes(t))
+      );
+    }
+  },
+  methods: {
+    doLogout() { logout(); },
+  },
+  mounted() {
+    document.addEventListener('click', () => { this.dropdownOpen = false; });
+  }
+}).mount('#app');
+</script>
 </body>
 </html>

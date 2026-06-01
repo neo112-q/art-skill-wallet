@@ -5,66 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+<div id="app">
 
   <!-- Navbar -->
   <nav class="navbar" aria-label="Main navigation">
     <div class="navbar-inner">
-      <a href="home.html" class="nav-logo">
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <img src="img/logoartskill.png" height="45px" alt="Art skill Wallet Logo">
-        </svg>
+      <a href="/home.html" class="nav-logo">
+        <img src="/img/logoartskill.png" height="32" alt="ArtSkillWallet Logo">
         <span class="nav-logo-text">ArtSkillWallet</span>
       </a>
       <div class="nav-links">
-        <a href="explore.html" class="nav-link">Explore</a>
-        <a href="#features" class="nav-link">Skills</a>
-        <a href="#about" class="nav-link">About</a>
+        <a href="/explore.html" class="nav-link">Explore</a>
+        <a href="#features" class="nav-link" @click.prevent="scrollTo('#features')">Skills</a>
+        <a href="#about" class="nav-link" @click.prevent="scrollTo('#about')">About</a>
       </div>
-      <button class="btn-outline" onclick="openAuth('login')">Login / Register</button>
+      <button v-if="!loggedIn" class="btn-outline" @click="openAuth('login')">Login / Register</button>
+      <a v-else class="btn-outline" :href="isAdmin ? '/admin.html' : '/profile.html'">Go to Profile</a>
     </div>
   </nav>
 
   <!-- Hero -->
   <div style="padding-top:64px;">
-    <div class="hero">
-      <!-- <p class="hero-text">Get Started</p> -->
-    </div>
+    <div class="hero"></div>
   </div>
 
   <!-- Featured Works -->
   <section id="explore" class="cards-section fade-in">
     <div class="cards-grid">
-
-      <div class="work-card">
-        <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80" alt="Character Design artwork 1">
+      <div class="work-card" v-for="w in featured" :key="w.title">
+        <img :src="w.img" :alt="w.title">
         <span class="card-badge" aria-hidden="true">🏅</span>
         <div class="card-info">
-          <h3>Character Design – ADVANCE</h3>
-          <p>LEVEL 3</p>
+          <h3>{{ w.title }}</h3>
+          <p>{{ w.level }}</p>
         </div>
       </div>
-
-      <div class="work-card">
-        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80" alt="Character Design artwork 2">
-        <span class="card-badge" aria-hidden="true">🏅</span>
-        <div class="card-info">
-          <h3>Character Design – ADVANCE</h3>
-          <p>LEVEL 3</p>
-        </div>
-      </div>
-
-      <div class="work-card">
-        <img src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80" alt="Character Design artwork 3">
-        <span class="card-badge" aria-hidden="true">🏅</span>
-        <div class="card-info">
-          <h3>Character Design – ADVANCE</h3>
-          <p>LEVEL 3</p>
-        </div>
-      </div>
-
     </div>
   </section>
 
@@ -72,26 +50,14 @@
   <section id="features" class="features-section">
     <div class="features-inner">
       <h2 class="features-title">What it does</h2>
-
       <div class="features-grid">
-        <div class="feature-item">
-          <span class="feature-icon" aria-hidden="true">📈</span>
-          <h3>Trace Progress</h3>
-          <p>Track every milestone in your art journey with a visual timeline of your growth.</p>
-        </div>
-        <div class="feature-item">
-          <span class="feature-icon" aria-hidden="true">🗂️</span>
-          <h3>Curate Portfolio</h3>
-          <p>Build a dynamic portfolio that shows not just where you are, but how far you've come.</p>
-        </div>
-        <div class="feature-item">
-          <span class="feature-icon" aria-hidden="true">🎨</span>
-          <h3>Showcase Skills</h3>
-          <p>Display your skills with gamified levels — Beginner, Intermediate, Advanced.</p>
+        <div class="feature-item" v-for="f in features" :key="f.title">
+          <span class="feature-icon" aria-hidden="true">{{ f.icon }}</span>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.desc }}</p>
         </div>
       </div>
-
-      <a href="explore.html" class="btn-neon">View Our Community</a>
+      <a href="/explore.html" class="btn-neon">View Our Community</a>
     </div>
   </section>
 
@@ -100,28 +66,23 @@
     <div class="footer-inner">
       <div>
         <div class="footer-logo">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-          </svg>
+          <img src="/img/logoartskill.png" height="26" alt="ArtSkillWallet Logo">
           <span class="footer-logo-text">ArtSkillWallet</span>
         </div>
         <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
       </div>
-
       <div class="footer-col">
         <p class="footer-col-title">Product</p>
-        <a href="explore.html">Explore</a>
-        <a href="#features">Skills</a>
-        <a href="explore.html">Community</a>
+        <a href="/explore.html">Explore</a>
+        <a href="/skillManage.html">Skills</a>
+        <a href="/explore.html">Community</a>
       </div>
-
       <div class="footer-col">
         <p class="footer-col-title">Account</p>
-        <a onclick="openAuth('login')">Login</a>
-        <a onclick="openAuth('register')">Register</a>
-        <a href="profile.html">Profile</a>
+        <a href="#" @click.prevent="openAuth('login')">Login</a>
+        <a href="#" @click.prevent="openAuth('register')">Register</a>
+        <a href="/profile.html">Profile</a>
       </div>
-
       <div class="footer-col">
         <p class="footer-col-title">Support</p>
         <a href="#">FAQ</a>
@@ -129,13 +90,13 @@
         <a href="#">Privacy Policy</a>
       </div>
     </div>
-    <div class="footer-bottom">© 2025 ArtSkillWallet. All rights reserved.</div>
+    <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
   <!-- Auth Popup -->
-  <div id="authOverlay" class="auth-overlay" role="dialog" aria-modal="true" aria-label="Authentication">
+  <div class="auth-overlay" :class="{ open: authOpen }" role="dialog" aria-modal="true" @click.self="closeAuth()">
     <div class="auth-modal">
-      <button class="auth-close" onclick="closeAuth()" aria-label="Close">✕</button>
+      <button class="auth-close" @click="closeAuth()" aria-label="Close">&times;</button>
 
       <div class="auth-modal-logo">
         <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -147,76 +108,145 @@
       </div>
 
       <div class="auth-tabs" role="tablist">
-        <button class="auth-tab active" id="auth-tab-login" role="tab" aria-selected="true" onclick="switchAuthTab('login')">Login</button>
-        <button class="auth-tab" id="auth-tab-register" role="tab" aria-selected="false" onclick="switchAuthTab('register')">Register</button>
+        <button class="auth-tab" :class="{ active: authTab === 'login' }" @click="authTab='login'; authMsg=''">Login</button>
+        <button class="auth-tab" :class="{ active: authTab === 'register' }" @click="authTab='register'; authMsg=''">Register</button>
       </div>
 
       <!-- Login Panel -->
-      <div class="auth-panel active" id="auth-panel-login" role="tabpanel">
-        <div id="login-msg" class="auth-msg error"></div>
-        <button class="auth-google-btn" onclick="handleGoogleAuth()">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-          </svg>
-          Continue with Google
-        </button>
-        <div class="auth-divider"><span>or</span></div>
+      <div class="auth-panel" :class="{ active: authTab === 'login' }">
+        <div v-if="authMsg && authTab === 'login'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
+        <div class="auth-divider"><span>Login with credentials</span></div>
         <div class="auth-field">
-          <label for="login-username">Username</label>
-          <input type="text" id="login-username" class="auth-input" placeholder="your_username" autocomplete="username">
+          <label>อีเมล</label>
+          <input type="email" v-model="loginEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" @keyup.enter="handleLogin">
         </div>
         <div class="auth-field">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" class="auth-input" placeholder="••••••••" autocomplete="current-password">
+          <label>รหัสผ่าน</label>
+          <input type="password" v-model="loginPassword" class="auth-input" placeholder="••••••••" autocomplete="current-password" @keyup.enter="handleLogin">
         </div>
-        <div class="auth-forgot">
-          <span onclick="showForgotPassword()">Forgot password?</span>
-        </div>
-        <button class="auth-submit" onclick="handleLogin()">LOGIN</button>
-        <p class="auth-switch">Don't have an account? <span onclick="switchAuthTab('register')">Register</span></p>
+        <div class="auth-forgot"><span @click="authTab='forgot'; authMsg=''">Forgot password?</span></div>
+        <button class="auth-submit" @click="handleLogin" :disabled="authLoading">{{ authLoading ? 'Logging in...' : 'LOGIN' }}</button>
+        <p class="auth-switch">Don't have an account? <span @click="authTab='register'; authMsg=''">Register</span></p>
       </div>
 
-      <!-- Forgot Password Panel -->
-      <div class="auth-panel" id="auth-panel-forgot" role="tabpanel">
-        <div id="forgot-msg" class="auth-msg error"></div>
+      <!-- Forgot Panel -->
+      <div class="auth-panel" :class="{ active: authTab === 'forgot' }">
+        <div v-if="authMsg && authTab === 'forgot'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
         <p style="font-size:0.8rem;color:#888;margin:0 0 1rem;">Enter your email and we'll send a reset link.</p>
         <div class="auth-field">
-          <label for="forgot-email">Email</label>
-          <input type="email" id="forgot-email" class="auth-input" placeholder="you@example.com" autocomplete="email">
+          <label>Email</label>
+          <input type="email" v-model="forgotEmail" class="auth-input" placeholder="you@example.com" autocomplete="email">
         </div>
-        <button class="auth-submit" onclick="handleForgotPassword()">SEND RESET LINK</button>
-        <p class="auth-switch"><span onclick="switchAuthTab('login')">← Back to Login</span></p>
+        <button class="auth-submit" @click="handleForgot">SEND RESET LINK</button>
+        <p class="auth-switch"><span @click="authTab='login'; authMsg=''">&larr; Back to Login</span></p>
       </div>
 
       <!-- Register Panel -->
-      <div class="auth-panel" id="auth-panel-register" role="tabpanel">
-        <div id="register-msg" class="auth-msg error"></div>
-        <button class="auth-google-btn" onclick="handleGoogleAuth()">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <img src="img/logoartskill.png" height="26px" alt="Art skill Wallet Logo">
-          </svg>
-          Continue with Google
-        </button>
-        <div class="auth-divider"><span>or</span></div>
+      <div class="auth-panel" :class="{ active: authTab === 'register' }">
+        <div v-if="authMsg && authTab === 'register'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
+        <div class="auth-divider"><span>Create your account</span></div>
         <div class="auth-field">
-          <label for="reg-username">Username</label>
-          <input type="text" id="reg-username" class="auth-input" placeholder="your_username" autocomplete="username">
+          <label>ชื่อผู้ใช้</label>
+          <input type="text" v-model="regUsername" class="auth-input" placeholder="your_username" autocomplete="username">
         </div>
         <div class="auth-field">
-          <label for="reg-password">Password</label>
-          <input type="password" id="reg-password" class="auth-input" placeholder="••••••••" autocomplete="new-password">
+          <label>อีเมล</label>
+          <input type="email" v-model="regEmail" class="auth-input" placeholder="you@example.com" autocomplete="email">
         </div>
         <div class="auth-field">
-          <label for="reg-confirm">Confirm Password</label>
-          <input type="password" id="reg-confirm" class="auth-input" placeholder="••••••••" autocomplete="new-password">
+          <label>รหัสผ่าน</label>
+          <input type="password" v-model="regPassword" class="auth-input" placeholder="••••••••" autocomplete="new-password">
         </div>
-        <button class="auth-submit" onclick="handleRegister()">CREATE ACCOUNT</button>
-        <p class="auth-switch">Already have an account? <span onclick="switchAuthTab('login')">Login</span></p>
+        <div class="auth-field">
+          <label>ยืนยันรหัสผ่าน</label>
+          <input type="password" v-model="regConfirm" class="auth-input" placeholder="••••••••" autocomplete="new-password" @keyup.enter="handleRegister">
+        </div>
+        <button class="auth-submit" @click="handleRegister" :disabled="authLoading">{{ authLoading ? 'Creating...' : 'CREATE ACCOUNT' }}</button>
+        <p class="auth-switch">Already have an account? <span @click="authTab='login'; authMsg=''">Login</span></p>
       </div>
     </div>
   </div>
 
-  <script src="js/app.js" defer></script>
-  <script src="js/home.js" defer></script>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const { createApp } = Vue;
+createApp({
+  data() {
+    return {
+      loggedIn: TokenStore.isLoggedIn(),
+      isAdmin: TokenStore.isAdmin(),
+      authOpen: false,
+      authTab: 'login',
+      authMsg: '',
+      authMsgType: 'error',
+      authLoading: false,
+      loginEmail: '',
+      loginPassword: '',
+      regUsername: '',
+      regEmail: '',
+      regPassword: '',
+      regConfirm: '',
+      forgotEmail: '',
+      featured: [
+        { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80' },
+        { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80' },
+        { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80' },
+      ],
+      features: [
+        { icon: '📈', title: 'Trace Progress', desc: 'Track every milestone in your art journey with a visual timeline of your growth.' },
+        { icon: '🗂️', title: 'Curate Portfolio', desc: 'Build a dynamic portfolio that shows not just where you are, but how far you\'ve come.' },
+        { icon: '🎨', title: 'Showcase Skills', desc: 'Display your skills with gamified levels — Beginner, Intermediate, Advanced.' },
+      ],
+    };
+  },
+  methods: {
+    openAuth(tab) { this.authTab = tab || 'login'; this.authOpen = true; this.authMsg = ''; document.body.style.overflow = 'hidden'; },
+    closeAuth() { this.authOpen = false; document.body.style.overflow = ''; },
+    scrollTo(sel) {
+      const el = document.querySelector(sel);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    },
+    async handleLogin() {
+      this.authMsg = '';
+      if (!this.loginEmail || !this.loginPassword) { this.authMsg = 'Please fill in all fields.'; this.authMsgType = 'error'; return; }
+      this.authLoading = true;
+      try {
+        const r = await apiFetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.loginEmail, password: this.loginPassword }) });
+        if (r.ok) {
+          const { access_token, refresh_token, username } = r.data.data;
+          const claims = decodeJWT(access_token);
+          TokenStore.set(access_token, refresh_token, claims?.role || 'user', username);
+          this.closeAuth();
+          window.location.href = (claims?.role === 'admin') ? '/admin.html' : '/profile.html';
+        } else { this.authMsg = r.data.error_message || 'Login failed.'; this.authMsgType = 'error'; }
+      } catch { this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error'; }
+      this.authLoading = false;
+    },
+    async handleRegister() {
+      this.authMsg = '';
+      if (!this.regUsername || !this.regEmail || !this.regPassword) { this.authMsg = 'All fields are required.'; this.authMsgType = 'error'; return; }
+      if (this.regPassword !== this.regConfirm) { this.authMsg = 'Passwords do not match.'; this.authMsgType = 'error'; return; }
+      if (this.regPassword.length < 6) { this.authMsg = 'Password must be at least 6 characters.'; this.authMsgType = 'error'; return; }
+      this.authLoading = true;
+      try {
+        const r = await apiFetch('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: this.regUsername, email: this.regEmail, password: this.regPassword }) });
+        if (r.ok) { this.authTab = 'login'; this.loginEmail = this.regEmail; this.authMsg = 'Account created! Please log in.'; this.authMsgType = 'success'; }
+        else { this.authMsg = r.data.error_message || 'Registration failed.'; this.authMsgType = 'error'; }
+      } catch { this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error'; }
+      this.authLoading = false;
+    },
+    handleForgot() {
+      if (!this.forgotEmail) { this.authMsg = 'Please enter your email.'; this.authMsgType = 'error'; return; }
+      this.authMsg = 'Reset link sent! Check your inbox.'; this.authMsgType = 'success';
+    },
+  },
+  mounted() {
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeAuth(); });
+  }
+}).mount('#app');
+</script>
 </body>
 </html>
