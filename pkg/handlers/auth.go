@@ -124,20 +124,31 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Check email uniqueness
+	emailCount, err := db.Col("users").CountDocuments(ctx, bson.M{"email": req.Email})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Database error")
+		return
+	}
+	if emailCount > 0 {
+		response.Error(c, http.StatusConflict, "Email already registered")
+		return
+	}
+
 	// Hash password — NEVER store plain text
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.HashPass), bcryptCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to hash password")
 		return
 	}
 
 	user := models.User{
-		ID:        primitive.NewObjectID(),
-		Username:  req.Username,
-		Bio:       req.Bio,
-		Role:      "user", // default role
-		HashPass:  string(hash),
-		CreatedAt: time.Now(),
+		ID:           primitive.NewObjectID(),
+		Username:     req.Username,
+		Email:        req.Email,
+		PasswordHash: string(hash),
+		Role:         "user",
+		CreatedAt:    time.Now(),
 	}
 
 	if _, err := db.Col("users").InsertOne(ctx, user); err != nil {
@@ -171,18 +182,18 @@ func Login(c *gin.Context) {
 	defer cancel()
 
 	var user models.User
-	err := db.Col("users").FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
+	err := db.Col("users").FindOne(ctx, bson.M{"email": req.Email}).Decode(&user)
 
 	// Always run bcrypt.CompareHashAndPassword to prevent timing attacks
-	// that reveal whether a username exists in the database.
+	// that reveal whether an email exists in the database.
 	dummyHash, _ := bcrypt.GenerateFromPassword([]byte("dummy"), bcryptCost)
-	compareHash := user.HashPass
+	compareHash := user.PasswordHash
 	if err != nil {
 		compareHash = string(dummyHash)
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(compareHash), []byte(req.Password)) != nil || err != nil {
-		response.Error(c, http.StatusUnauthorized, "Invalid username or password")
+		response.Error(c, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
 
@@ -215,6 +226,7 @@ func Login(c *gin.Context) {
 	response.Success(c, http.StatusOK, models.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		Username:     user.Username,
 	})
 }
 

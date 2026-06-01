@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"art-skill-wallet/pkg/db"
 	"art-skill-wallet/pkg/handlers"
@@ -32,6 +33,11 @@ func projectRoot() string {
 
 func main() {
 	root := projectRoot()
+
+	// Load .env from the project root (not the working directory)
+	if err := godotenv.Load(filepath.Join(root, ".env")); err != nil {
+		log.Println("No .env file found, using environment variables")
+	}
 
 	// ── Database ────────────────────────────────────────────────────────
 	if err := db.Connect(); err != nil {
