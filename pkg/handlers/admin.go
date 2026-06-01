@@ -110,6 +110,43 @@ func GetSubmissionsEnriched(c *gin.Context) {
 	response.Success(c, http.StatusOK, rows)
 }
 
+// GetSubmissionProofs godoc
+// @Summary      Admin — view proofs for a submission
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id path string true "Artwork ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/submissions/{id}/proofs [get]
+func GetSubmissionProofs(c *gin.Context) {
+	artworkID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid artwork ID")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cursor, err := db.Col("proofs").Find(ctx, bson.M{"artwork_id": artworkID})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch proofs")
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var proofs []models.Proof
+	if err := cursor.All(ctx, &proofs); err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to decode proofs")
+		return
+	}
+	if proofs == nil {
+		proofs = []models.Proof{}
+	}
+
+	response.Success(c, http.StatusOK, proofs)
+}
+
 // UpdateSubmissionStatus godoc
 // @Summary      Admin — approve or reject a submission
 // @Tags         admin

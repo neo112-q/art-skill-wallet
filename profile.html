@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -42,10 +43,8 @@
     </div>
   </nav>
 
-  <!-- Loading State -->
-  <main v-if="loading" class="page-main" style="text-align:center; padding:6rem 1rem; color:#888;">
-    <p>Loading profile...</p>
-  </main>
+  <!-- Loading -->
+  <main v-if="loading" class="page-main" style="text-align:center; padding:6rem 1rem; color:#888;">Loading profile...</main>
 
   <!-- Main -->
   <main v-else class="page-main">
@@ -75,11 +74,9 @@
           <h2>Skill Showcase</h2>
           <a href="/skillManage.html" class="btn-neon">View All &rarr;</a>
         </div>
-
         <div v-if="!skills.length" style="text-align:center; padding:2rem; color:#555;">
-          <p>No skills yet. <a href="/skillManage.html" style="color:#CCFF00;">Add your first skill</a>.</p>
+          No skills yet. <a href="/skillManage.html" style="color:#CCFF00;">Add your first skill</a>.
         </div>
-
         <div v-else class="skills-grid">
           <div class="skill-card" v-for="s in skills.slice(0, 6)" :key="s.id">
             <h3>{{ s.skill_name }}</h3>
@@ -100,18 +97,21 @@
           <h2>Your Portfolio</h2>
           <a href="/upload.html" class="btn-neon">+ Add Artwork</a>
         </div>
-
         <div v-if="!artworks.length" style="text-align:center; padding:2rem; color:#555;">
-          <p>No artworks yet. <a href="/upload.html" style="color:#CCFF00;">Upload your first piece</a>.</p>
+          No artworks yet. <a href="/upload.html" style="color:#CCFF00;">Upload your first piece</a>.
         </div>
-
         <div v-else class="portfolio-grid">
-          <div class="portfolio-item" v-for="a in artworks" :key="a.id" @click="openArtwork(a)">
+          <div class="portfolio-item" v-for="a in artworks" :key="a.id" @click="openArtwork(a)" style="cursor:pointer; position:relative;">
             <img v-if="a._thumbUrl" :src="a._thumbUrl" :alt="a.title">
             <div v-else style="width:100%; aspect-ratio:1; background:#1C1C1C; display:flex; align-items:center; justify-content:center; color:#555; font-size:0.8rem;">
               {{ a.title }}
             </div>
             <div class="portfolio-overlay" aria-hidden="true"></div>
+            <!-- Status badge -->
+            <span style="position:absolute; top:6px; right:6px; font-size:0.65rem; padding:0.15rem 0.4rem; border-radius:4px; font-weight:600;"
+              :style="{ background: a.status === 'Approved' ? '#22c55e' : a.status === 'Rejected' ? '#ef4444' : '#eab308', color: '#000' }">
+              {{ a.status || 'Pending' }}
+            </span>
           </div>
         </div>
       </section>
@@ -128,49 +128,112 @@
         </div>
         <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
       </div>
-      <div class="footer-col">
-        <p class="footer-col-title">Product</p>
-        <a href="/explore.html">Explore</a>
-        <a href="/skillManage.html">Skills</a>
-        <a href="/explore.html">Community</a>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-title">Account</p>
-        <a href="/home.html">Login</a>
-        <a href="/home.html">Register</a>
-        <a href="/profile.html">Profile</a>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-title">Support</p>
-        <a href="#">FAQ</a>
-        <a href="#">Contact</a>
-        <a href="#">Privacy Policy</a>
-      </div>
+      <div class="footer-col"><p class="footer-col-title">Product</p><a href="/explore.html">Explore</a><a href="/skillManage.html">Skills</a><a href="/explore.html">Community</a></div>
+      <div class="footer-col"><p class="footer-col-title">Account</p><a href="/home.html">Login</a><a href="/home.html">Register</a><a href="/profile.html">Profile</a></div>
+      <div class="footer-col"><p class="footer-col-title">Support</p><a href="#">FAQ</a><a href="#">Contact</a><a href="#">Privacy Policy</a></div>
     </div>
     <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
-  <!-- Artwork Detail Popup -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- Artwork Detail Popup (with proofs + edit/delete)                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
   <div class="artwork-overlay" :class="{ open: artworkOpen }" @click.self="closeArtwork">
-    <div class="artwork-modal" v-if="selectedArt">
+    <div class="artwork-modal" v-if="selectedArt" style="max-width:700px;">
       <button class="artwork-modal-close" @click="closeArtwork">&times;</button>
+
+      <!-- Artwork image -->
       <img v-if="selectedArt._thumbUrl" :src="selectedArt._thumbUrl" :alt="selectedArt.title" class="artwork-modal-img">
+
       <div class="artwork-modal-body">
-        <h2 class="artwork-modal-title">{{ selectedArt.title }}</h2>
-        <div class="artwork-meta">
+        <!-- Title + status -->
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;">
+          <h2 class="artwork-modal-title" style="margin:0;">{{ selectedArt.title }}</h2>
+          <span style="font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;"
+            :style="{ background: selectedArt.status === 'Approved' ? '#22c55e' : selectedArt.status === 'Rejected' ? '#ef4444' : '#eab308', color: '#000' }">
+            {{ selectedArt.status || 'Pending' }}
+          </span>
+        </div>
+
+        <div class="artwork-meta" style="margin-top:0.5rem;">
           <span class="artwork-meta-item">{{ formatDate(selectedArt.upload_date) }}</span>
           <span class="artwork-meta-tag">{{ selectedArt._skillName || '—' }}</span>
           <span class="artwork-meta-tag">{{ selectedArt.privacy_status }}</span>
         </div>
+
         <p class="artwork-log" v-if="selectedArt.description">{{ selectedArt.description }}</p>
-        <div class="privacy-row">
-          <span class="privacy-label">Privacy</span>
-          <div class="privacy-toggle">
-            <button class="privacy-btn" :class="{ active: selectedArt.privacy_status === 'Public' }">Public</button>
-            <button class="privacy-btn" :class="{ active: selectedArt.privacy_status === 'Private' }">Private</button>
+
+        <!-- ── Proofs section ──────────────────────────────────────── -->
+        <div style="margin-top:1rem; border-top:1px solid #2A2A2A; padding-top:1rem;">
+          <h3 style="font-size:0.85rem; font-weight:700; margin-bottom:0.5rem;">
+            <i class="fas fa-file-alt" style="color:#CCFF00;"></i> Evidence / Proofs
+          </h3>
+
+          <div v-if="proofsLoading" style="color:#888; font-size:0.8rem;">Loading proofs...</div>
+          <div v-else-if="!proofs.length" style="color:#555; font-size:0.8rem;">No proofs attached.</div>
+
+          <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <div v-for="p in proofs" :key="p.id" style="position:relative;">
+              <!-- Image proof -->
+              <a v-if="p.file_type === 'image'" :href="p.file_url" target="_blank">
+                <img :src="p.file_url" style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A;">
+              </a>
+              <!-- Video proof -->
+              <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:180px; border-radius:6px; border:1px solid #2A2A2A;"></video>
+              <!-- Type label -->
+              <span style="position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.7); color:#ccc; font-size:0.6rem; padding:0.1rem 0.3rem; border-radius:3px;">
+                {{ p.file_type }}
+              </span>
+            </div>
           </div>
         </div>
+
+        <!-- ── Edit / Delete buttons ───────────────────────────────── -->
+        <div style="margin-top:1rem; border-top:1px solid #2A2A2A; padding-top:1rem; display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <button class="btn-neon" style="font-size:0.8rem; padding:0.4rem 1rem;" @click="openEditArtwork">
+            <i class="fas fa-pen" style="font-size:0.7rem;"></i> Edit
+          </button>
+          <button style="background:none; border:1px solid #ef4444; color:#ef4444; padding:0.4rem 1rem; border-radius:6px; font-size:0.8rem; cursor:pointer;" @click="deleteArtwork">
+            <i class="fas fa-trash" style="font-size:0.7rem;"></i> Delete
+          </button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- Edit Artwork Modal                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" :class="{ open: editArtOpen }" @click.self="editArtOpen=false">
+    <div class="modal-box">
+      <button class="modal-close" @click="editArtOpen=false">&times;</button>
+      <h2 class="modal-title">Edit Artwork</h2>
+
+      <div class="auth-field" style="margin-bottom:1rem;">
+        <label class="edit-label">Title</label>
+        <input type="text" class="auth-input" v-model="editArtForm.title">
+      </div>
+
+      <div class="auth-field" style="margin-bottom:1rem;">
+        <label class="edit-label">Description</label>
+        <textarea class="auth-input" v-model="editArtForm.description" rows="3"></textarea>
+      </div>
+
+      <div class="auth-field" style="margin-bottom:1rem;">
+        <label class="edit-label">Privacy</label>
+        <div style="display:flex; gap:0.75rem; margin-top:0.25rem;">
+          <label class="privacy-btn" :class="{ active: editArtForm.privacy_status === 'Public' }" @click="editArtForm.privacy_status='Public'" style="cursor:pointer;">
+            <i class="fas fa-globe" style="font-size:0.7rem;"></i> Public
+          </label>
+          <label class="privacy-btn" :class="{ active: editArtForm.privacy_status === 'Private' }" @click="editArtForm.privacy_status='Private'" style="cursor:pointer;">
+            <i class="fas fa-lock" style="font-size:0.7rem;"></i> Private
+          </label>
+        </div>
+      </div>
+
+      <button class="modal-save-btn" @click="saveEditArtwork" :disabled="editArtSaving">
+        {{ editArtSaving ? 'Saving...' : 'SAVE CHANGES' }}
+      </button>
     </div>
   </div>
 
@@ -191,8 +254,15 @@ createApp({
       skills: [],
       artworks: [],
       uploads: [],
+      // Artwork detail popup
       artworkOpen: false,
       selectedArt: null,
+      proofs: [],
+      proofsLoading: false,
+      // Edit artwork modal
+      editArtOpen: false,
+      editArtForm: { id: '', title: '', description: '', privacy_status: 'Public' },
+      editArtSaving: false,
     };
   },
   computed: {
@@ -201,9 +271,7 @@ createApp({
     },
     totalPoints() {
       let pts = 0;
-      this.skills.forEach(s => {
-        pts += s.level === 'Advanced' ? 500 : s.level === 'Intermediate' ? 250 : 100;
-      });
+      this.skills.forEach(s => { pts += s.level === 'Advanced' ? 500 : s.level === 'Intermediate' ? 250 : 100; });
       pts += this.artworks.length * 50;
       return pts.toLocaleString();
     },
@@ -215,79 +283,119 @@ createApp({
       if (!d) return '';
       return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     },
-    openArtwork(a) { this.selectedArt = a; this.artworkOpen = true; document.body.style.overflow = 'hidden'; },
-    closeArtwork() { this.artworkOpen = false; document.body.style.overflow = ''; },
 
-    // Build a lookup: artwork upload_date matches upload created_at close in time,
-    // or match by title. For simplicity we match upload by user and build a URL.
     enrichArtworks() {
       const skillMap = {};
       this.skills.forEach(s => { skillMap[s.id] = s.skill_name; });
-
-      // Build a map of uploads by ID for thumbnail URLs
       const uploadsByTitle = {};
       this.uploads.forEach(u => {
-        // The file is served at /uploads/<filename-on-disk>
-        // file_path is like ./uploads/<id>.ext — extract the basename
         const parts = (u.file_path || '').replace(/\\/g, '/').split('/');
         const fname = parts[parts.length - 1];
-        if (fname) {
-          uploadsByTitle[u.title.toLowerCase()] = '/uploads/' + fname;
-        }
+        if (fname) uploadsByTitle[u.title.toLowerCase()] = '/uploads/' + fname;
       });
-
       this.artworks.forEach(a => {
         a._skillName = skillMap[a.skill_id] || '';
-        // Try to find a matching upload by title
-        const key = (a.title || '').toLowerCase();
-        a._thumbUrl = uploadsByTitle[key] || '';
+        a._thumbUrl = uploadsByTitle[(a.title || '').toLowerCase()] || '';
       });
+    },
+
+    // ── Open artwork detail + fetch proofs ────────────────────────────
+    async openArtwork(a) {
+      this.selectedArt = a;
+      this.proofs = [];
+      this.proofsLoading = true;
+      this.artworkOpen = true;
+      document.body.style.overflow = 'hidden';
+
+      console.log('[PROFILE] Fetching proofs for artwork', a.id);
+      const r = await apiFetch('/proofs?artwork_id=' + a.id);
+      if (r.ok && r.data.data) {
+        this.proofs = r.data.data;
+        console.log('[PROFILE] Loaded', this.proofs.length, 'proofs');
+      }
+      this.proofsLoading = false;
+    },
+
+    closeArtwork() {
+      this.artworkOpen = false;
+      document.body.style.overflow = '';
+    },
+
+    // ── Edit artwork ──────────────────────────────────────────────────
+    openEditArtwork() {
+      this.editArtForm = {
+        id: this.selectedArt.id,
+        title: this.selectedArt.title,
+        description: this.selectedArt.description || '',
+        privacy_status: this.selectedArt.privacy_status || 'Public',
+      };
+      this.editArtOpen = true;
+    },
+
+    async saveEditArtwork() {
+      if (!this.editArtForm.title) { alert('Title is required.'); return; }
+      this.editArtSaving = true;
+
+      console.log('[PROFILE] PUT /artworks/' + this.editArtForm.id);
+      const r = await apiFetch('/artworks/' + this.editArtForm.id, {
+        method: 'PUT',
+        body: JSON.stringify({
+          title: this.editArtForm.title,
+          description: this.editArtForm.description,
+          privacy_status: this.editArtForm.privacy_status,
+        }),
+      });
+
+      if (r.ok) {
+        alert('Artwork updated!');
+        // Update local data
+        const idx = this.artworks.findIndex(a => a.id === this.editArtForm.id);
+        if (idx !== -1) {
+          Object.assign(this.artworks[idx], r.data.data);
+          this.artworks[idx]._skillName = this.selectedArt._skillName;
+          this.artworks[idx]._thumbUrl = this.selectedArt._thumbUrl;
+        }
+        if (this.selectedArt) {
+          Object.assign(this.selectedArt, r.data.data);
+          this.selectedArt._skillName = this.artworks[idx]?._skillName || '';
+          this.selectedArt._thumbUrl = this.artworks[idx]?._thumbUrl || '';
+        }
+        this.editArtOpen = false;
+      } else {
+        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+      }
+      this.editArtSaving = false;
+    },
+
+    // ── Delete artwork ────────────────────────────────────────────────
+    async deleteArtwork() {
+      if (!this.selectedArt) return;
+      if (!confirm('Delete "' + this.selectedArt.title + '"? This will also remove all linked proofs. This cannot be undone.')) return;
+
+      console.log('[PROFILE] DELETE /artworks/' + this.selectedArt.id);
+      const r = await apiFetch('/artworks/' + this.selectedArt.id, { method: 'DELETE' });
+
+      if (r.ok) {
+        alert('Artwork deleted.');
+        this.artworks = this.artworks.filter(a => a.id !== this.selectedArt.id);
+        this.closeArtwork();
+      } else {
+        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+      }
     },
   },
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeArtwork(); });
-
-    console.log('[PROFILE] Fetching /me, /skills, /artworks, /uploads in parallel …');
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { this.closeArtwork(); this.editArtOpen = false; } });
 
     const [meRes, skillRes, artRes, upRes] = await Promise.all([
-      apiFetch('/me'),
-      apiFetch('/skills'),
-      apiFetch('/artworks'),
-      apiFetch('/uploads'),
+      apiFetch('/me'), apiFetch('/skills'), apiFetch('/artworks'), apiFetch('/uploads'),
     ]);
 
-    // ── /me ──────────────────────────────────────────────────────────
-    if (meRes.ok && meRes.data.data) {
-      Object.assign(this.user, meRes.data.data);
-      console.log('[PROFILE] User loaded:', this.user.username);
-    } else {
-      console.error('[PROFILE] /me failed:', meRes.data.error_message);
-    }
-
-    // ── /skills ──────────────────────────────────────────────────────
-    if (skillRes.ok && skillRes.data.data) {
-      this.skills = skillRes.data.data;
-      console.log('[PROFILE] Loaded', this.skills.length, 'skills');
-    } else {
-      console.error('[PROFILE] /skills failed:', skillRes.data.error_message);
-    }
-
-    // ── /artworks ────────────────────────────────────────────────────
-    if (artRes.ok && artRes.data.data) {
-      this.artworks = artRes.data.data;
-      console.log('[PROFILE] Loaded', this.artworks.length, 'artworks');
-    } else {
-      console.error('[PROFILE] /artworks failed:', artRes.data.error_message);
-    }
-
-    // ── /uploads ─────────────────────────────────────────────────────
-    if (upRes.ok && upRes.data.data) {
-      this.uploads = upRes.data.data;
-      console.log('[PROFILE] Loaded', this.uploads.length, 'uploads');
-    } else {
-      console.error('[PROFILE] /uploads failed:', upRes.data.error_message);
-    }
+    if (meRes.ok && meRes.data.data) Object.assign(this.user, meRes.data.data);
+    if (skillRes.ok && skillRes.data.data) this.skills = skillRes.data.data;
+    if (artRes.ok && artRes.data.data) this.artworks = artRes.data.data;
+    if (upRes.ok && upRes.data.data) this.uploads = upRes.data.data;
 
     this.enrichArtworks();
     this.loading = false;

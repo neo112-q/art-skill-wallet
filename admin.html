@@ -151,7 +151,7 @@
     <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
-  <!-- View Modal -->
+  <!-- View Modal (with proofs) -->
   <div class="modal-overlay" :class="{ open: viewOpen }" @click.self="viewOpen=false">
     <div class="modal-box modal-box-wide">
       <button class="modal-close" @click="viewOpen=false">&times;</button>
@@ -162,6 +162,43 @@
         <div class="view-row"><span class="view-label">Level</span><span class="view-value">{{ viewData.level }}</span></div>
         <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">{{ formatDate(viewData.submitted) }}</span></div>
         <div class="view-row"><span class="view-label">Status</span><span class="view-value">{{ viewData.status }}</span></div>
+
+        <!-- Proofs Section -->
+        <div style="margin-top:1rem; border-top:1px solid #2A2A2A; padding-top:1rem;">
+          <p style="font-size:0.85rem; font-weight:700; margin-bottom:0.5rem; color:white;">
+            <i class="fas fa-file-alt" style="color:#CCFF00;"></i> Evidence / Proofs
+          </p>
+
+          <div v-if="viewProofsLoading" style="color:#888; font-size:0.8rem;">Loading proofs...</div>
+          <div v-else-if="!viewProofs.length" style="color:#f55; font-size:0.8rem; background:#1a1a1a; padding:0.5rem 0.75rem; border-radius:6px;">
+            <i class="fas fa-exclamation-triangle"></i> No proofs attached — user did not provide evidence for this submission.
+          </div>
+
+          <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <div v-for="p in viewProofs" :key="p.id" style="position:relative;">
+              <a v-if="p.file_type === 'image'" :href="p.file_url" target="_blank">
+                <img :src="p.file_url" style="width:140px; height:105px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A;">
+              </a>
+              <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:200px; border-radius:6px; border:1px solid #2A2A2A;"></video>
+              <a v-else :href="p.file_url" target="_blank" style="display:flex; align-items:center; gap:0.3rem; background:#1C1C1C; border:1px solid #2A2A2A; padding:0.4rem 0.6rem; border-radius:6px; color:#CCFF00; font-size:0.75rem; text-decoration:none;">
+                <i class="fas fa-file-pdf"></i> View PDF
+              </a>
+              <span style="position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.7); color:#ccc; font-size:0.6rem; padding:0.1rem 0.3rem; border-radius:3px;">
+                {{ p.file_type }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions inside modal -->
+        <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button v-if="viewData.status !== 'Approved'" class="btn-approve" @click="setStatus(viewData, 'Approved'); viewData.status='Approved'">
+            <i class="fas fa-check"></i> Approve
+          </button>
+          <button v-if="viewData.status !== 'Rejected'" class="btn-reject" @click="setStatus(viewData, 'Rejected'); viewData.status='Rejected'">
+            <i class="fas fa-times"></i> Reject
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -183,6 +220,8 @@ createApp({
       search: '', fStatus: '', fSkill: '', fLevel: '', sortDir: 'Newest First',
       viewOpen: false,
       viewData: {},
+      viewProofs: [],
+      viewProofsLoading: false,
     };
   },
   computed: {
@@ -214,7 +253,22 @@ createApp({
       if (!d) return '';
       return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     },
-    viewRow(r) { this.viewData = { ...r }; this.viewOpen = true; },
+    async viewRow(r) {
+      this.viewData = { ...r };
+      this.viewProofs = [];
+      this.viewProofsLoading = true;
+      this.viewOpen = true;
+
+      console.log('[ADMIN] Fetching proofs for submission', r.id);
+      const res = await apiFetch('/admin/submissions/' + r.id + '/proofs');
+      if (res.ok && res.data.data) {
+        this.viewProofs = res.data.data;
+        console.log('[ADMIN] Loaded', this.viewProofs.length, 'proofs');
+      } else {
+        console.warn('[ADMIN] No proofs or error:', res.data.error_message);
+      }
+      this.viewProofsLoading = false;
+    },
 
     // ── Approve / Reject → PUT /admin/submissions/:id ─────────────
     async setStatus(row, newStatus) {

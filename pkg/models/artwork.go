@@ -25,3 +25,9 @@ type ArtworkRequest struct {
 	Description   string `json:"description"`
 	PrivacyStatus string `json:"privacy_status" binding:"required,oneof=Public Private"`
 }
+
+type ArtworkUpdateRequest struct {
+	Title         string `json:"title"          binding:"required"`
+	Description   string `json:"description"`
+	PrivacyStatus string `json:"privacy_status" binding:"required,oneof=Public Private"`
+}

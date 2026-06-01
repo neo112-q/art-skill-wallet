@@ -98,6 +98,8 @@ func main() {
 		protected.DELETE("/skills/:id", handlers.DeleteSkill)
 		protected.GET("/artworks", handlers.GetArtworks)
 		protected.POST("/artworks", handlers.CreateArtwork)
+		protected.PUT("/artworks/:id", handlers.UpdateArtwork)
+		protected.DELETE("/artworks/:id", handlers.DeleteArtwork)
 		protected.GET("/uploads", handlers.GetUploads)
 		protected.POST("/uploads", handlers.CreateUpload)
 		protected.PUT("/uploads/:id", handlers.UpdateUpload)
@@ -113,6 +115,7 @@ func main() {
 	{
 		adminGroup.GET("/submissions", handlers.GetSubmissionsEnriched)
 		adminGroup.PUT("/submissions/:id", handlers.UpdateSubmissionStatus)
+		adminGroup.GET("/submissions/:id/proofs", handlers.GetSubmissionProofs)
 	}
 
 	// ── Start ───────────────────────────────────────────────────────────
