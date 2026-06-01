@@ -23,10 +23,10 @@
         <a href="/history.html" class="nav-link">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <img :src="displayAvatar" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
         <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="displayAvatar" alt="User avatar" class="avatar-dropdown-pic">
             <div>
               <p class="avatar-dropdown-name">{{ user.username }}</p>
               <p class="avatar-dropdown-email">{{ user.email }}</p>
@@ -42,41 +42,50 @@
     </div>
   </nav>
 
+  <!-- Loading State -->
+  <main v-if="loading" class="page-main" style="text-align:center; padding:6rem 1rem; color:#888;">
+    <p>Loading profile...</p>
+  </main>
+
   <!-- Main -->
-  <main class="page-main">
+  <main v-else class="page-main">
 
     <!-- Profile Info -->
     <section class="profile-section fade-in" aria-label="Profile information">
-      <img :src="avatarUrl" :alt="user.username" class="avatar-lg">
+      <img :src="displayAvatar" :alt="user.username" class="avatar-lg">
       <div class="profile-details">
         <div class="profile-name-row">
           <h1 class="profile-name">{{ user.username }}</h1>
           <a href="/editProfile.html" class="btn-edit">edit profile</a>
         </div>
-        <p class="profile-bio">Bio: "{{ user.bio }}"</p>
+        <p class="profile-bio" v-if="user.bio">Bio: "{{ user.bio }}"</p>
+        <p class="profile-bio" v-else style="color:#555;">No bio yet. <a href="/editProfile.html" style="color:#CCFF00;">Add one</a>.</p>
         <div class="stats-row">
-          <div class="stat-item"><span class="stat-value">{{ stats.points }}</span><p class="stat-label">Total Points</p></div>
+          <div class="stat-item"><span class="stat-value">{{ totalPoints }}</span><p class="stat-label">Total Points</p></div>
           <div class="stat-item"><span class="stat-value">{{ skills.length }}</span><p class="stat-label">Skills</p></div>
           <div class="stat-item"><span class="stat-value">{{ artworks.length }}</span><p class="stat-label">Artworks</p></div>
         </div>
       </div>
     </section>
 
-    <!-- Portfolio Tab -->
+    <!-- Skill Showcase -->
     <div class="tab-panel active fade-in-2">
-
-      <!-- Skill Showcase -->
       <section aria-label="Skill showcase">
         <div class="section-hd">
           <h2>Skill Showcase</h2>
           <a href="/skillManage.html" class="btn-neon">View All &rarr;</a>
         </div>
-        <div class="skills-grid">
-          <div class="skill-card" v-for="s in skills.slice(0, 6)" :key="s.skill_name">
+
+        <div v-if="!skills.length" style="text-align:center; padding:2rem; color:#555;">
+          <p>No skills yet. <a href="/skillManage.html" style="color:#CCFF00;">Add your first skill</a>.</p>
+        </div>
+
+        <div v-else class="skills-grid">
+          <div class="skill-card" v-for="s in skills.slice(0, 6)" :key="s.id">
             <h3>{{ s.skill_name }}</h3>
-            <div class="meter" :aria-label="'Skill level: ' + s.level">
-              <div class="seg" :class="s.level === 'Beginner' ? 'seg-green' : 'seg-green'"></div>
-              <div class="seg" :class="s.level === 'Intermediate' || s.level === 'Advanced' ? 'seg-blue' : 'seg-empty'"></div>
+            <div class="meter">
+              <div class="seg seg-green"></div>
+              <div class="seg" :class="s.level !== 'Beginner' ? 'seg-blue' : 'seg-empty'"></div>
               <div class="seg" :class="s.level === 'Advanced' ? 'seg-green' : 'seg-empty'"></div>
             </div>
             <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
@@ -91,14 +100,21 @@
           <h2>Your Portfolio</h2>
           <a href="/upload.html" class="btn-neon">+ Add Artwork</a>
         </div>
-        <div class="portfolio-grid">
+
+        <div v-if="!artworks.length" style="text-align:center; padding:2rem; color:#555;">
+          <p>No artworks yet. <a href="/upload.html" style="color:#CCFF00;">Upload your first piece</a>.</p>
+        </div>
+
+        <div v-else class="portfolio-grid">
           <div class="portfolio-item" v-for="a in artworks" :key="a.id" @click="openArtwork(a)">
-            <img :src="a.thumb" :alt="a.title">
+            <img v-if="a._thumbUrl" :src="a._thumbUrl" :alt="a.title">
+            <div v-else style="width:100%; aspect-ratio:1; background:#1C1C1C; display:flex; align-items:center; justify-content:center; color:#555; font-size:0.8rem;">
+              {{ a.title }}
+            </div>
             <div class="portfolio-overlay" aria-hidden="true"></div>
           </div>
         </div>
       </section>
-
     </div>
   </main>
 
@@ -135,23 +151,23 @@
   </footer>
 
   <!-- Artwork Detail Popup -->
-  <div class="artwork-overlay" :class="{ open: artworkOpen }" @click.self="artworkOpen=false">
+  <div class="artwork-overlay" :class="{ open: artworkOpen }" @click.self="closeArtwork">
     <div class="artwork-modal" v-if="selectedArt">
-      <button class="artwork-modal-close" @click="artworkOpen=false">&times;</button>
-      <img :src="selectedArt.img" :alt="selectedArt.title" class="artwork-modal-img">
+      <button class="artwork-modal-close" @click="closeArtwork">&times;</button>
+      <img v-if="selectedArt._thumbUrl" :src="selectedArt._thumbUrl" :alt="selectedArt.title" class="artwork-modal-img">
       <div class="artwork-modal-body">
         <h2 class="artwork-modal-title">{{ selectedArt.title }}</h2>
         <div class="artwork-meta">
-          <span class="artwork-meta-item">{{ selectedArt.date }}</span>
-          <span class="artwork-meta-tag">{{ selectedArt.skill }}</span>
-          <span class="artwork-meta-tag">{{ selectedArt.level }}</span>
+          <span class="artwork-meta-item">{{ formatDate(selectedArt.upload_date) }}</span>
+          <span class="artwork-meta-tag">{{ selectedArt._skillName || '—' }}</span>
+          <span class="artwork-meta-tag">{{ selectedArt.privacy_status }}</span>
         </div>
-        <p class="artwork-log">{{ selectedArt.description }}</p>
+        <p class="artwork-log" v-if="selectedArt.description">{{ selectedArt.description }}</p>
         <div class="privacy-row">
           <span class="privacy-label">Privacy</span>
           <div class="privacy-toggle">
-            <button class="privacy-btn" :class="{ active: selectedArt.privacy === 'Public' }" @click="selectedArt.privacy='Public'">Public</button>
-            <button class="privacy-btn" :class="{ active: selectedArt.privacy === 'Private' }" @click="selectedArt.privacy='Private'">Private</button>
+            <button class="privacy-btn" :class="{ active: selectedArt.privacy_status === 'Public' }">Public</button>
+            <button class="privacy-btn" :class="{ active: selectedArt.privacy_status === 'Private' }">Private</button>
           </div>
         </div>
       </div>
@@ -170,42 +186,111 @@ createApp({
     return {
       isAdmin: TokenStore.isAdmin(),
       dropdownOpen: false,
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80',
-      user: { username: TokenStore.getUsername() || 'User', email: '', bio: 'Creative digital artist specializing in fantasy and sci-fi concept art.' },
-      stats: { points: 2450 },
-      skills: [
-        { skill_name: 'Character Design', level: 'Intermediate' },
-        { skill_name: 'Concept Art', level: 'Advanced' },
-        { skill_name: 'Illustration', level: 'Beginner' },
-        { skill_name: 'Digital Painting', level: 'Intermediate' },
-        { skill_name: 'Storyboarding', level: 'Advanced' },
-        { skill_name: '3D Modeling', level: 'Beginner' },
-      ],
-      artworks: [
-        { id: 1, title: 'Beauty Path to Violent', thumb: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80', img: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=700&q=80', date: '26 December 2026', skill: 'Character Design', level: 'Advanced', description: 'This piece explores the contrast between beauty and violence through expressive line work.', privacy: 'Public' },
-        { id: 2, title: 'Sloth Dream', thumb: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80', img: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=700&q=80', date: '26 November 2026', skill: 'Illustration', level: 'Intermediate', description: 'A dreamlike illustration exploring surrealism and slow movement.', privacy: 'Public' },
-        { id: 3, title: 'Swallow in the Pretty Face', thumb: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=80', img: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=700&q=80', date: '26 October 2026', skill: 'Digital Painting', level: 'Intermediate', description: 'Portrait study focused on capturing emotional complexity.', privacy: 'Private' },
-        { id: 4, title: 'Neon Citadel', thumb: 'https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=400&q=80', img: 'https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=700&q=80', date: '14 September 2026', skill: 'Concept Art', level: 'Advanced', description: 'Environment concept for a cyberpunk city.', privacy: 'Public' },
-        { id: 5, title: 'Forest Spirit', thumb: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=400&q=80', img: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=700&q=80', date: '2 August 2026', skill: 'Illustration', level: 'Intermediate', description: 'Nature-inspired character design.', privacy: 'Public' },
-        { id: 6, title: 'Void Walker', thumb: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&q=80', img: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=700&q=80', date: '10 July 2026', skill: 'Character Design', level: 'Advanced', description: 'Dark fantasy character study.', privacy: 'Public' },
-      ],
+      loading: true,
+      user: { username: TokenStore.getUsername() || '', email: '', bio: '', profile_picture: '' },
+      skills: [],
+      artworks: [],
+      uploads: [],
       artworkOpen: false,
       selectedArt: null,
     };
   },
+  computed: {
+    displayAvatar() {
+      return this.user.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.user.username || 'U') + '&background=CCFF00&color=121212&bold=true&size=200';
+    },
+    totalPoints() {
+      let pts = 0;
+      this.skills.forEach(s => {
+        pts += s.level === 'Advanced' ? 500 : s.level === 'Intermediate' ? 250 : 100;
+      });
+      pts += this.artworks.length * 50;
+      return pts.toLocaleString();
+    },
+  },
   methods: {
     doLogout() { logout(); },
     levelNum(l) { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
-    openArtwork(a) { this.selectedArt = { ...a }; this.artworkOpen = true; document.body.style.overflow = 'hidden'; },
+    formatDate(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    },
+    openArtwork(a) { this.selectedArt = a; this.artworkOpen = true; document.body.style.overflow = 'hidden'; },
+    closeArtwork() { this.artworkOpen = false; document.body.style.overflow = ''; },
+
+    // Build a lookup: artwork upload_date matches upload created_at close in time,
+    // or match by title. For simplicity we match upload by user and build a URL.
+    enrichArtworks() {
+      const skillMap = {};
+      this.skills.forEach(s => { skillMap[s.id] = s.skill_name; });
+
+      // Build a map of uploads by ID for thumbnail URLs
+      const uploadsByTitle = {};
+      this.uploads.forEach(u => {
+        // The file is served at /uploads/<filename-on-disk>
+        // file_path is like ./uploads/<id>.ext — extract the basename
+        const parts = (u.file_path || '').replace(/\\/g, '/').split('/');
+        const fname = parts[parts.length - 1];
+        if (fname) {
+          uploadsByTitle[u.title.toLowerCase()] = '/uploads/' + fname;
+        }
+      });
+
+      this.artworks.forEach(a => {
+        a._skillName = skillMap[a.skill_id] || '';
+        // Try to find a matching upload by title
+        const key = (a.title || '').toLowerCase();
+        a._thumbUrl = uploadsByTitle[key] || '';
+      });
+    },
   },
-  watch: { artworkOpen(v) { if (!v) document.body.style.overflow = ''; } },
-  mounted() {
+  async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.artworkOpen = false; });
-    // Fetch real user data
-    apiFetch('/me').then(r => { if (r.ok && r.data.data) { Object.assign(this.user, r.data.data); } });
-    apiFetch('/skills').then(r => { if (r.ok && r.data.data && r.data.data.length) this.skills = r.data.data; });
-    apiFetch('/artworks').then(r => { if (r.ok && r.data.data && r.data.data.length) this.artworks = r.data.data; });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeArtwork(); });
+
+    console.log('[PROFILE] Fetching /me, /skills, /artworks, /uploads in parallel …');
+
+    const [meRes, skillRes, artRes, upRes] = await Promise.all([
+      apiFetch('/me'),
+      apiFetch('/skills'),
+      apiFetch('/artworks'),
+      apiFetch('/uploads'),
+    ]);
+
+    // ── /me ──────────────────────────────────────────────────────────
+    if (meRes.ok && meRes.data.data) {
+      Object.assign(this.user, meRes.data.data);
+      console.log('[PROFILE] User loaded:', this.user.username);
+    } else {
+      console.error('[PROFILE] /me failed:', meRes.data.error_message);
+    }
+
+    // ── /skills ──────────────────────────────────────────────────────
+    if (skillRes.ok && skillRes.data.data) {
+      this.skills = skillRes.data.data;
+      console.log('[PROFILE] Loaded', this.skills.length, 'skills');
+    } else {
+      console.error('[PROFILE] /skills failed:', skillRes.data.error_message);
+    }
+
+    // ── /artworks ────────────────────────────────────────────────────
+    if (artRes.ok && artRes.data.data) {
+      this.artworks = artRes.data.data;
+      console.log('[PROFILE] Loaded', this.artworks.length, 'artworks');
+    } else {
+      console.error('[PROFILE] /artworks failed:', artRes.data.error_message);
+    }
+
+    // ── /uploads ─────────────────────────────────────────────────────
+    if (upRes.ok && upRes.data.data) {
+      this.uploads = upRes.data.data;
+      console.log('[PROFILE] Loaded', this.uploads.length, 'uploads');
+    } else {
+      console.error('[PROFILE] /uploads failed:', upRes.data.error_message);
+    }
+
+    this.enrichArtworks();
+    this.loading = false;
   }
 }).mount('#app');
 </script>

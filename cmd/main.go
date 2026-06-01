@@ -81,6 +81,9 @@ func main() {
 		auth.POST("/logout", middleware.JWTAuth(), handlers.Logout)
 	}
 
+	// Public data endpoints (no auth required)
+	api.GET("/explore", handlers.GetExplore)
+
 	// Protected endpoints — valid JWT required
 	protected := api.Group("/")
 	protected.Use(middleware.JWTAuth())

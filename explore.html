@@ -22,6 +22,7 @@
         <a href="/skillManage.html" class="nav-link">Skills</a>
         <a href="/history.html" class="nav-link">History</a>
       </div>
+      <!-- Logged-in: avatar dropdown -->
       <div class="avatar-wrapper" v-if="loggedIn">
         <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
         <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
@@ -29,7 +30,6 @@
             <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
             <div>
               <p class="avatar-dropdown-name">{{ username }}</p>
-              <p class="avatar-dropdown-email">{{ email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
@@ -39,6 +39,7 @@
           <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
+      <!-- Logged-out: login button -->
       <a v-else href="/home.html" class="btn-outline">Login / Register</a>
     </div>
   </nav>
@@ -52,19 +53,20 @@
         <h2 class="filter-title">Filter</h2>
         <div class="filter-group">
           <label class="filter-label">Name</label>
-          <input type="text" class="filter-input" v-model="filterName">
+          <input type="text" class="filter-input" v-model="filterName" placeholder="Search artist...">
         </div>
         <div class="filter-group">
           <label class="filter-label">Skill</label>
-          <input type="text" class="filter-input" v-model="filterSkill">
+          <input type="text" class="filter-input" v-model="filterSkill" placeholder="e.g. Illustration">
         </div>
         <div class="filter-group">
           <label class="filter-label">Level</label>
-          <input type="text" class="filter-input" v-model="filterLevel">
-        </div>
-        <div class="filter-group">
-          <label class="filter-label">Tag</label>
-          <input type="text" class="filter-input" v-model="filterTag">
+          <select class="filter-input" v-model="filterLevel">
+            <option value="">All Levels</option>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+          </select>
         </div>
       </div>
     </aside>
@@ -72,18 +74,33 @@
     <!-- Artists Grid -->
     <main class="explore-area">
       <h1 class="explore-heading">Explore</h1>
-      <div class="artist-grid">
-        <div class="artist-card" v-for="a in filteredArtists" :key="a.name">
-          <img v-if="a.img" :src="a.img" :alt="a.name" class="artist-thumb">
-          <div v-else class="artist-thumb-placeholder">
-            <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><rect x="20" y="8" width="40" height="38" fill="#7B52F6" rx="4"/><rect x="10" y="48" width="60" height="22" fill="#7B52F6" rx="4"/></svg>
+
+      <!-- Loading -->
+      <div v-if="loading" style="text-align:center; padding:3rem; color:#888;">Loading artists...</div>
+
+      <!-- Empty -->
+      <div v-else-if="!filteredArtists.length" style="text-align:center; padding:3rem; color:#555;">
+        <p v-if="artists.length">No artists match your filters.</p>
+        <p v-else>No artists have registered yet. Be the first!</p>
+      </div>
+
+      <!-- Artist cards -->
+      <div v-else class="artist-grid">
+        <div class="artist-card" v-for="a in filteredArtists" :key="a.id">
+          <img v-if="a.profile_picture" :src="a.profile_picture" :alt="a.username" class="artist-thumb">
+          <div v-else class="artist-thumb-placeholder" :style="{ background: avatarColor(a.username) }">
+            <span style="font-size:2rem; font-weight:800; color:rgba(255,255,255,0.7);">{{ initials(a.username) }}</span>
           </div>
           <div class="artist-body">
-            <h3 class="artist-name">{{ a.name }}</h3>
+            <h3 class="artist-name">{{ a.username }}</h3>
             <div class="artist-skills">
-              <span class="skill-badge" v-for="s in a.skills" :key="s"><span class="skill-badge-dot"></span>{{ s }}</span>
+              <span class="skill-badge" v-for="s in a.skills.slice(0, 4)" :key="s.id">
+                <span class="skill-badge-dot"></span>{{ s.skill_name }}
+              </span>
+              <span v-if="a.skills.length > 4" class="skill-badge" style="opacity:0.5;">+{{ a.skills.length - 4 }} more</span>
             </div>
-            <p class="artist-bio">Bio : {{ a.bio }}</p>
+            <p class="artist-bio" v-if="a.bio">Bio : {{ a.bio }}</p>
+            <p class="artist-bio" v-else style="color:#444;">No bio</p>
           </div>
         </div>
       </div>
@@ -103,38 +120,72 @@ createApp({
       loggedIn: TokenStore.isLoggedIn(),
       isAdmin: TokenStore.isAdmin(),
       username: TokenStore.getUsername() || 'User',
-      email: '',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
+      avatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
       dropdownOpen: false,
-      filterName: '', filterSkill: '', filterLevel: '', filterTag: '',
-      artists: [
-        { name: 'AneeShan', img: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=400&q=80', skills: ['Character Design','Concept Art'], level: 'advanced', tags: 'digital,anime', bio: 'hello just man love art age 24' },
-        { name: 'man behind the slaughter', img: '', skills: ['Pixel Art','Game Design'], level: 'intermediate', tags: 'pixel,game,indie', bio: 'dont care at my profile to must it just joke' },
-        { name: 'Maestro Callisto', img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80', skills: ['Oil Painting','Fine Art'], level: 'advanced', tags: 'oil,classical,fine', bio: 'After all, art is a culmination of moments and choices...' },
-        { name: 'back ground', img: '', skills: ['Background Art','Environment'], level: 'beginner', tags: 'background,environment', bio: 'just back ground' },
-        { name: 'Pixel Fox', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80', skills: ['Pixel Art','Animation'], level: 'intermediate', tags: 'pixel,animation,indie', bio: 'Making pixel art and short loops for indie games.' },
-        { name: 'Nora Lin', img: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=400&q=80', skills: ['Watercolor','Botanical'], level: 'advanced', tags: 'watercolor,botanical,nature', bio: 'Botanical illustrator and watercolor enthusiast from Chiang Mai.' },
-        { name: 'Kiro Blade', img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80', skills: ['Digital Painting','Character Design'], level: 'advanced', tags: 'digital,dark,fantasy', bio: 'Dark fantasy concept artist. Swords, shadows, and stormy skies.' },
-        { name: 'Sol Artes', img: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80', skills: ['Illustration','Typography'], level: 'intermediate', tags: 'illustration,type,graphic', bio: 'Illustrator blending type and imagery into visual poetry.' },
-      ],
+      loading: true,
+      artists: [],
+      filterName: '',
+      filterSkill: '',
+      filterLevel: '',
     };
   },
   computed: {
     filteredArtists() {
-      const n = this.filterName.toLowerCase(), s = this.filterSkill.toLowerCase(), l = this.filterLevel.toLowerCase(), t = this.filterTag.toLowerCase();
-      return this.artists.filter(a =>
-        (!n || a.name.toLowerCase().includes(n)) &&
-        (!s || a.skills.join(',').toLowerCase().includes(s)) &&
-        (!l || a.level.includes(l)) &&
-        (!t || a.tags.toLowerCase().includes(t))
-      );
-    }
+      const n = this.filterName.toLowerCase();
+      const s = this.filterSkill.toLowerCase();
+      const l = this.filterLevel;
+      return this.artists.filter(a => {
+        if (n && !a.username.toLowerCase().includes(n)) return false;
+        if (s) {
+          const hasSkill = a.skills.some(sk => sk.skill_name.toLowerCase().includes(s));
+          if (!hasSkill) return false;
+        }
+        if (l) {
+          const hasLevel = a.skills.some(sk => sk.level === l);
+          if (!hasLevel) return false;
+        }
+        return true;
+      });
+    },
   },
   methods: {
     doLogout() { logout(); },
+    initials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return name.slice(0, 2).toUpperCase();
+    },
+    avatarColor(name) {
+      // Simple hash → hue
+      let hash = 0;
+      for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      const hue = Math.abs(hash) % 360;
+      return 'hsl(' + hue + ', 50%, 25%)';
+    },
+
+    async fetchExplore() {
+      console.log('[EXPLORE] Fetching GET /explore …');
+      try {
+        const res = await fetch(API_BASE + '/explore');
+        const body = await res.json();
+        console.log('[EXPLORE] Response:', res.status, body);
+
+        if (res.ok && body.data) {
+          this.artists = body.data;
+          console.log('[EXPLORE] Loaded', this.artists.length, 'artists');
+        } else {
+          console.error('[EXPLORE] Failed:', body.error_message);
+        }
+      } catch (e) {
+        console.error('[EXPLORE] Network error:', e);
+      }
+      this.loading = false;
+    },
   },
   mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
+    this.fetchExplore();
   }
 }).mount('#app');
 </script>
