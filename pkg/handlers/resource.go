@@ -64,13 +64,13 @@ func CreateSkill(c *gin.Context) {
 	defer cancel()
 
 	skill := models.Skill{
-		ID:           primitive.NewObjectID(),
-		UserID:       objID,
-		Name:         req.Name,
-		Level:        req.Level,
-		ProgressData: req.ProgressData,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:               primitive.NewObjectID(),
+		UserID:           objID,
+		SkillName:        req.SkillName,
+		Level:            req.Level,
+		DevelopmentGuide: req.DevelopmentGuide,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
 	if _, err := db.Col("skills").InsertOne(ctx, skill); err != nil {
@@ -136,16 +136,23 @@ func CreateArtwork(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Validate that the skill exists and belongs to this user
+	var skill models.Skill
+	if err := db.Col("skills").FindOne(ctx, bson.M{"_id": skillObjID, "user_id": objID}).Decode(&skill); err != nil {
+		response.Error(c, http.StatusBadRequest, "Skill not found or does not belong to you")
+		return
+	}
+
 	artwork := models.Artwork{
-		ID:                  primitive.NewObjectID(),
-		UserID:              objID,
-		SkillID:             skillObjID,
-		Path:                req.Path,
-		Date:                req.Date,
-		Privacy:             req.Privacy,
-		ProgressCheckpoints: req.ProgressCheckpoints,
-		CreatedAt:           time.Now(),
-		UpdatedAt:           time.Now(),
+		ID:            primitive.NewObjectID(),
+		UserID:        objID,
+		SkillID:       skillObjID,
+		Title:         req.Title,
+		Description:   req.Description,
+		PrivacyStatus: req.PrivacyStatus,
+		UploadDate:    time.Now(),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 
 	if _, err := db.Col("artworks").InsertOne(ctx, artwork); err != nil {

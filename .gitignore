@@ -1,0 +1,13 @@
+# Secrets
+.env
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build cache
+/bin/
+/tmp/
