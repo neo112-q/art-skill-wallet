@@ -11,7 +11,7 @@
 <body>
 <div id="app">
 
-  <!-- Navbar (unified with home.html) -->
+  <!-- Navbar -->
   <nav class="navbar" aria-label="Main navigation">
     <div class="navbar-inner">
       <a href="/home.html" class="nav-logo">
@@ -24,13 +24,12 @@
         <a href="/history.html" class="nav-link">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <img :src="displayAvatar" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
         <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="displayAvatar" alt="User avatar" class="avatar-dropdown-pic">
             <div>
               <p class="avatar-dropdown-name">{{ username }}</p>
-              <p class="avatar-dropdown-email">{{ email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
@@ -56,21 +55,24 @@
     </div>
 
     <!-- Filter bar -->
-    <div class="filter-bar fade-in-2" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; padding:1rem 1.25rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:1.5rem;">
+    <div class="fade-in-2" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; padding:1rem 1.25rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:1.5rem;">
       <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem;">
         <div style="display:flex; align-items:center; gap:0.5rem; background:#121212; border:1px solid #2A2A2A; border-radius:8px; padding:0.5rem 0.75rem;">
           <i class="fas fa-search" style="color:#555; font-size:0.85rem;"></i>
           <input type="text" v-model="search" placeholder="Search by user or title..." style="background:transparent; border:none; outline:none; color:white; font-size:0.85rem; width:12rem;">
         </div>
         <select v-model="fStatus" class="filter-select"><option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
-        <select v-model="fSkill" class="filter-select"><option value="">All Skills</option><option>Illustration</option><option>UI Design</option><option>3D Modeling</option><option>Photography</option><option>Video Editing</option></select>
+        <select v-model="fSkill" class="filter-select"><option value="">All Skills</option><option v-for="s in uniqueSkills" :key="s">{{ s }}</option></select>
         <select v-model="fLevel" class="filter-select"><option value="">All Levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
       </div>
       <select v-model="sortDir" class="filter-select"><option>Newest First</option><option>Oldest First</option></select>
     </div>
 
+    <!-- Loading -->
+    <div v-if="loading" style="text-align:center; padding:3rem; color:#888;">Loading submissions...</div>
+
     <!-- Table -->
-    <div class="fade-in-3" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; overflow-x:auto;">
+    <div v-else class="fade-in-3" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; overflow-x:auto;">
       <table style="width:100%; font-size:0.85rem; border-collapse:collapse;">
         <thead style="background:#161616; border-bottom:1px solid #2A2A2A;">
           <tr>
@@ -84,6 +86,9 @@
           </tr>
         </thead>
         <tbody>
+          <tr v-if="!filteredRows.length">
+            <td colspan="7" style="text-align:center; padding:2rem; color:#555;">No submissions found.</td>
+          </tr>
           <tr v-for="row in filteredRows" :key="row.id" class="tr-row" style="border-bottom:1px solid #2A2A2A;">
             <td class="td-cell">
               <div style="display:flex; align-items:center; gap:0.6rem;">
@@ -94,13 +99,17 @@
             <td class="td-cell" style="font-weight:600; color:white;">{{ row.title }}</td>
             <td class="td-cell" style="color:#aaa;">{{ row.skill }}</td>
             <td class="td-cell"><span class="badge" :class="badgeClass(row.level)">{{ row.level }}</span></td>
-            <td class="td-cell" style="color:#666; white-space:nowrap;">{{ row.date }}</td>
+            <td class="td-cell" style="color:#666; white-space:nowrap;">{{ formatDate(row.submitted) }}</td>
             <td class="td-cell"><span class="status" :class="'status-' + row.status.toLowerCase()">{{ row.status }}</span></td>
             <td class="td-cell">
               <div style="display:flex; align-items:center; gap:0.4rem;">
                 <button class="btn-view" @click="viewRow(row)"><i class="fas fa-eye"></i></button>
-                <button v-if="row.status !== 'Approved'" class="btn-approve" @click="row.status='Approved'"><i class="fas fa-check"></i> Approve</button>
-                <button v-if="row.status !== 'Rejected'" class="btn-reject" @click="row.status='Rejected'"><i class="fas fa-times"></i> Reject</button>
+                <button v-if="row.status !== 'Approved'" class="btn-approve" @click="setStatus(row, 'Approved')" :disabled="row._saving">
+                  <i class="fas fa-check"></i> Approve
+                </button>
+                <button v-if="row.status !== 'Rejected'" class="btn-reject" @click="setStatus(row, 'Rejected')" :disabled="row._saving">
+                  <i class="fas fa-times"></i> Reject
+                </button>
               </div>
             </td>
           </tr>
@@ -110,7 +119,7 @@
 
   </main>
 
-  <!-- Footer (unified with home.html) -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div>
@@ -146,12 +155,12 @@
   <div class="modal-overlay" :class="{ open: viewOpen }" @click.self="viewOpen=false">
     <div class="modal-box modal-box-wide">
       <button class="modal-close" @click="viewOpen=false">&times;</button>
-      <h2 class="modal-title">{{ viewData.title }}</h2>
+      <h2 class="modal-title">{{ viewData.title || 'Submission Detail' }}</h2>
       <div v-if="viewData.title">
         <div class="view-row"><span class="view-label">User</span><span class="view-value">{{ viewData.user }}</span></div>
         <div class="view-row"><span class="view-label">Skill</span><span class="view-value">{{ viewData.skill }}</span></div>
         <div class="view-row"><span class="view-label">Level</span><span class="view-value">{{ viewData.level }}</span></div>
-        <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">{{ viewData.date }}</span></div>
+        <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">{{ formatDate(viewData.submitted) }}</span></div>
         <div class="view-row"><span class="view-label">Status</span><span class="view-value">{{ viewData.status }}</span></div>
       </div>
     </div>
@@ -168,42 +177,84 @@ createApp({
   data() {
     return {
       username: TokenStore.getUsername() || 'Admin',
-      email: '',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
       dropdownOpen: false,
+      loading: true,
+      rows: [],
       search: '', fStatus: '', fSkill: '', fLevel: '', sortDir: 'Newest First',
-      rows: [
-        { id: 1, user: 'Jane Doe', initials: 'JD', title: 'Fantasy Forest Scene', skill: 'Illustration', level: 'Intermediate', date: '20 May 2026', status: 'Pending' },
-        { id: 2, user: 'Mark S.', initials: 'MS', title: 'Product Dashboard UI', skill: 'UI Design', level: 'Advanced', date: '19 May 2026', status: 'Pending' },
-        { id: 3, user: 'Amy Lee', initials: 'AL', title: 'City Street Photography', skill: 'Photography', level: 'Beginner', date: '18 May 2026', status: 'Pending' },
-        { id: 4, user: 'Tom K.', initials: 'TK', title: 'Sci-Fi Character Model', skill: '3D Modeling', level: 'Advanced', date: '17 May 2026', status: 'Approved' },
-        { id: 5, user: 'Nina P.', initials: 'NP', title: 'Travel Vlog Reel', skill: 'Video Editing', level: 'Intermediate', date: '16 May 2026', status: 'Rejected' },
-        { id: 6, user: 'Ryan W.', initials: 'RW', title: 'Dragon Concept Art', skill: 'Illustration', level: 'Advanced', date: '15 May 2026', status: 'Pending' },
-      ],
       viewOpen: false,
       viewData: {},
     };
   },
   computed: {
+    displayAvatar() {
+      return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.username) + '&background=CCFF00&color=121212&bold=true&size=100';
+    },
     pendingCount() { return this.rows.filter(r => r.status === 'Pending').length; },
+    uniqueSkills() {
+      return [...new Set(this.rows.map(r => r.skill).filter(Boolean))];
+    },
     filteredRows() {
-      const q = this.search.toLowerCase(), st = this.fStatus, sk = this.fSkill, lv = this.fLevel;
+      const q = this.search.toLowerCase();
+      const st = this.fStatus, sk = this.fSkill, lv = this.fLevel;
       let res = this.rows.filter(r =>
         (!q || r.user.toLowerCase().includes(q) || r.title.toLowerCase().includes(q)) &&
-        (!st || r.status === st) && (!sk || r.skill === sk) && (!lv || r.level === lv)
+        (!st || r.status === st) &&
+        (!sk || r.skill === sk) &&
+        (!lv || r.level === lv)
       );
       const dir = this.sortDir === 'Oldest First' ? 1 : -1;
-      res.sort((a, b) => dir * (new Date(a.date) - new Date(b.date)));
+      res.sort((a, b) => dir * (new Date(a.submitted) - new Date(b.submitted)));
       return res;
     },
   },
   methods: {
     doLogout() { logout(); },
     badgeClass(l) { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
+    formatDate(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
     viewRow(r) { this.viewData = { ...r }; this.viewOpen = true; },
+
+    // ── Approve / Reject → PUT /admin/submissions/:id ─────────────
+    async setStatus(row, newStatus) {
+      row._saving = true;
+      console.log('[ADMIN] PUT /admin/submissions/' + row.id + ' → ' + newStatus);
+
+      const r = await apiFetch('/admin/submissions/' + row.id, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      console.log('[ADMIN] Response:', r.status, r.data);
+
+      if (r.ok) {
+        row.status = newStatus;
+        alert(row.title + ' → ' + newStatus);
+      } else {
+        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+        console.error('[ADMIN] Failed:', r.data);
+      }
+      row._saving = false;
+    },
   },
-  mounted() {
+  async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
+
+    console.log('[ADMIN] Fetching GET /admin/submissions …');
+    const r = await apiFetch('/admin/submissions');
+    console.log('[ADMIN] Response:', r.status, r.data);
+
+    if (r.ok && r.data.data) {
+      this.rows = r.data.data.map(row => ({ ...row, _saving: false }));
+      console.log('[ADMIN] Loaded', this.rows.length, 'submissions');
+    } else {
+      console.error('[ADMIN] Failed:', r.data.error_message);
+      if (r.status === 403) {
+        alert('Access denied. Admin role required.');
+        window.location.href = '/profile.html';
+      }
+    }
+    this.loading = false;
   }
 }).mount('#app');
 </script>

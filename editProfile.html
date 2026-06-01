@@ -23,10 +23,10 @@
         <a href="/history.html" class="nav-link">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <img :src="displayAvatar" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
         <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="displayAvatar" alt="User avatar" class="avatar-dropdown-pic">
             <div>
               <p class="avatar-dropdown-name">{{ form.username }}</p>
               <p class="avatar-dropdown-email">{{ form.email }}</p>
@@ -42,8 +42,11 @@
     </div>
   </nav>
 
+  <!-- Loading -->
+  <main v-if="loading" class="page-main" style="text-align:center; padding:6rem; color:#888;">Loading profile...</main>
+
   <!-- Main -->
-  <main class="page-main">
+  <main v-else class="page-main">
 
     <div class="edit-profile-header fade-in">
       <a href="/profile.html" class="edit-profile-back">&larr; Back to Profile</a>
@@ -86,44 +89,23 @@
           <textarea class="edit-input edit-textarea" v-model="form.bio" placeholder="Tell the world about yourself..."></textarea>
         </div>
 
-        <div class="edit-field-group">
-          <div class="edit-field">
-            <label class="edit-label">Website / Portfolio</label>
-            <input type="url" class="edit-input" v-model="form.website" placeholder="https://yoursite.com">
-          </div>
-          <div class="edit-field">
-            <label class="edit-label">Twitter / X</label>
-            <input type="text" class="edit-input" v-model="form.twitter" placeholder="@username">
-          </div>
-        </div>
-
-        <div class="edit-field-group">
-          <div class="edit-field">
-            <label class="edit-label">Instagram</label>
-            <input type="text" class="edit-input" v-model="form.instagram" placeholder="@username">
-          </div>
-          <div class="edit-field">
-            <label class="edit-label">Location</label>
-            <input type="text" class="edit-input" v-model="form.location" placeholder="City, Country">
-          </div>
-        </div>
-
-        <div class="edit-section-divider"><span>Account</span></div>
+        <!-- Divider -->
+        <div class="edit-section-divider"><span>Change Password</span></div>
 
         <div class="edit-field-group">
           <div class="edit-field">
             <label class="edit-label">Current Password</label>
-            <input type="password" class="edit-input" v-model="form.currentPw" placeholder="••••••••">
+            <input type="password" class="edit-input" v-model="form.old_password" placeholder="••••••••">
           </div>
           <div class="edit-field">
             <label class="edit-label">New Password</label>
-            <input type="password" class="edit-input" v-model="form.newPw" placeholder="••••••••">
+            <input type="password" class="edit-input" v-model="form.new_password" placeholder="••••••••">
           </div>
         </div>
 
         <div class="edit-field" style="max-width:340px;">
           <label class="edit-label">Confirm New Password</label>
-          <input type="password" class="edit-input" v-model="form.confirmPw" placeholder="••••••••">
+          <input type="password" class="edit-input" v-model="confirmPw" placeholder="••••••••">
         </div>
 
       </div>
@@ -133,12 +115,11 @@
         <div v-if="msg" class="ep-msg" :class="'ep-msg-' + msgType">{{ msg }}</div>
         <div style="display:flex; gap:1rem; flex-wrap:wrap;">
           <a href="/profile.html" class="btn-outline">Cancel</a>
-          <button type="submit" class="btn-neon">Save Changes</button>
+          <button type="submit" class="btn-neon" :disabled="saving">{{ saving ? 'Saving...' : 'Save Changes' }}</button>
         </div>
       </div>
 
     </form>
-
   </main>
 
 </div>
@@ -153,46 +134,112 @@ createApp({
     return {
       isAdmin: TokenStore.isAdmin(),
       dropdownOpen: false,
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80',
-      avatarPreview: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=80',
-      form: {
-        username: TokenStore.getUsername() || 'Navvy_Art',
-        email: '',
-        bio: 'Creative digital artist specializing in fantasy and sci-fi concept art. Full-time creator.',
-        website: '', twitter: '', instagram: '', location: '',
-        currentPw: '', newPw: '', confirmPw: '',
-      },
+      loading: true,
+      saving: false,
       msg: '', msgType: 'success',
+      currentAvatar: '',
+      avatarPreview: '',
+      pendingAvatarFile: null,
+      form: { username: '', email: '', bio: '', old_password: '', new_password: '' },
+      confirmPw: '',
     };
+  },
+  computed: {
+    displayAvatar() {
+      return this.avatarPreview || this.currentAvatar ||
+        'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.form.username || 'U') + '&background=CCFF00&color=121212&bold=true&size=200';
+    },
   },
   methods: {
     doLogout() { logout(); },
+
     onAvatarChange(e) {
       const file = e.target.files[0];
       if (!file) return;
+      this.pendingAvatarFile = file;
       const reader = new FileReader();
       reader.onload = (ev) => { this.avatarPreview = ev.target.result; };
       reader.readAsDataURL(file);
     },
-    saveProfile() {
-      if (this.form.newPw && this.form.newPw !== this.form.confirmPw) { this.msg = 'Passwords do not match.'; this.msgType = 'error'; return; }
-      if (this.form.newPw && this.form.newPw.length < 6) { this.msg = 'New password must be at least 6 characters.'; this.msgType = 'error'; return; }
-      // TODO: send to backend API
-      this.msg = 'Profile saved successfully!'; this.msgType = 'success';
-      setTimeout(() => { window.location.href = '/profile.html'; }, 1200);
+
+    async saveProfile() {
+      this.msg = '';
+
+      // Client-side validation
+      if (!this.form.username || this.form.username.length < 3) {
+        this.msg = 'Username must be at least 3 characters.'; this.msgType = 'error'; return;
+      }
+      if (!this.form.email) {
+        this.msg = 'Email is required.'; this.msgType = 'error'; return;
+      }
+      if (this.form.new_password && this.form.new_password !== this.confirmPw) {
+        this.msg = 'New passwords do not match.'; this.msgType = 'error'; return;
+      }
+
+      this.saving = true;
+
+      // ── Step 1: Upload avatar if changed ──────────────────────────
+      if (this.pendingAvatarFile) {
+        console.log('[EDIT] Uploading avatar …');
+        const fd = new FormData();
+        fd.append('avatar', this.pendingAvatarFile);
+        const avRes = await apiUpload('/me/avatar', fd);
+        console.log('[EDIT] Avatar response:', avRes.status, avRes.data);
+        if (avRes.ok) {
+          this.currentAvatar = avRes.data.data.profile_picture;
+          this.pendingAvatarFile = null;
+        } else {
+          this.msg = 'Avatar upload failed: ' + (avRes.data.error_message || 'Unknown'); this.msgType = 'error';
+          this.saving = false; return;
+        }
+      }
+
+      // ── Step 2: Update profile fields ─────────────────────────────
+      const payload = {
+        username: this.form.username,
+        email: this.form.email,
+        bio: this.form.bio,
+        old_password: this.form.old_password || '',
+        new_password: this.form.new_password || '',
+      };
+
+      console.log('[EDIT] Sending PUT /me …', { ...payload, old_password: '***', new_password: payload.new_password ? '***' : '' });
+      const r = await apiFetch('/me', { method: 'PUT', body: JSON.stringify(payload) });
+      console.log('[EDIT] Response:', r.status, r.data);
+
+      if (r.ok) {
+        // Update stored username
+        localStorage.setItem('username', this.form.username);
+        alert('Profile saved successfully!');
+        this.msg = 'Profile saved!'; this.msgType = 'success';
+        this.form.old_password = '';
+        this.form.new_password = '';
+        this.confirmPw = '';
+        setTimeout(() => { window.location.href = '/profile.html'; }, 800);
+      } else {
+        this.msg = r.data.error_message || 'Failed to save profile.'; this.msgType = 'error';
+        console.error('[EDIT] Failed:', this.msg);
+      }
+      this.saving = false;
     },
   },
-  mounted() {
+  async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
-    apiFetch('/me').then(r => {
-      if (r.ok && r.data.data) {
-        const u = r.data.data;
-        this.form.username = u.username || this.form.username;
-        this.form.email = u.email || '';
-        if (u.bio) this.form.bio = u.bio;
-        if (u.profile_picture) { this.avatarUrl = u.profile_picture; this.avatarPreview = u.profile_picture; }
-      }
-    });
+
+    console.log('[EDIT] Fetching /me …');
+    const r = await apiFetch('/me');
+    if (r.ok && r.data.data) {
+      const u = r.data.data;
+      this.form.username = u.username || '';
+      this.form.email = u.email || '';
+      this.form.bio = u.bio || '';
+      this.currentAvatar = u.profile_picture || '';
+      this.avatarPreview = u.profile_picture || '';
+      console.log('[EDIT] Loaded user:', u.username);
+    } else {
+      console.error('[EDIT] Failed to load profile');
+    }
+    this.loading = false;
   }
 }).mount('#app');
 </script>

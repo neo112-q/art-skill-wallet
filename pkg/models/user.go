@@ -37,3 +37,15 @@ type LoginResponse struct {
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
+
+type UpdateProfileRequest struct {
+	Username    string `json:"username"     binding:"required,min=3,max=30"`
+	Email       string `json:"email"        binding:"required,email"`
+	Bio         string `json:"bio"`
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+}
+
+type StatusUpdateRequest struct {
+	Status string `json:"status" binding:"required,oneof=Pending Approved Rejected"`
+}

@@ -89,6 +89,9 @@ func main() {
 	protected.Use(middleware.JWTAuth())
 	{
 		protected.GET("/me", handlers.GetMe)
+		protected.PUT("/me", handlers.UpdateMe)
+		protected.PUT("/me/avatar", handlers.UploadAvatar)
+		protected.GET("/history", handlers.GetHistory)
 		protected.GET("/skills", handlers.GetSkills)
 		protected.POST("/skills", handlers.CreateSkill)
 		protected.PUT("/skills/:id", handlers.UpdateSkill)
@@ -105,7 +108,8 @@ func main() {
 	adminGroup := api.Group("/admin")
 	adminGroup.Use(middleware.JWTAuth(), middleware.CheckAdmin())
 	{
-		adminGroup.GET("/submissions", handlers.GetSubmissions)
+		adminGroup.GET("/submissions", handlers.GetSubmissionsEnriched)
+		adminGroup.PUT("/submissions/:id", handlers.UpdateSubmissionStatus)
 	}
 
 	// ── Start ───────────────────────────────────────────────────────────

@@ -23,13 +23,12 @@
         <a href="/history.html" class="nav-link active">History</a>
       </div>
       <div class="avatar-wrapper">
-        <img :src="avatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <img :src="displayAvatar" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
         <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
           <div class="avatar-dropdown-header">
-            <img :src="avatarUrl" alt="User avatar" class="avatar-dropdown-pic">
+            <img :src="displayAvatar" alt="User avatar" class="avatar-dropdown-pic">
             <div>
               <p class="avatar-dropdown-name">{{ username }}</p>
-              <p class="avatar-dropdown-email">{{ email }}</p>
             </div>
           </div>
           <div class="avatar-dropdown-divider"></div>
@@ -50,46 +49,57 @@
       <div class="filter-card">
         <h2 class="filter-title">Filter</h2>
         <div class="filter-group">
-          <label class="filter-label">Name</label>
-          <input type="text" class="filter-input" v-model="filterName">
+          <label class="filter-label">Title</label>
+          <input type="text" class="filter-input" v-model="filterTitle" placeholder="Search...">
         </div>
         <div class="filter-group">
           <label class="filter-label">Skill</label>
-          <input type="text" class="filter-input" v-model="filterSkill">
+          <input type="text" class="filter-input" v-model="filterSkill" placeholder="e.g. Illustration">
         </div>
         <div class="filter-group">
-          <label class="filter-label">Level</label>
-          <input type="text" class="filter-input" v-model="filterLevel">
-        </div>
-        <div class="filter-group">
-          <label class="filter-label">Tag</label>
-          <input type="text" class="filter-input" v-model="filterTag">
+          <label class="filter-label">Type</label>
+          <select class="filter-input" v-model="filterType">
+            <option value="">All</option>
+            <option value="upload">Uploads</option>
+            <option value="skill_created">Skills Added</option>
+          </select>
         </div>
       </div>
     </aside>
 
     <!-- Timeline -->
     <main class="timeline-area">
-      <div class="timeline-wrap">
+
+      <!-- Loading -->
+      <div v-if="loading" style="text-align:center; padding:3rem; color:#888;">Loading timeline...</div>
+
+      <!-- Empty -->
+      <div v-else-if="!filteredEvents.length" style="text-align:center; padding:3rem; color:#555;">
+        <p v-if="events.length">No events match your filters.</p>
+        <p v-else>No activity yet. <a href="/upload.html" style="color:#CCFF00;">Upload your first artwork</a> or <a href="/skillManage.html" style="color:#CCFF00;">add a skill</a>.</p>
+      </div>
+
+      <div v-else class="timeline-wrap">
         <div class="timeline-line"></div>
-        <template v-for="g in filteredGroups" :key="g.date">
-          <div class="timeline-group">
-            <div class="timeline-date" v-html="g.dateLabel"></div>
-            <div class="timeline-dot"></div>
-            <div class="timeline-entries">
-              <div class="timeline-card" v-for="e in g.entries" :key="e.text">
-                <div class="timeline-thumb">
-                  <img v-if="e.img" :src="e.img" :alt="e.text">
-                  <span v-else class="timeline-icon">⬆️</span>
-                </div>
-                <div class="timeline-text">
-                  <p v-html="e.text"></p>
-                  <span class="timeline-tag" v-for="t in e.tags" :key="t">{{ t }}</span>
-                </div>
+
+        <div class="timeline-group" v-for="(group, gi) in groupedEvents" :key="gi">
+          <div class="timeline-date" v-html="group.dateLabel"></div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-entries">
+            <div class="timeline-card" v-for="(ev, ei) in group.items" :key="ei">
+              <div class="timeline-thumb">
+                <span v-if="ev.type === 'upload'" class="timeline-icon">🎨</span>
+                <span v-else class="timeline-icon">⬆️</span>
+              </div>
+              <div class="timeline-text">
+                <p v-if="ev.type === 'upload'">You uploaded :<br><strong>{{ ev.title }}</strong></p>
+                <p v-else>You added skill :<br><strong>{{ ev.title }}</strong></p>
+                <span class="timeline-tag" v-if="ev.skill_name">{{ ev.skill_name }}</span>
+                <span class="timeline-tag" v-if="ev.level">{{ ev.level }}</span>
               </div>
             </div>
           </div>
-        </template>
+        </div>
       </div>
     </main>
 
@@ -107,50 +117,62 @@ createApp({
     return {
       isAdmin: TokenStore.isAdmin(),
       username: TokenStore.getUsername() || 'User',
-      email: '',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
       dropdownOpen: false,
-      filterName: '', filterSkill: '', filterLevel: '', filterTag: '',
-      groups: [
-        { date: '2026-12-26', dateLabel: '26 December<br>2026', name: 'beauty path to violent,character design is now advanced', skill: 'Character Design', level: 'Advanced', tags: 'digital,character,upload,levelup', entries: [
-          { img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=160&q=80', text: 'You upload :<br><strong>Beauty path to violent</strong>', tags: ['Character Design'] },
-          { img: '', text: 'You level up :<br><strong>Character Design is now Advanced</strong>', tags: ['Advanced'] },
-        ]},
-        { date: '2026-11-26', dateLabel: '26 November<br>2026', name: 'sloth dream', skill: 'Illustration', level: 'Intermediate', tags: 'illustration,moon,upload', entries: [
-          { img: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=160&q=80', text: 'You upload :<br><strong>Sloth dream</strong>', tags: ['Illustration','Intermediate'] },
-        ]},
-        { date: '2026-10-26', dateLabel: '26 October<br>2026', name: 'swallow in the pretty face', skill: 'Digital Painting', level: 'Intermediate', tags: 'painting,portrait,upload', entries: [
-          { img: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=160&q=80', text: 'You upload :<br><strong>Swallow in the pretty face</strong>', tags: ['Digital Painting'] },
-        ]},
-        { date: '2026-09-14', dateLabel: '14 September<br>2026', name: 'neon citadel', skill: 'Concept Art', level: 'Advanced', tags: 'concept,environment,upload', entries: [
-          { img: 'https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=160&q=80', text: 'You upload :<br><strong>Neon Citadel</strong>', tags: ['Concept Art','Advanced'] },
-        ]},
-        { date: '2026-08-02', dateLabel: '2 August<br>2026', name: 'forest spirit,illustration is now intermediate', skill: 'Illustration', level: 'Intermediate', tags: 'illustration,nature,upload,levelup', entries: [
-          { img: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=160&q=80', text: 'You upload :<br><strong>Forest Spirit</strong>', tags: ['Illustration'] },
-          { img: '', text: 'You level up :<br><strong>Illustration is now Intermediate</strong>', tags: ['Intermediate'] },
-        ]},
-        { date: '2026-07-10', dateLabel: '10 July<br>2026', name: 'void walker', skill: 'Character Design', level: 'Advanced', tags: 'character,darkfantasy,upload', entries: [
-          { img: 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=160&q=80', text: 'You upload :<br><strong>Void Walker</strong>', tags: ['Character Design'] },
-        ]},
-      ],
+      loading: true,
+      events: [],
+      filterTitle: '',
+      filterSkill: '',
+      filterType: '',
     };
   },
   computed: {
-    filteredGroups() {
-      const n = this.filterName.toLowerCase(), s = this.filterSkill.toLowerCase(), l = this.filterLevel.toLowerCase(), t = this.filterTag.toLowerCase();
-      return this.groups.filter(g =>
-        (!n || g.name.toLowerCase().includes(n)) &&
-        (!s || g.skill.toLowerCase().includes(s)) &&
-        (!l || g.level.toLowerCase().includes(l)) &&
-        (!t || g.tags.toLowerCase().includes(t))
+    displayAvatar() {
+      return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.username) + '&background=CCFF00&color=121212&bold=true&size=100';
+    },
+    filteredEvents() {
+      const t = this.filterTitle.toLowerCase();
+      const s = this.filterSkill.toLowerCase();
+      const tp = this.filterType;
+      return this.events.filter(e =>
+        (!t || e.title.toLowerCase().includes(t)) &&
+        (!s || (e.skill_name || '').toLowerCase().includes(s)) &&
+        (!tp || e.type === tp)
       );
+    },
+    // Group filtered events by date string (day)
+    groupedEvents() {
+      const groups = [];
+      const map = {};
+      this.filteredEvents.forEach(ev => {
+        const d = new Date(ev.date);
+        const key = d.toISOString().slice(0, 10);
+        if (!map[key]) {
+          const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) + '<br>' + d.getFullYear();
+          map[key] = { dateLabel: label, items: [] };
+          groups.push(map[key]);
+        }
+        map[key].items.push(ev);
+      });
+      return groups;
     },
   },
   methods: {
     doLogout() { logout(); },
   },
-  mounted() {
+  async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
+
+    console.log('[HISTORY] Fetching GET /history …');
+    const r = await apiFetch('/history');
+    console.log('[HISTORY] Response:', r.status, r.data);
+
+    if (r.ok && r.data.data) {
+      this.events = r.data.data;
+      console.log('[HISTORY] Loaded', this.events.length, 'events');
+    } else {
+      console.error('[HISTORY] Failed:', r.data.error_message);
+    }
+    this.loading = false;
   }
 }).mount('#app');
 </script>

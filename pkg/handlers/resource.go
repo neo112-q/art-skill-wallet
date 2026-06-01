@@ -275,6 +275,7 @@ func CreateArtwork(c *gin.Context) {
 		Title:         req.Title,
 		Description:   req.Description,
 		PrivacyStatus: req.PrivacyStatus,
+		Status:        "Pending",
 		UploadDate:    time.Now(),
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -288,27 +289,4 @@ func CreateArtwork(c *gin.Context) {
 	response.Success(c, http.StatusCreated, artwork)
 }
 
-// ── Admin ─────────────────────────────────────────────────────────────────────
-
-func GetSubmissions(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	cursor, err := db.Col("artworks").Find(ctx, bson.M{})
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch submissions")
-		return
-	}
-	defer cursor.Close(ctx)
-
-	var artworks []models.Artwork
-	if err := cursor.All(ctx, &artworks); err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to decode submissions")
-		return
-	}
-	if artworks == nil {
-		artworks = []models.Artwork{}
-	}
-
-	response.Success(c, http.StatusOK, artworks)
-}
+// ── Admin handlers moved to pkg/handlers/admin.go ────────────────────────────
