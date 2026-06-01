@@ -87,6 +87,8 @@ func main() {
 		protected.GET("/me", handlers.GetMe)
 		protected.GET("/skills", handlers.GetSkills)
 		protected.POST("/skills", handlers.CreateSkill)
+		protected.PUT("/skills/:id", handlers.UpdateSkill)
+		protected.DELETE("/skills/:id", handlers.DeleteSkill)
 		protected.GET("/artworks", handlers.GetArtworks)
 		protected.POST("/artworks", handlers.CreateArtwork)
 	}
