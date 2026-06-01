@@ -33,8 +33,6 @@ const TokenStore = {
 };
 
 // ── JWT Decode ────────────────────────────────────────────────────────────────
-// Client-side only — reads payload without verifying signature.
-// Real verification always happens on the server.
 
 function decodeJWT(token) {
   try {
@@ -79,18 +77,24 @@ async function refreshAccessToken() {
   }
 }
 
-// ── apiFetch ──────────────────────────────────────────────────────────────────
-// Automatically attaches Bearer token.
-// Silently refreshes and retries once on 401.
+// ── Ensure valid token (shared pre-flight) ───────────────────────────────────
 
-async function apiFetch(path, opts = {}) {
+async function ensureToken() {
   let accessToken = TokenStore.getAccess();
-
-  // Proactively refresh if token is already expired
   if (accessToken && tokenIsExpired(accessToken)) {
     const ok = await refreshAccessToken();
-    if (!ok) return { ok: false, status: 401, data: { error_message: 'Session expired' } };
+    if (!ok) return null;
     accessToken = TokenStore.getAccess();
+  }
+  return accessToken;
+}
+
+// ── apiFetch — JSON requests ─────────────────────────────────────────────────
+
+async function apiFetch(path, opts = {}) {
+  let accessToken = await ensureToken();
+  if (!accessToken && TokenStore.getAccess()) {
+    return { ok: false, status: 401, data: { error_message: 'Session expired' } };
   }
 
   const headers = {
@@ -113,6 +117,37 @@ async function apiFetch(path, opts = {}) {
 
   let data = {};
   try { data = await res.json(); } catch { /* empty body */ }
+
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ── apiUpload — multipart/form-data requests ─────────────────────────────────
+// Do NOT set Content-Type manually — the browser sets it with the boundary.
+
+async function apiUpload(path, formData) {
+  let accessToken = await ensureToken();
+  if (!accessToken) {
+    return { ok: false, status: 401, data: { error_message: 'Session expired' } };
+  }
+
+  let res = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + accessToken },
+    body: formData,
+  });
+
+  if (res.status === 401) {
+    const ok = await refreshAccessToken();
+    if (!ok) return { ok: false, status: 401, data: { error_message: 'Session expired' } };
+    res = await fetch(API_BASE + path, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + TokenStore.getAccess() },
+      body: formData,
+    });
+  }
+
+  let data = {};
+  try { data = await res.json(); } catch {}
 
   return { ok: res.ok, status: res.status, data };
 }

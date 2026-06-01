@@ -11,7 +11,7 @@
 <body>
 <div id="app">
 
-  <!-- Navbar (unified with home.html) -->
+  <!-- Navbar -->
   <nav class="navbar" aria-label="Main navigation">
     <div class="navbar-inner">
       <a href="/home.html" class="nav-logo">
@@ -52,31 +52,47 @@
         <h1 style="font-size:1.5rem; font-weight:800;">My Skills</h1>
         <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Track your skill levels and progress</p>
       </div>
-      <a href="/upload.html" class="btn-neon"><i class="fas fa-plus" style="font-size:0.7rem;"></i> Add ArtWork</a>
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn-neon" @click="openAddModal"><i class="fas fa-plus" style="font-size:0.7rem;"></i> Add Skill</button>
+        <a href="/upload.html" class="btn-outline"><i class="fas fa-cloud-upload-alt" style="font-size:0.7rem;"></i> Upload Art</a>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div v-if="loading" style="text-align:center; padding:3rem; color:#888;">Loading skills...</div>
+
+    <!-- Empty State -->
+    <div v-else-if="!skills.length" style="text-align:center; padding:3rem; color:#666;">
+      <p style="font-size:1.1rem; margin-bottom:1rem;">No skills yet.</p>
+      <button class="btn-neon" @click="openAddModal">+ Add Your First Skill</button>
     </div>
 
     <!-- Skills Grid -->
-    <div class="skills-grid fade-in-2">
-      <div class="skill-card" v-for="s in skills" :key="s.skill_name">
+    <div v-else class="skills-grid fade-in-2">
+      <div class="skill-card" v-for="s in skills" :key="s.id">
         <h3>{{ s.skill_name }}</h3>
         <div class="meter" style="margin-bottom:0.25rem;">
-          <div class="seg" :class="'seg-neon'"></div>
+          <div class="seg seg-neon"></div>
           <div class="seg" :class="s.level === 'Intermediate' || s.level === 'Advanced' ? 'seg-blue' : 'seg-empty'"></div>
           <div class="seg" :class="s.level === 'Advanced' ? 'seg-neon' : 'seg-empty'"></div>
         </div>
         <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
         <p style="color:#aaa; font-size:0.75rem; margin-top:0.5rem;">Level : {{ levelNum(s.level) }}</p>
+        <p v-if="s.development_guide" style="color:#666; font-size:0.72rem; margin-top:0.35rem; line-height:1.4;">{{ s.development_guide }}</p>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-top:1rem;">
           <span class="badge" :class="badgeClass(s.level)">
             <i class="fas" :class="badgeIcon(s.level)" style="font-size:0.7rem;"></i> {{ s.level }}
           </span>
-          <button class="btn-edit-sm" @click="openEdit(s)"><i class="fas fa-pen" style="font-size:0.7rem;"></i> Edit</button>
+          <div style="display:flex; gap:0.4rem;">
+            <button class="btn-edit-sm" @click="openEditModal(s)"><i class="fas fa-pen" style="font-size:0.7rem;"></i> Edit</button>
+            <button class="btn-edit-sm" style="color:#f55;" @click="deleteSkill(s)"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+          </div>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Footer (unified with home.html) -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div>
@@ -108,18 +124,32 @@
     <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
-  <!-- Edit Skill Modal -->
-  <div class="modal-overlay" :class="{ open: editOpen }" @click.self="editOpen=false">
+  <!-- Add / Edit Skill Modal -->
+  <div class="modal-overlay" :class="{ open: modalOpen }" @click.self="modalOpen=false">
     <div class="modal-box">
-      <button class="modal-close" @click="editOpen=false">&times;</button>
-      <h2 class="modal-title">Edit – {{ editSkill.skill_name }}</h2>
-      <p style="font-size:0.78rem; color:#666; margin:-0.5rem 0 1.25rem;">Select the new level for this skill.</p>
-      <div class="level-radio-group">
-        <div><input type="radio" v-model="editLevel" value="Beginner" id="lvl-beg"><label for="lvl-beg">🌱 Beginner</label></div>
-        <div><input type="radio" v-model="editLevel" value="Intermediate" id="lvl-int"><label for="lvl-int">🔥 Intermediate</label></div>
-        <div><input type="radio" v-model="editLevel" value="Advanced" id="lvl-adv"><label for="lvl-adv">👑 Advanced</label></div>
+      <button class="modal-close" @click="modalOpen=false">&times;</button>
+      <h2 class="modal-title">{{ modalMode === 'add' ? 'Add New Skill' : 'Edit – ' + modalForm.skill_name }}</h2>
+
+      <div class="auth-field" style="margin-bottom:1rem;">
+        <label class="edit-label">Skill Name</label>
+        <input type="text" class="auth-input" v-model="modalForm.skill_name" placeholder="e.g. Character Design" :disabled="modalMode === 'edit'">
       </div>
-      <button class="modal-save-btn" @click="saveEdit">SAVE CHANGES</button>
+
+      <p style="font-size:0.78rem; color:#666; margin-bottom:0.75rem;">Select the level for this skill:</p>
+      <div class="level-radio-group">
+        <div><input type="radio" v-model="modalForm.level" value="Beginner" id="lvl-beg"><label for="lvl-beg">🌱 Beginner</label></div>
+        <div><input type="radio" v-model="modalForm.level" value="Intermediate" id="lvl-int"><label for="lvl-int">🔥 Intermediate</label></div>
+        <div><input type="radio" v-model="modalForm.level" value="Advanced" id="lvl-adv"><label for="lvl-adv">👑 Advanced</label></div>
+      </div>
+
+      <div class="auth-field" style="margin-top:1rem;">
+        <label class="edit-label">Development Guide (optional)</label>
+        <textarea class="auth-input" v-model="modalForm.development_guide" rows="2" placeholder="Tips, resources, next steps..."></textarea>
+      </div>
+
+      <button class="modal-save-btn" @click="saveSkill" :disabled="saving" style="margin-top:1.25rem;">
+        {{ saving ? 'Saving...' : (modalMode === 'add' ? 'CREATE SKILL' : 'SAVE CHANGES') }}
+      </button>
     </div>
   </div>
 
@@ -138,17 +168,12 @@ createApp({
       email: '',
       avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
       dropdownOpen: false,
-      skills: [
-        { skill_name: 'Illustration', level: 'Beginner' },
-        { skill_name: 'UI Design', level: 'Intermediate' },
-        { skill_name: '3D Modeling', level: 'Advanced' },
-        { skill_name: 'Photography', level: 'Intermediate' },
-        { skill_name: 'Video Editing', level: 'Beginner' },
-        { skill_name: 'Concept Art', level: 'Advanced' },
-      ],
-      editOpen: false,
-      editSkill: {},
-      editLevel: 'Beginner',
+      loading: true,
+      skills: [],
+      modalOpen: false,
+      modalMode: 'add', // 'add' | 'edit'
+      modalForm: { id: '', skill_name: '', level: 'Beginner', development_guide: '' },
+      saving: false,
     };
   },
   methods: {
@@ -156,12 +181,108 @@ createApp({
     levelNum(l) { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
     badgeClass(l) { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
     badgeIcon(l) { return l === 'Beginner' ? 'fa-seedling' : l === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
-    openEdit(s) { this.editSkill = s; this.editLevel = s.level; this.editOpen = true; },
-    saveEdit() { this.editSkill.level = this.editLevel; this.editOpen = false; },
+
+    // ── FETCH ALL → GET /skills ────────────────────────────────────────
+    async fetchSkills() {
+      this.loading = true;
+      console.log('[SKILLS] Fetching GET /skills …');
+      const r = await apiFetch('/skills');
+      console.log('[SKILLS] Response:', r.status, r.data);
+      if (r.ok) {
+        this.skills = r.data.data || [];
+        console.log('[SKILLS] Loaded', this.skills.length, 'skills');
+      } else {
+        console.error('[SKILLS] Failed to load:', r.data.error_message);
+        alert('Failed to load skills: ' + (r.data.error_message || 'Unknown error'));
+      }
+      this.loading = false;
+    },
+
+    // ── ADD MODAL ──────────────────────────────────────────────────────
+    openAddModal() {
+      this.modalMode = 'add';
+      this.modalForm = { id: '', skill_name: '', level: 'Beginner', development_guide: '' };
+      this.modalOpen = true;
+    },
+
+    // ── EDIT MODAL ─────────────────────────────────────────────────────
+    openEditModal(s) {
+      this.modalMode = 'edit';
+      this.modalForm = { id: s.id, skill_name: s.skill_name, level: s.level, development_guide: s.development_guide || '' };
+      this.modalOpen = true;
+    },
+
+    // ── SAVE (CREATE or UPDATE) ────────────────────────────────────────
+    async saveSkill() {
+      if (!this.modalForm.skill_name) { alert('Skill name is required.'); return; }
+      this.saving = true;
+
+      const payload = {
+        skill_name: this.modalForm.skill_name,
+        level: this.modalForm.level,
+        development_guide: this.modalForm.development_guide,
+      };
+
+      if (this.modalMode === 'add') {
+        // ── POST /skills ────────────────────────────────────────────
+        console.log('[SKILLS] Sending POST /skills …', payload);
+        const r = await apiFetch('/skills', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        console.log('[SKILLS] POST Response:', r.status, r.data);
+
+        if (r.ok) {
+          alert('Skill "' + payload.skill_name + '" created successfully!');
+          this.skills.push(r.data.data);
+          this.modalOpen = false;
+        } else {
+          alert('Failed to create skill: ' + (r.data.error_message || 'Unknown error'));
+          console.error('[SKILLS] POST failed:', r.data);
+        }
+      } else {
+        // ── PUT /skills/:id ─────────────────────────────────────────
+        console.log('[SKILLS] Sending PUT /skills/' + this.modalForm.id + ' …', payload);
+        const r = await apiFetch('/skills/' + this.modalForm.id, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+        console.log('[SKILLS] PUT Response:', r.status, r.data);
+
+        if (r.ok) {
+          alert('Skill "' + payload.skill_name + '" updated successfully!');
+          // Replace in local array
+          const idx = this.skills.findIndex(s => s.id === this.modalForm.id);
+          if (idx !== -1) this.skills[idx] = r.data.data;
+          this.modalOpen = false;
+        } else {
+          alert('Failed to update skill: ' + (r.data.error_message || 'Unknown error'));
+          console.error('[SKILLS] PUT failed:', r.data);
+        }
+      }
+      this.saving = false;
+    },
+
+    // ── DELETE → DELETE /skills/:id ────────────────────────────────────
+    async deleteSkill(s) {
+      if (!confirm('Delete "' + s.skill_name + '"? This cannot be undone.')) return;
+
+      console.log('[SKILLS] Sending DELETE /skills/' + s.id + ' …');
+      const r = await apiFetch('/skills/' + s.id, { method: 'DELETE' });
+      console.log('[SKILLS] DELETE Response:', r.status, r.data);
+
+      if (r.ok) {
+        alert('Skill "' + s.skill_name + '" deleted.');
+        this.skills = this.skills.filter(x => x.id !== s.id);
+      } else {
+        alert('Failed to delete: ' + (r.data.error_message || 'Unknown error'));
+        console.error('[SKILLS] DELETE failed:', r.data);
+      }
+    },
   },
   mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
-    apiFetch('/skills').then(r => { if (r.ok && r.data.data && r.data.data.length) this.skills = r.data.data; });
+    this.fetchSkills();
   }
 }).mount('#app');
 </script>

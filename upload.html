@@ -11,7 +11,7 @@
 <body>
 <div id="app">
 
-  <!-- Navbar (unified with home.html) -->
+  <!-- Navbar -->
   <nav class="navbar" aria-label="Main navigation">
     <div class="navbar-inner">
       <a href="/home.html" class="nav-logo">
@@ -53,14 +53,15 @@
 
     <div class="fade-in-2" style="display:flex; flex-direction:column; gap:1.25rem;">
 
-      <!-- Artwork Upload -->
+      <!-- Artwork File -->
       <section class="form-section">
         <h2 class="section-title">Artwork</h2>
-        <label class="upload-box" for="artworkUpload">
+        <label class="upload-box" for="artworkUpload" @dragover.prevent @drop.prevent="onDropArtwork">
           <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem; color:#555;"></i>
-          <span class="upload-label">Click or Drag File</span>
+          <span class="upload-label" v-if="!artworkFile">Click or Drag File</span>
+          <span class="upload-label" v-else style="color:#CCFF00;">{{ artworkFile.name }} ({{ formatSize(artworkFile.size) }})</span>
           <span class="upload-hint">PNG, JPG, MP4 — max 50MB</span>
-          <input type="file" id="artworkUpload" accept="image/*,video/*" hidden>
+          <input type="file" id="artworkUpload" accept="image/*,video/*" hidden @change="onArtworkSelect">
         </label>
       </section>
 
@@ -76,42 +77,27 @@
         <textarea class="input-field textarea" v-model="form.description" placeholder="Describe your work..."></textarea>
       </section>
 
-      <!-- Details -->
+      <!-- Skill Selector -->
       <section class="form-section">
-        <h2 class="section-title">Details</h2>
-        <div style="display:flex; flex-direction:column; gap:1rem;">
-
-          <!-- Skill Search -->
-          <div style="display:flex; flex-direction:column; gap:0.4rem;">
-            <label class="input-label">Skill in Art</label>
-            <div class="skill-search-wrap">
-              <input type="text" class="input-field" v-model="skillQuery" placeholder="Search skill..." @focus="skillDropOpen=true" @input="skillDropOpen=true" @click.stop>
-              <div class="skill-dropdown" :class="{ open: skillDropOpen }" @click.stop>
-                <div v-if="!filteredSkills.length" class="skill-option" style="opacity:.4; pointer-events:none;">No results</div>
-                <div v-for="s in filteredSkills" :key="s" class="skill-option" :class="{ selected: selectedSkills.includes(s) }" @click="addSkill(s)">{{ s }}</div>
-              </div>
-            </div>
-            <div class="skill-tags">
-              <span class="skill-tag" v-for="s in selectedSkills" :key="s">{{ s }} <button class="skill-tag-remove" @click="removeSkill(s)">&times;</button></span>
-            </div>
-          </div>
-
-          <!-- Date -->
-          <div style="display:flex; flex-direction:column; gap:0.4rem;">
-            <label class="input-label">Project Complete Date</label>
-            <input type="date" class="input-field" v-model="form.date">
-          </div>
+        <h2 class="section-title">Skill in Art</h2>
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          <select class="input-field" v-model="form.skill_id" v-if="userSkills.length">
+            <option value="" disabled>Select a skill...</option>
+            <option v-for="s in userSkills" :key="s.id" :value="s.id">{{ s.skill_name }} ({{ s.level }})</option>
+          </select>
+          <p v-else style="color:#666; font-size:0.82rem;">No skills found. <a href="/skillManage.html" style="color:#CCFF00;">Add a skill first</a>.</p>
         </div>
       </section>
 
       <!-- Evidence -->
       <section class="form-section">
-        <h2 class="section-title">Upload Evidence</h2>
-        <label class="upload-box upload-box-sm" for="evidenceUpload">
+        <h2 class="section-title">Upload Evidence (Process Proof)</h2>
+        <label class="upload-box upload-box-sm" for="evidenceUpload" @dragover.prevent @drop.prevent="onDropEvidence">
           <i class="fas fa-paperclip" style="font-size:1.1rem; color:#555;"></i>
-          <span class="upload-label">Click or Drag File</span>
+          <span class="upload-label" v-if="!evidenceFile">Click or Drag File</span>
+          <span class="upload-label" v-else style="color:#CCFF00;">{{ evidenceFile.name }} ({{ formatSize(evidenceFile.size) }})</span>
           <span class="upload-hint">PDF, PNG, JPG — max 10MB</span>
-          <input type="file" id="evidenceUpload" accept="image/*,.pdf" hidden>
+          <input type="file" id="evidenceUpload" accept="image/*,.pdf" hidden @change="onEvidenceSelect">
         </label>
       </section>
 
@@ -128,11 +114,14 @@
         </div>
       </section>
 
-      <button class="publish-btn" @click="publish">PUBLISH</button>
+      <!-- Publish -->
+      <button class="publish-btn" @click="publish" :disabled="publishing">
+        {{ publishing ? 'Uploading...' : 'PUBLISH' }}
+      </button>
     </div>
   </main>
 
-  <!-- Footer (unified with home.html) -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div>
@@ -171,7 +160,6 @@
 <script>
 if (!TokenStore.isLoggedIn()) { window.location.replace('/home.html'); }
 const { createApp } = Vue;
-const ALL_SKILLS = ['Illustration','Character Design','Concept Art','Digital Painting','Storyboarding','3D Modeling','Animation','Pixel Art','UI Design','Watercolor','Oil Painting','Graphic Design','Typography','Photography','Video Editing','Game Design','Background Art','Botanical Illustration','Fine Art','Sculpture'];
 createApp({
   data() {
     return {
@@ -180,31 +168,122 @@ createApp({
       email: '',
       avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
       dropdownOpen: false,
-      form: { title: '', description: '', date: '', privacy: 'Public' },
-      skillQuery: '',
-      skillDropOpen: false,
-      selectedSkills: [],
+      form: { title: '', description: '', skill_id: '', privacy: 'Public' },
+      artworkFile: null,
+      evidenceFile: null,
+      userSkills: [],
+      publishing: false,
     };
-  },
-  computed: {
-    filteredSkills() {
-      const q = this.skillQuery.toLowerCase();
-      return ALL_SKILLS.filter(s => s.toLowerCase().includes(q));
-    },
   },
   methods: {
     doLogout() { logout(); },
-    addSkill(s) { if (!this.selectedSkills.includes(s)) this.selectedSkills.push(s); this.skillQuery = ''; this.skillDropOpen = false; },
-    removeSkill(s) { this.selectedSkills = this.selectedSkills.filter(x => x !== s); },
+    formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    },
+
+    // ── File selection ─────────────────────────────────────────────────
+    onArtworkSelect(e) { this.artworkFile = e.target.files[0] || null; },
+    onDropArtwork(e) { this.artworkFile = e.dataTransfer.files[0] || null; },
+    onEvidenceSelect(e) { this.evidenceFile = e.target.files[0] || null; },
+    onDropEvidence(e) { this.evidenceFile = e.dataTransfer.files[0] || null; },
+
+    // ── PUBLISH ────────────────────────────────────────────────────────
+    // Step 1: Upload the main artwork file → POST /uploads (multipart)
+    // Step 2: Create the artwork record    → POST /artworks (JSON)
+    // Step 3: Upload evidence (if any)     → POST /uploads (multipart)
     async publish() {
-      if (!this.form.title || !this.selectedSkills.length) { alert('Title and at least one skill are required.'); return; }
-      // TODO: wire to real API with file upload
-      alert('Artwork published successfully!');
-      window.location.href = '/profile.html';
+      // ── Validation ────────────────────────────────────────────────
+      if (!this.artworkFile) { alert('Please select an artwork file.'); return; }
+      if (!this.form.title)  { alert('Title is required.'); return; }
+      if (!this.form.skill_id) { alert('Please select a skill.'); return; }
+
+      this.publishing = true;
+      console.log('[UPLOAD] Starting publish flow …');
+
+      try {
+        // ── Step 1: Upload artwork file ─────────────────────────────
+        const artFormData = new FormData();
+        artFormData.append('file', this.artworkFile);
+        artFormData.append('title', this.form.title);
+        artFormData.append('description', this.form.description || '');
+
+        console.log('[UPLOAD] Step 1 — POST /uploads (artwork file) …');
+        const uploadRes = await apiUpload('/uploads', artFormData);
+        console.log('[UPLOAD] Step 1 Response:', uploadRes.status, uploadRes.data);
+
+        if (!uploadRes.ok) {
+          alert('File upload failed: ' + (uploadRes.data.error_message || 'Unknown error'));
+          this.publishing = false;
+          return;
+        }
+
+        const uploadRecord = uploadRes.data.data;
+        console.log('[UPLOAD] File saved. ID:', uploadRecord.id);
+
+        // ── Step 2: Create artwork record ───────────────────────────
+        const artworkPayload = {
+          skill_id: this.form.skill_id,
+          title: this.form.title,
+          description: this.form.description || '',
+          privacy_status: this.form.privacy,
+        };
+
+        console.log('[UPLOAD] Step 2 — POST /artworks …', artworkPayload);
+        const artRes = await apiFetch('/artworks', {
+          method: 'POST',
+          body: JSON.stringify(artworkPayload),
+        });
+        console.log('[UPLOAD] Step 2 Response:', artRes.status, artRes.data);
+
+        if (!artRes.ok) {
+          alert('Artwork record creation failed: ' + (artRes.data.error_message || 'Unknown error'));
+          this.publishing = false;
+          return;
+        }
+
+        // ── Step 3: Upload evidence (optional) ──────────────────────
+        if (this.evidenceFile) {
+          const evFormData = new FormData();
+          evFormData.append('file', this.evidenceFile);
+          evFormData.append('title', 'Evidence for: ' + this.form.title);
+          evFormData.append('description', 'Process proof');
+
+          console.log('[UPLOAD] Step 3 — POST /uploads (evidence file) …');
+          const evRes = await apiUpload('/uploads', evFormData);
+          console.log('[UPLOAD] Step 3 Response:', evRes.status, evRes.data);
+
+          if (!evRes.ok) {
+            console.warn('[UPLOAD] Evidence upload failed (non-fatal):', evRes.data.error_message);
+          }
+        }
+
+        // ── Done ────────────────────────────────────────────────────
+        alert('Artwork published successfully!');
+        console.log('[UPLOAD] Full publish flow complete — redirecting to profile');
+        window.location.href = '/profile.html';
+
+      } catch (e) {
+        alert('Upload error: ' + e.message);
+        console.error('[UPLOAD] Exception:', e);
+      }
+      this.publishing = false;
     },
   },
   mounted() {
-    document.addEventListener('click', () => { this.dropdownOpen = false; this.skillDropOpen = false; });
+    document.addEventListener('click', () => { this.dropdownOpen = false; });
+
+    // Load user's skills for the dropdown
+    console.log('[UPLOAD] Fetching user skills for dropdown …');
+    apiFetch('/skills').then(r => {
+      if (r.ok) {
+        this.userSkills = r.data.data || [];
+        console.log('[UPLOAD] Loaded', this.userSkills.length, 'skills for dropdown');
+      } else {
+        console.error('[UPLOAD] Failed to load skills:', r.data.error_message);
+      }
+    });
   }
 }).mount('#app');
 </script>

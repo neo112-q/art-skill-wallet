@@ -178,17 +178,9 @@ createApp({
     return {
       loggedIn: TokenStore.isLoggedIn(),
       isAdmin: TokenStore.isAdmin(),
-      authOpen: false,
-      authTab: 'login',
-      authMsg: '',
-      authMsgType: 'error',
-      authLoading: false,
-      loginEmail: '',
-      loginPassword: '',
-      regUsername: '',
-      regEmail: '',
-      regPassword: '',
-      regConfirm: '',
+      authOpen: false, authTab: 'login', authMsg: '', authMsgType: 'error', authLoading: false,
+      loginEmail: '', loginPassword: '',
+      regUsername: '', regEmail: '', regPassword: '', regConfirm: '',
       forgotEmail: '',
       featured: [
         { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80' },
@@ -205,39 +197,81 @@ createApp({
   methods: {
     openAuth(tab) { this.authTab = tab || 'login'; this.authOpen = true; this.authMsg = ''; document.body.style.overflow = 'hidden'; },
     closeAuth() { this.authOpen = false; document.body.style.overflow = ''; },
-    scrollTo(sel) {
-      const el = document.querySelector(sel);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    },
+    scrollTo(sel) { const el = document.querySelector(sel); if (el) el.scrollIntoView({ behavior: 'smooth' }); },
+
+    // ── LOGIN → POST /auth/login ──────────────────────────────────────
     async handleLogin() {
       this.authMsg = '';
-      if (!this.loginEmail || !this.loginPassword) { this.authMsg = 'Please fill in all fields.'; this.authMsgType = 'error'; return; }
+      if (!this.loginEmail || !this.loginPassword) {
+        this.authMsg = 'Please fill in all fields.'; this.authMsgType = 'error'; return;
+      }
       this.authLoading = true;
       try {
-        const r = await apiFetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.loginEmail, password: this.loginPassword }) });
+        console.log('[LOGIN] Sending POST /auth/login …');
+        const r = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: this.loginEmail, password: this.loginPassword }),
+        });
+        console.log('[LOGIN] Response:', r.status, r.data);
+
         if (r.ok) {
           const { access_token, refresh_token, username } = r.data.data;
           const claims = decodeJWT(access_token);
-          TokenStore.set(access_token, refresh_token, claims?.role || 'user', username);
+          const role = claims?.role || 'user';
+          TokenStore.set(access_token, refresh_token, role, username);
+          console.log('[LOGIN] Token stored. Role:', role, '| Username:', username);
+          alert('Login successful! Welcome, ' + username);
           this.closeAuth();
-          window.location.href = (claims?.role === 'admin') ? '/admin.html' : '/profile.html';
-        } else { this.authMsg = r.data.error_message || 'Login failed.'; this.authMsgType = 'error'; }
-      } catch { this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error'; }
+          window.location.href = (role === 'admin') ? '/admin.html' : '/profile.html';
+        } else {
+          this.authMsg = r.data.error_message || 'Login failed.'; this.authMsgType = 'error';
+          console.error('[LOGIN] Failed:', this.authMsg);
+        }
+      } catch (e) {
+        this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error';
+        console.error('[LOGIN] Network error:', e);
+      }
       this.authLoading = false;
     },
+
+    // ── REGISTER → POST /auth/register ────────────────────────────────
     async handleRegister() {
       this.authMsg = '';
-      if (!this.regUsername || !this.regEmail || !this.regPassword) { this.authMsg = 'All fields are required.'; this.authMsgType = 'error'; return; }
-      if (this.regPassword !== this.regConfirm) { this.authMsg = 'Passwords do not match.'; this.authMsgType = 'error'; return; }
-      if (this.regPassword.length < 6) { this.authMsg = 'Password must be at least 6 characters.'; this.authMsgType = 'error'; return; }
+      if (!this.regUsername || !this.regEmail || !this.regPassword) {
+        this.authMsg = 'All fields are required.'; this.authMsgType = 'error'; return;
+      }
+      if (this.regPassword !== this.regConfirm) {
+        this.authMsg = 'Passwords do not match.'; this.authMsgType = 'error'; return;
+      }
+      if (this.regPassword.length < 6) {
+        this.authMsg = 'Password must be at least 6 characters.'; this.authMsgType = 'error'; return;
+      }
       this.authLoading = true;
       try {
-        const r = await apiFetch('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: this.regUsername, email: this.regEmail, password: this.regPassword }) });
-        if (r.ok) { this.authTab = 'login'; this.loginEmail = this.regEmail; this.authMsg = 'Account created! Please log in.'; this.authMsgType = 'success'; }
-        else { this.authMsg = r.data.error_message || 'Registration failed.'; this.authMsgType = 'error'; }
-      } catch { this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error'; }
+        console.log('[REGISTER] Sending POST /auth/register …');
+        const r = await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ username: this.regUsername, email: this.regEmail, password: this.regPassword }),
+        });
+        console.log('[REGISTER] Response:', r.status, r.data);
+
+        if (r.ok) {
+          alert('Account created successfully! Please log in.');
+          console.log('[REGISTER] Success — switching to login tab');
+          this.authTab = 'login';
+          this.loginEmail = this.regEmail;
+          this.authMsg = 'Account created! Please log in.'; this.authMsgType = 'success';
+        } else {
+          this.authMsg = r.data.error_message || 'Registration failed.'; this.authMsgType = 'error';
+          console.error('[REGISTER] Failed:', this.authMsg);
+        }
+      } catch (e) {
+        this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error';
+        console.error('[REGISTER] Network error:', e);
+      }
       this.authLoading = false;
     },
+
     handleForgot() {
       if (!this.forgotEmail) { this.authMsg = 'Please enter your email.'; this.authMsgType = 'error'; return; }
       this.authMsg = 'Reset link sent! Check your inbox.'; this.authMsgType = 'success';
