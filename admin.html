@@ -48,14 +48,32 @@
   <!-- Main -->
   <main class="page-main" style="max-width:960px; margin:0 auto;">
 
-    <!-- Header -->
-    <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem;">
+    <!-- Header + Tabs -->
+    <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
       <div>
-        <h1 style="font-size:1.5rem; font-weight:800;">Skill Submissions</h1>
-        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Review and approve artwork uploaded by users</p>
+        <h1 style="font-size:1.5rem; font-weight:800;">Admin Panel</h1>
+        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Manage submissions and users</p>
       </div>
-      <span style="background:#CCFF00; color:#121212; font-size:0.75rem; font-weight:700; padding:0.35rem 1rem; border-radius:999px;">{{ pendingCount }} Pending</span>
+      <span v-if="activeTab==='submissions'" style="background:#CCFF00; color:#121212; font-size:0.75rem; font-weight:700; padding:0.35rem 1rem; border-radius:999px;">{{ pendingCount }} Pending</span>
+      <span v-if="activeTab==='users'" style="background:#CCFF00; color:#121212; font-size:0.75rem; font-weight:700; padding:0.35rem 1rem; border-radius:999px;">{{ users.length }} Users</span>
     </div>
+
+    <!-- Tab switcher -->
+    <div style="display:flex; gap:0; margin-bottom:1.5rem; border-bottom:1px solid #2A2A2A;">
+      <button @click="activeTab='submissions'"
+        :style="{ borderBottom: activeTab==='submissions' ? '2px solid #CCFF00' : '2px solid transparent', color: activeTab==='submissions' ? '#CCFF00' : '#666' }"
+        style="background:none; border:none; padding:0.6rem 1.25rem; font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; cursor:pointer; margin-bottom:-1px;">
+        <i class="fas fa-image" style="margin-right:0.4rem;"></i> Submissions
+      </button>
+      <button @click="activeTab='users'; loadUsers()"
+        :style="{ borderBottom: activeTab==='users' ? '2px solid #CCFF00' : '2px solid transparent', color: activeTab==='users' ? '#CCFF00' : '#666' }"
+        style="background:none; border:none; padding:0.6rem 1.25rem; font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; cursor:pointer; margin-bottom:-1px;">
+        <i class="fas fa-users" style="margin-right:0.4rem;"></i> Users
+      </button>
+    </div>
+
+    <!-- ── SUBMISSIONS TAB ─────────────────────────────────────────────── -->
+    <div v-if="activeTab==='submissions'">
 
     <!-- Filter bar -->
     <div class="fade-in-2" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; padding:1rem 1.25rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:1.5rem;">
@@ -66,7 +84,6 @@
         </div>
         <select v-model="fStatus" class="filter-select"><option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
         <select v-model="fSkill" class="filter-select"><option value="">All Skills</option><option v-for="s in uniqueSkills" :key="s">{{ s }}</option></select>
-        <select v-model="fLevel" class="filter-select"><option value="">All Levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
       </div>
       <select v-model="sortDir" class="filter-select"><option>Newest First</option><option>Oldest First</option></select>
     </div>
@@ -82,7 +99,7 @@
             <th class="th-cell">User</th>
             <th class="th-cell">Title</th>
             <th class="th-cell">Skill</th>
-            <th class="th-cell">Level</th>
+            <th class="th-cell">Votes</th>
             <th class="th-cell">Submitted</th>
             <th class="th-cell">Status</th>
             <th class="th-cell">Action</th>
@@ -106,7 +123,10 @@
               </template>
               <span v-else>{{ row.skill || '—' }}</span>
             </td>
-            <td class="td-cell"><span class="badge" :class="badgeClass(row.level)">{{ row.level }}</span></td>
+            <td class="td-cell" style="color:#aaa; font-size:0.8rem;">
+              <span style="color:#4ade80;">{{ row.vote_approve_count || 0 }}✓</span>
+              <span style="color:#f87171; margin-left:0.4rem;">{{ row.vote_reject_count || 0 }}✗</span>
+            </td>
             <td class="td-cell" style="color:#666; white-space:nowrap;">{{ formatDate(row.submitted) }}</td>
             <td class="td-cell"><span class="status" :class="'status-' + row.status.toLowerCase()">{{ row.status }}</span></td>
             <td class="td-cell">
@@ -118,6 +138,9 @@
                 <button v-if="row.status !== 'Rejected'" class="btn-reject" @click="setStatus(row, 'Rejected')" :disabled="row._saving">
                   <i class="fas fa-times"></i> Reject
                 </button>
+                <button class="btn-view" style="border-color:#ef4444; color:#ef4444;" @click="deleteRow(row)" :disabled="row._saving" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -125,10 +148,90 @@
       </table>
     </div>
 
+    </div><!-- end submissions tab -->
+
+    <!-- ── USERS TAB ──────────────────────────────────────────────────────── -->
+    <div v-if="activeTab==='users'">
+
+      <!-- Search users -->
+      <div style="margin-bottom:1rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem; background:#121212; border:1px solid #2A2A2A; border-radius:8px; padding:0.5rem 0.75rem; max-width:320px;">
+          <i class="fas fa-search" style="color:#555; font-size:0.85rem;"></i>
+          <input type="text" v-model="userSearch" placeholder="Search by username or email..." style="background:transparent; border:none; outline:none; color:white; font-size:0.85rem; width:100%;">
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div v-if="usersLoading" style="text-align:center; padding:3rem; color:#888;">Loading users...</div>
+
+      <!-- Users table -->
+      <div v-else class="fade-in-2" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; overflow-x:auto;">
+        <table style="width:100%; font-size:0.85rem; border-collapse:collapse;">
+          <thead style="background:#161616; border-bottom:1px solid #2A2A2A;">
+            <tr>
+              <th class="th-cell">User</th>
+              <th class="th-cell">Email</th>
+              <th class="th-cell">Role</th>
+              <th class="th-cell">Joined</th>
+              <th class="th-cell">Status</th>
+              <th class="th-cell">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="!filteredUsers.length">
+              <td colspan="6" style="text-align:center; padding:2rem; color:#555;">No users found.</td>
+            </tr>
+            <tr v-for="u in filteredUsers" :key="u.id"
+                style="border-bottom:1px solid #2A2A2A; transition:background 0.15s;"
+                @mouseenter="$event.currentTarget.style.background='rgba(204,255,0,0.02)'"
+                @mouseleave="$event.currentTarget.style.background='transparent'">
+              <!-- Avatar + name -->
+              <td class="td-cell">
+                <div style="display:flex; align-items:center; gap:0.625rem;">
+                  <img v-if="u.profile_picture" :src="u.profile_picture"
+                       style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #2A2A2A;">
+                  <div v-else class="avatar-init">{{ u.username.slice(0,2).toUpperCase() }}</div>
+                  <span style="color:#fff; font-weight:600; white-space:nowrap;">{{ u.username }}</span>
+                </div>
+              </td>
+              <td class="td-cell" style="color:#aaa;">{{ u.email }}</td>
+              <td class="td-cell">
+                <span :style="{ background: u.role==='admin' ? 'rgba(204,255,0,0.1)' : 'rgba(255,255,255,0.05)', color: u.role==='admin' ? '#CCFF00' : '#aaa' }"
+                      style="font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:99px;">
+                  {{ u.role }}
+                </span>
+              </td>
+              <td class="td-cell" style="color:#666; white-space:nowrap;">{{ formatDate(u.created_at) }}</td>
+              <td class="td-cell">
+                <span v-if="u.banned"
+                      style="background:rgba(239,68,68,0.12); color:#f87171; font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:99px;">
+                  Banned
+                </span>
+                <span v-else
+                      style="background:rgba(34,197,94,0.12); color:#4ade80; font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:99px;">
+                  Active
+                </span>
+              </td>
+              <td class="td-cell">
+                <button v-if="!u.banned && u.role !== 'admin'" class="btn-reject" style="font-size:0.75rem; padding:0.3rem 0.75rem;" @click="banUser(u)">
+                  <i class="fas fa-ban"></i> Ban
+                </button>
+                <button v-else-if="u.banned" class="btn-approve" style="font-size:0.75rem; padding:0.3rem 0.75rem;" @click="unbanUser(u)">
+                  <i class="fas fa-check"></i> Unban
+                </button>
+                <span v-else style="color:#555; font-size:0.75rem;">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- end users tab -->
+
   </main>
 
   <!-- Footer -->
-  <footer class="site-footer">
+  <!-- <footer class="site-footer">
     <div class="footer-inner">
       <div>
         <div class="footer-logo">
@@ -157,7 +260,7 @@
       </div>
     </div>
     <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
-  </footer>
+  </footer> -->
 
   <!-- View Modal (with proofs) -->
   <div class="modal-overlay" :class="{ open: viewOpen }" @click.self="viewOpen=false">
@@ -175,7 +278,6 @@
             <span v-else>{{ viewData.skill || '—' }}</span>
           </span>
         </div>
-        <div class="view-row"><span class="view-label">Level</span><span class="view-value">{{ viewData.level }}</span></div>
         <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">{{ formatDate(viewData.submitted) }}</span></div>
         <div class="view-row"><span class="view-label">Status</span><span class="view-value">{{ viewData.status }}</span></div>
 
@@ -208,11 +310,14 @@
 
         <!-- Quick actions inside modal -->
         <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <button v-if="viewData.status !== 'Approved'" class="btn-approve" @click="setStatus(viewData, 'Approved'); viewData.status='Approved'">
+          <button v-if="viewData.status !== 'Approved'" class="btn-approve" @click="setStatus(viewData, 'Approved')">
             <i class="fas fa-check"></i> Approve
           </button>
-          <button v-if="viewData.status !== 'Rejected'" class="btn-reject" @click="setStatus(viewData, 'Rejected'); viewData.status='Rejected'">
+          <button v-if="viewData.status !== 'Rejected'" class="btn-reject" @click="setStatus(viewData, 'Rejected')">
             <i class="fas fa-times"></i> Reject
+          </button>
+          <button class="btn-reject" style="margin-left:auto;" @click="deleteRow(viewData)">
+            <i class="fas fa-trash"></i> Delete Artwork
           </button>
         </div>
       </div>
@@ -231,13 +336,19 @@ createApp({
     return {
       username: TokenStore.getUsername() || 'Admin',
       dropdownOpen: false,
+      mobileOpen: false,
       loading: true,
       rows: [],
-      search: '', fStatus: '', fSkill: '', fLevel: '', sortDir: 'Newest First',
+      search: '', fStatus: '', fSkill: '', sortDir: 'Newest First',
       viewOpen: false,
       viewData: {},
       viewProofs: [],
       viewProofsLoading: false,
+      // Users tab
+      activeTab: 'submissions',
+      users: [],
+      usersLoading: false,
+      userSearch: '',
     };
   },
   computed: {
@@ -245,17 +356,24 @@ createApp({
       return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.username) + '&background=CCFF00&color=121212&bold=true&size=100';
     },
     pendingCount() { return this.rows.filter(r => r.status === 'Pending').length; },
+    filteredUsers() {
+      const q = this.userSearch.toLowerCase();
+      if (!q) return this.users;
+      return this.users.filter(u =>
+        u.username.toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)
+      );
+    },
     uniqueSkills() {
-      return [...new Set(this.rows.map(r => r.skill).filter(Boolean))];
+      const all = this.rows.flatMap(r => r.skills && r.skills.length ? r.skills : (r.skill ? [r.skill] : []));
+      return [...new Set(all)];
     },
     filteredRows() {
       const q = this.search.toLowerCase();
-      const st = this.fStatus, sk = this.fSkill, lv = this.fLevel;
+      const st = this.fStatus, sk = this.fSkill;
       let res = this.rows.filter(r =>
         (!q || r.user.toLowerCase().includes(q) || r.title.toLowerCase().includes(q)) &&
         (!st || r.status === st) &&
-        (!sk || r.skill === sk) &&
-        (!lv || r.level === lv)
+        (!sk || (r.skills && r.skills.includes(sk)) || r.skill === sk)
       );
       const dir = this.sortDir === 'Oldest First' ? 1 : -1;
       res.sort((a, b) => dir * (new Date(a.submitted) - new Date(b.submitted)));
@@ -287,22 +405,72 @@ createApp({
     },
 
     // ── Approve / Reject → PUT /admin/submissions/:id ─────────────
-    async setStatus(row, newStatus) {
-      row._saving = true;
-      console.log('[ADMIN] PUT /admin/submissions/' + row.id + ' → ' + newStatus);
+    // ── User management ───────────────────────────────────────────────
+    async loadUsers() {
+      if (this.users.length) return; // already loaded
+      this.usersLoading = true;
+      const r = await apiFetch('/admin/users');
+      if (r.ok && r.data.data) this.users = r.data.data;
+      this.usersLoading = false;
+    },
 
-      const r = await apiFetch('/admin/submissions/' + row.id, {
-        method: 'PUT',
-        body: JSON.stringify({ status: newStatus }),
-      });
-      console.log('[ADMIN] Response:', r.status, r.data);
-
+    async banUser(u) {
+      if (!confirm(`Ban "${u.username}"?\nThey will be logged out and unable to login.`)) return;
+      const r = await apiFetch('/admin/users/' + u.id + '/ban', { method: 'PUT' });
       if (r.ok) {
-        row.status = newStatus;
-        alert(row.title + ' → ' + newStatus);
+        u.banned = true;
       } else {
         alert('Failed: ' + (r.data.error_message || 'Unknown error'));
-        console.error('[ADMIN] Failed:', r.data);
+      }
+    },
+
+    async unbanUser(u) {
+      if (!confirm(`Unban "${u.username}"?`)) return;
+      const r = await apiFetch('/admin/users/' + u.id + '/unban', { method: 'PUT' });
+      if (r.ok) {
+        u.banned = false;
+      } else {
+        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+      }
+    },
+
+    async deleteRow(row) {
+      if (!confirm(`Delete "${row.title}" permanently?\nThis cannot be undone.`)) return;
+      row._saving = true;
+      const r = await apiFetch('/admin/submissions/' + row.id, { method: 'DELETE' });
+      if (r.ok) {
+        this.rows = this.rows.filter(rw => rw.id !== row.id);
+        this.viewOpen = false;
+      } else {
+        alert('Delete failed: ' + (r.data.error_message || 'Unknown error'));
+        row._saving = false;
+      }
+    },
+
+    async setStatus(row, newStatus) {
+      row._saving = true;
+      const vote = newStatus === 'Approved' ? 'approve' : 'reject';
+      const r = await apiFetch('/admin/submissions/' + row.id + '/vote', {
+        method: 'POST',
+        body: JSON.stringify({ vote }),
+      });
+
+      if (r.ok && r.data.data) {
+        const d = r.data.data;
+        row.vote_approve_count = d.approve_count;
+        row.vote_reject_count  = d.reject_count;
+        if (d.status && d.status !== 'Pending') {
+          row.status = d.status;
+        }
+        // sync the matching row in rows[] if called from modal
+        const listRow = this.rows.find(rw => rw.id === row.id);
+        if (listRow && listRow !== row) {
+          listRow.vote_approve_count = d.approve_count;
+          listRow.vote_reject_count  = d.reject_count;
+          listRow.status = row.status;
+        }
+      } else {
+        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
       }
       row._saving = false;
     },

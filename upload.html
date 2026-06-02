@@ -77,55 +77,75 @@
         <textarea class="input-field textarea" v-model="form.description" placeholder="Describe your work..."></textarea>
       </section>
 
-      <!-- Skill Selector (multi-select) -->
+      <!-- ── Skill in Art ─────────────────────────────────────────────── -->
       <section class="form-section">
         <h2 class="section-title">Skill in Art <span style="color:#f55;">*</span></h2>
+        <p style="font-size:0.78rem; color:#666; margin-bottom:0.75rem;">Select a main skill category, then pick or create a sub-skill.</p>
 
-        <div v-if="userSkills.length" style="display:flex; flex-direction:column; gap:0.6rem;">
+        <!-- Step 1: Main Skill -->
+        <div style="margin-bottom:0.75rem;">
+          <label style="font-size:0.78rem; color:#888; display:block; margin-bottom:0.3rem;">1. Main Skill Category</label>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <select class="input-field" v-model="selectedMainId" @change="onMainSkillChange" style="flex:1;">
+              <option value="">— Select a category —</option>
+              <option v-for="m in mainSkills" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+            <!-- Admin-only: create new main skill -->
+            <button v-if="isAdmin" class="btn-outline" style="white-space:nowrap; padding:0.5rem 0.75rem; font-size:0.78rem;" @click="openNewMainModal">
+              <i class="fas fa-plus"></i> New
+            </button>
+          </div>
+        </div>
 
-          <!-- Search input -->
-          <div class="skill-search-wrap">
-            <input
-              type="text"
-              class="input-field"
-              v-model="skillQuery"
-              placeholder="Search your skills..."
-              @focus="skillDropOpen = true"
-              @input="skillDropOpen = true"
-              @click.stop
-            >
-            <!-- Dropdown -->
-            <div class="skill-dropdown" :class="{ open: skillDropOpen && filteredSkills.length }">
-              <div
-                v-for="s in filteredSkills"
-                :key="s.id"
-                class="skill-option"
-                :class="{ selected: isSkillSelected(s.id) }"
-                @click.stop="toggleSkill(s)"
+        <!-- Step 2: Sub-Skill (shown only after main selected) -->
+        <div v-if="selectedMainId" style="margin-bottom:0.75rem;">
+          <label style="font-size:0.78rem; color:#888; display:block; margin-bottom:0.3rem;">2. Sub-Skill</label>
+          <div style="display:flex; gap:0.5rem; align-items:flex-start;">
+            <div style="position:relative; flex:1;">
+              <input
+                type="text"
+                class="input-field"
+                v-model="subQuery"
+                placeholder="Search sub-skills..."
+                @focus="subDropOpen = true"
+                @input="subDropOpen = true"
+                @click.stop
+                :disabled="subLoading"
               >
-                <span>{{ s.skill_name }}</span>
-                <span style="font-size:0.68rem; color:#888; margin-left:auto;">{{ s.level }}</span>
-                <i v-if="isSkillSelected(s.id)" class="fas fa-check" style="color:var(--neon); margin-left:0.5rem; font-size:0.7rem;"></i>
+              <div v-if="subLoading" style="position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); color:#555; font-size:0.75rem;">Loading...</div>
+
+              <!-- Dropdown -->
+              <div class="skill-dropdown" :class="{ open: subDropOpen && filteredSubs.length }">
+                <div
+                  v-for="s in filteredSubs"
+                  :key="s.id"
+                  class="skill-option"
+                  :class="{ selected: isSubSelected(s.id) }"
+                  @click.stop="selectSub(s)"
+                >
+                  <span>{{ s.display_name }}</span>
+                  <i v-if="isSubSelected(s.id)" class="fas fa-check" style="color:var(--neon); margin-left:auto; font-size:0.7rem;"></i>
+                </div>
               </div>
             </div>
+            <!-- Explicit create button for everyone -->
+            <button class="btn-outline" style="white-space:nowrap; padding:0.5rem 0.75rem; font-size:0.78rem;" @click="openNewSubModal">
+              <i class="fas fa-plus"></i> New
+            </button>
           </div>
-
-          <!-- Selected skill tags -->
-          <div class="skill-tags" v-if="selectedSkills.length">
-            <span class="skill-tag" v-for="s in selectedSkills" :key="s.id">
-              {{ s.skill_name }}
-              <button class="skill-tag-remove" @click="removeSkill(s.id)">✕</button>
-            </span>
-          </div>
-          <p v-else style="font-size:0.75rem; color:#555;">No skills selected yet — search and click to add.</p>
-
         </div>
-        <p v-else style="color:#666; font-size:0.82rem;">
-          No skills found. <a href="/skillManage.html" style="color:#CCFF00;">Add a skill first</a>.
-        </p>
+
+        <!-- Selected skill tags -->
+        <div class="skill-tags" v-if="selectedSubs.length">
+          <span class="skill-tag" v-for="s in selectedSubs" :key="s.id">
+            <span style="color:#888; font-size:0.7rem;">{{ s.mainName }} ›</span> {{ s.display_name }}
+            <button class="skill-tag-remove" @click="removeSub(s.id)">✕</button>
+          </span>
+        </div>
+        <p v-else style="font-size:0.75rem; color:#555; margin-top:0.25rem;">No skills selected yet.</p>
       </section>
 
-      <!-- Evidence / Proof (REQUIRED — #2) -->
+      <!-- Evidence / Proof -->
       <section class="form-section">
         <h2 class="section-title">Upload Evidence (Process Proof) <span style="color:#f55;">*</span></h2>
         <p style="color:#888; font-size:0.78rem; margin-bottom:0.5rem;">Required: before-after images or process video to verify your skill.</p>
@@ -154,7 +174,7 @@
       <!-- Status info -->
       <div style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:8px; padding:0.75rem 1rem; font-size:0.78rem; color:#888;">
         <i class="fas fa-info-circle" style="color:#CCFF00;"></i>
-        Your submission will be reviewed by an admin before appearing publicly. Status: <strong style="color:#CCFF00;">Pending</strong>
+        Your submission will be reviewed by admins before appearing publicly. Status: <strong style="color:#CCFF00;">Pending</strong>
       </div>
 
       <!-- Publish -->
@@ -196,6 +216,37 @@
     <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
   </footer>
 
+  <!-- New Sub-Skill Modal (all users) -->
+  <div class="modal-overlay" :class="{ open: newSubOpen }" @click.self="newSubOpen=false">
+    <div class="modal-box">
+      <button class="modal-close" @click="newSubOpen=false">&times;</button>
+      <h2 class="modal-title">Create Sub-Skill</h2>
+      <p style="font-size:0.78rem; color:#666; margin-bottom:1rem;">Under: <strong style="color:#CCFF00;">{{ selectedMainName }}</strong></p>
+      <div class="auth-field" style="margin-bottom:1rem;">
+        <label class="edit-label">Sub-Skill Name</label>
+        <input type="text" class="auth-input" v-model="newSubName" placeholder="e.g. Gouache Painting" @keyup.enter="submitNewSub">
+      </div>
+      <button class="modal-save-btn" @click="submitNewSub" :disabled="newSubSaving">
+        {{ newSubSaving ? 'Creating...' : 'CREATE' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin: New Main Skill Modal -->
+  <div class="modal-overlay" :class="{ open: newMainOpen }" @click.self="newMainOpen=false">
+    <div class="modal-box">
+      <button class="modal-close" @click="newMainOpen=false">&times;</button>
+      <h2 class="modal-title">Create Main Skill</h2>
+      <div class="auth-field" style="margin-bottom:1rem;">
+        <label class="edit-label">Skill Category Name</label>
+        <input type="text" class="auth-input" v-model="newMainName" placeholder="e.g. Sculpture" @keyup.enter="submitNewMain">
+      </div>
+      <button class="modal-save-btn" @click="submitNewMain" :disabled="newMainSaving">
+        {{ newMainSaving ? 'Creating...' : 'CREATE' }}
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <script src="/js/app.js"></script>
@@ -210,120 +261,196 @@ createApp({
       username: TokenStore.getUsername() || 'User',
       avatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
       dropdownOpen: false,
+      mobileOpen: false,
       form: { title: '', description: '', privacy: 'Public' },
       artworkFile: null,
       evidenceFile: null,
-      userSkills: [],
-      selectedSkills: [],   // array of selected skill objects
-      skillQuery: '',
-      skillDropOpen: false,
       publishing: false,
       publishStatus: 'Uploading...',
+
+      // Main skills
+      mainSkills: [],
+      selectedMainId: '',
+      selectedMainName: '',
+
+      // Sub skills
+      subSkills: [],        // sub-skills under selected main
+      subLoading: false,
+      subQuery: '',
+      subDropOpen: false,
+      selectedSubs: [],     // { id, display_name, mainName }
+
+      // Create sub-skill (all users)
+      newSubOpen: false,
+      newSubName: '',
+      newSubSaving: false,
+      // Admin: create main skill
+      newMainOpen: false,
+      newMainName: '',
+      newMainSaving: false,
     };
   },
   computed: {
-    filteredSkills() {
-      const q = this.skillQuery.toLowerCase();
-      return this.userSkills.filter(s => s.skill_name.toLowerCase().includes(q));
+    filteredSubs() {
+      const q = this.subQuery.toLowerCase();
+      return this.subSkills.filter(s => s.name.includes(q) || s.display_name.toLowerCase().includes(q));
+    },
+    exactSubMatch() {
+      const q = this.subQuery.trim().toLowerCase();
+      return this.subSkills.some(s => s.name === q);
     },
   },
   methods: {
     doLogout() { logout(); },
-    isSkillSelected(id) { return this.selectedSkills.some(s => s.id === id); },
-    toggleSkill(skill) {
-      if (this.isSkillSelected(skill.id)) {
-        this.removeSkill(skill.id);
-      } else {
-        this.selectedSkills.push(skill);
-      }
-      this.skillQuery = '';
-      this.skillDropOpen = false;
-    },
-    removeSkill(id) { this.selectedSkills = this.selectedSkills.filter(s => s.id !== id); },
     formatSize(bytes) {
       if (bytes < 1024) return bytes + ' B';
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     },
-    onArtworkSelect(e) { this.artworkFile = e.target.files[0] || null; },
-    onDropArtwork(e) { this.artworkFile = e.dataTransfer.files[0] || null; },
+    onArtworkSelect(e)  { this.artworkFile  = e.target.files[0] || null; },
+    onDropArtwork(e)    { this.artworkFile  = e.dataTransfer.files[0] || null; },
     onEvidenceSelect(e) { this.evidenceFile = e.target.files[0] || null; },
-    onDropEvidence(e) { this.evidenceFile = e.dataTransfer.files[0] || null; },
+    onDropEvidence(e)   { this.evidenceFile = e.dataTransfer.files[0] || null; },
+
+    async onMainSkillChange() {
+      const m = this.mainSkills.find(m => m.id === this.selectedMainId);
+      this.selectedMainName = m ? m.name : '';
+      this.subSkills = [];
+      this.subQuery  = '';
+      if (!this.selectedMainId) return;
+
+      this.subLoading = true;
+      const r = await apiFetch('/main-skills/' + this.selectedMainId + '/sub-skills');
+      if (r.ok) this.subSkills = r.data.data || [];
+      this.subLoading = false;
+    },
+
+    isSubSelected(id) { return this.selectedSubs.some(s => s.id === id); },
+
+    selectSub(sub) {
+      if (!this.isSubSelected(sub.id)) {
+        this.selectedSubs.push({ id: sub.id, display_name: sub.display_name, mainName: this.selectedMainName });
+      }
+      this.subQuery = '';
+      this.subDropOpen = false;
+    },
+
+    removeSub(id) { this.selectedSubs = this.selectedSubs.filter(s => s.id !== id); },
+
+    async createAndSelectSub() {
+      const name = this.subQuery.trim();
+      if (!name) return;
+      const r = await apiFetch('/main-skills/' + this.selectedMainId + '/sub-skills', {
+        method: 'POST',
+        body: JSON.stringify({ display_name: name }),
+      });
+      if (r.ok && r.data.data) {
+        const sub = r.data.data;
+        this.subSkills.push(sub);
+        this.selectSub(sub);
+      } else {
+        alert('Failed to create sub-skill: ' + (r.data?.error_message || 'Unknown error'));
+      }
+    },
+
+    // New sub-skill modal (all users)
+    openNewSubModal() { this.newSubName = ''; this.newSubOpen = true; },
+    async submitNewSub() {
+      const name = this.newSubName.trim();
+      if (!name) return;
+      this.newSubSaving = true;
+      const r = await apiFetch('/main-skills/' + this.selectedMainId + '/sub-skills', {
+        method: 'POST',
+        body: JSON.stringify({ display_name: name }),
+      });
+      if (r.ok && r.data.data) {
+        const sub = r.data.data;
+        if (!this.subSkills.find(s => s.id === sub.id)) this.subSkills.push(sub);
+        this.selectSub(sub);
+        this.newSubOpen = false;
+      } else {
+        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+      }
+      this.newSubSaving = false;
+    },
+
+    // Admin: new main skill modal
+    openNewMainModal() { this.newMainName = ''; this.newMainOpen = true; },
+    async submitNewMain() {
+      const name = this.newMainName.trim();
+      if (!name) return;
+      this.newMainSaving = true;
+      const r = await apiFetch('/admin/main-skills', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      });
+      if (r.ok && r.data.data) {
+        const m = r.data.data;
+        this.mainSkills.push(m);
+        this.selectedMainId = m.id;
+        await this.onMainSkillChange();
+        this.newMainOpen = false;
+      } else {
+        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+      }
+      this.newMainSaving = false;
+    },
 
     async publish() {
-      // ── Validation ────────────────────────────────────────────────
-      if (!this.artworkFile)          { alert('Please select an artwork file.'); return; }
-      if (!this.form.title)           { alert('Title is required.'); return; }
-      if (!this.selectedSkills.length){ alert('Please select at least one skill.'); return; }
-      // #2 — Enforce proof upload
-      if (!this.evidenceFile) { alert('Evidence file is required. Please attach a before-after image or process video as proof of your work.'); return; }
+      if (!this.artworkFile)           { alert('Please select an artwork file.'); return; }
+      if (!this.form.title)            { alert('Title is required.'); return; }
+      if (!this.selectedSubs.length)   { alert('Please select at least one sub-skill.'); return; }
+      if (!this.evidenceFile)          { alert('Evidence file is required.'); return; }
 
       this.publishing = true;
-
       try {
-        // ── Step 1: Upload artwork file → POST /uploads ─────────────
+        // Step 1: Upload artwork file
         this.publishStatus = 'Uploading artwork...';
-        console.log('[UPLOAD] Step 1 — POST /uploads (artwork)');
         const artFD = new FormData();
         artFD.append('file', this.artworkFile);
         artFD.append('title', this.form.title);
         artFD.append('description', this.form.description || '');
-
         const upRes = await apiUpload('/uploads', artFD);
-        console.log('[UPLOAD] Step 1:', upRes.status, upRes.data);
         if (!upRes.ok) { alert('Artwork upload failed: ' + (upRes.data.error_message || 'Unknown')); this.publishing = false; return; }
 
-        // ── Step 2: Create artwork record → POST /artworks ──────────
+        // Step 2: Create artwork record with sub_skill_ids
         this.publishStatus = 'Creating record...';
-        console.log('[UPLOAD] Step 2 — POST /artworks');
         const artRes = await apiFetch('/artworks', {
           method: 'POST',
           body: JSON.stringify({
-            skill_id:  this.selectedSkills[0].id,
-            skill_ids: this.selectedSkills.map(s => s.id),
+            sub_skill_ids: this.selectedSubs.map(s => s.id),
             title: this.form.title,
             description: this.form.description || '',
             privacy_status: this.form.privacy,
           }),
         });
-        console.log('[UPLOAD] Step 2:', artRes.status, artRes.data);
         if (!artRes.ok) { alert('Artwork creation failed: ' + (artRes.data.error_message || 'Unknown')); this.publishing = false; return; }
-
         const artworkId = artRes.data.data.id;
 
-        // ── Step 3: Upload proof → POST /proofs (linked to artwork) ──
+        // Step 3: Upload proof
         this.publishStatus = 'Uploading proof...';
-        console.log('[UPLOAD] Step 3 — POST /proofs (evidence linked to artwork ' + artworkId + ')');
         const proofFD = new FormData();
         proofFD.append('file', this.evidenceFile);
         proofFD.append('artwork_id', artworkId);
-
         const proofRes = await apiUpload('/proofs', proofFD);
-        console.log('[UPLOAD] Step 3:', proofRes.status, proofRes.data);
         if (!proofRes.ok) {
-          alert('Proof upload failed: ' + (proofRes.data.error_message || 'Unknown') + '\nYour artwork was created but has no proof. Please add proof from your profile.');
-          this.publishing = false;
+          alert('Proof upload failed. Your artwork was created but has no proof.');
           window.location.href = '/profile.html';
           return;
         }
 
-        // ── Done ────────────────────────────────────────────────────
-        alert('Artwork published successfully! It will be reviewed by an admin.');
-        console.log('[UPLOAD] Complete — redirecting');
+        alert('Artwork published! It will be reviewed by admins.');
         window.location.href = '/profile.html';
-
       } catch (e) {
         alert('Upload error: ' + e.message);
-        console.error('[UPLOAD] Exception:', e);
       }
       this.publishing = false;
     },
   },
-  mounted() {
-    document.addEventListener('click', () => { this.dropdownOpen = false; this.skillDropOpen = false; });
-    apiFetch('/skills').then(r => {
-      if (r.ok) { this.userSkills = r.data.data || []; }
-    });
+  async mounted() {
+    document.addEventListener('click', () => { this.dropdownOpen = false; this.subDropOpen = false; });
+    const r = await apiFetch('/main-skills');
+    if (r.ok) this.mainSkills = r.data.data || [];
   }
 }).mount('#app');
 </script>

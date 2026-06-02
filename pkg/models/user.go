@@ -14,6 +14,7 @@ type User struct {
 	Bio            string             `bson:"bio"                json:"bio"`
 	ProfilePicture string             `bson:"profile_picture"    json:"profile_picture"`
 	Role           string             `bson:"role"               json:"role"`
+	Banned         bool               `bson:"banned"             json:"banned"`
 	CreatedAt      time.Time          `bson:"created_at"         json:"created_at"`
 }
 

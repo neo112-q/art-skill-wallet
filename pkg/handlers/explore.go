@@ -20,10 +20,18 @@ import (
 type ExploreArtwork struct {
 	ID         string   `json:"id"`
 	Title      string   `json:"title"`
-	SkillName  string   `json:"skill_name"`   // primary skill (backward compat)
-	SkillNames []string `json:"skill_names"`  // all skills
+	SkillName  string   `json:"skill_name"`  // primary skill (backward compat)
+	SkillNames []string `json:"skill_names"` // all skills
 	ThumbUrl   string   `json:"thumb_url"`
 	UploadDate string   `json:"upload_date"`
+}
+
+// ExploreSkill is the skill rank shape returned in the explore feed.
+type ExploreSkill struct {
+	SubSkillID    string `json:"sub_skill_id"`
+	DisplayName   string `json:"display_name"`
+	MainSkillName string `json:"main_skill_name"`
+	Rank          string `json:"rank"`
 }
 
 // ExploreArtist is the public-facing shape returned by the explore feed.
@@ -32,56 +40,55 @@ type ExploreArtist struct {
 	Username       string           `json:"username"`
 	Bio            string           `json:"bio"`
 	ProfilePicture string           `json:"profile_picture"`
-	Skills         []models.Skill   `json:"skills"`
+	Skills         []ExploreSkill   `json:"skills"`
 	Artworks       []ExploreArtwork `json:"artworks"`
 	ArtworkCount   int              `json:"artwork_count"`
 }
 
-// GetExplore godoc
-// @Summary      Public explore feed
-// @Description  Returns all users with their skills and public+approved artworks. No auth required.
-// @Tags         explore
-// @Produce      json
-// @Success      200 {object} response.APIResponse
-// @Router       /explore [get]
 func GetExplore(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 1. Fetch all users
+	// Users
 	userCursor, err := db.Col("users").Find(ctx, bson.M{})
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to fetch users")
 		return
 	}
 	defer userCursor.Close(ctx)
-
 	var users []models.User
 	if err := userCursor.All(ctx, &users); err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to decode users")
 		return
 	}
 
-	// 2. Fetch all skills
-	skillCursor, err := db.Col("skills").Find(ctx, bson.M{})
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch skills")
-		return
+	// Sub skills + main skills for name lookup
+	subSkillMap, mainSkillMap := loadSkillMaps(ctx)
+
+	// Skill ranks grouped by user
+	rankCursor, _ := db.Col("user_skill_ranks").Find(ctx, bson.M{})
+	var allRanks []models.UserSkillRank
+	if rankCursor != nil {
+		_ = rankCursor.All(ctx, &allRanks)
+		rankCursor.Close(ctx)
 	}
-	defer skillCursor.Close(ctx)
-
-	var allSkills []models.Skill
-	_ = skillCursor.All(ctx, &allSkills)
-
-	skillMap := make(map[string][]models.Skill)
-	skillNameMap := make(map[string]string) // skill_id → skill_name
-	for _, s := range allSkills {
-		uid := s.UserID.Hex()
-		skillMap[uid] = append(skillMap[uid], s)
-		skillNameMap[s.ID.Hex()] = s.SkillName
+	rankMap := make(map[string][]ExploreSkill)
+	for _, r := range allRanks {
+		if r.Rank == "" {
+			continue
+		}
+		uid := r.UserID.Hex()
+		sub := subSkillMap[r.SubSkillID.Hex()]
+		main := mainSkillMap[sub.MainSkillID.Hex()]
+		rankMap[uid] = append(rankMap[uid], ExploreSkill{
+			SubSkillID:    r.SubSkillID.Hex(),
+			DisplayName:   sub.DisplayName,
+			MainSkillName: main.Name,
+			Rank:          r.Rank,
+		})
 	}
 
-	// 3. Fetch only Public + Approved artworks (#3 — privacy filter)
+	// Public + Approved artworks
 	artCursor, err := db.Col("artworks").Find(ctx, bson.M{
 		"privacy_status": "Public",
 		"status":         "Approved",
@@ -91,27 +98,21 @@ func GetExplore(c *gin.Context) {
 		return
 	}
 	defer artCursor.Close(ctx)
-
 	var allArtworks []models.Artwork
 	_ = artCursor.All(ctx, &allArtworks)
 
 	artworkMap := make(map[string][]ExploreArtwork)
 	for _, a := range allArtworks {
 		uid := a.UserID.Hex()
-		artworkMap[uid] = append(artworkMap[uid], ExploreArtwork{
-			ID:         a.ID.Hex(),
-			Title:      a.Title,
-			SkillName:  skillNameMap[a.SkillID.Hex()],
-			UploadDate: a.UploadDate.Format("2 January 2006"),
-		})
+		ea := buildExploreArtwork(a, subSkillMap, mainSkillMap, "")
+		artworkMap[uid] = append(artworkMap[uid], ea)
 	}
 
-	// 4. Build the response
 	artists := make([]ExploreArtist, 0, len(users))
 	for _, u := range users {
-		skills := skillMap[u.ID.Hex()]
+		skills := rankMap[u.ID.Hex()]
 		if skills == nil {
-			skills = []models.Skill{}
+			skills = []ExploreSkill{}
 		}
 		arts := artworkMap[u.ID.Hex()]
 		if arts == nil {
@@ -131,14 +132,6 @@ func GetExplore(c *gin.Context) {
 	response.Success(c, http.StatusOK, artists)
 }
 
-// GetPublicProfile godoc
-// @Summary      Get a single user's public profile
-// @Tags         explore
-// @Produce      json
-// @Param        id path string true "User ID"
-// @Success      200 {object} response.APIResponse
-// @Failure      404 {object} response.APIResponse
-// @Router       /users/{id}/public [get]
 func GetPublicProfile(c *gin.Context) {
 	userObjID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -149,42 +142,49 @@ func GetPublicProfile(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Fetch user
 	var user models.User
 	if err := db.Col("users").FindOne(ctx, bson.M{"_id": userObjID}).Decode(&user); err != nil {
 		response.Error(c, http.StatusNotFound, "User not found")
 		return
 	}
 
-	// Fetch user's skills
-	skillCursor, _ := db.Col("skills").Find(ctx, bson.M{"user_id": userObjID})
-	defer skillCursor.Close(ctx)
-	var skills []models.Skill
-	_ = skillCursor.All(ctx, &skills)
-	if skills == nil {
-		skills = []models.Skill{}
+	subSkillMap, mainSkillMap := loadSkillMaps(ctx)
+
+	// Skill ranks for this user
+	rankCursor, _ := db.Col("user_skill_ranks").Find(ctx, bson.M{"user_id": userObjID})
+	var ranks []models.UserSkillRank
+	if rankCursor != nil {
+		_ = rankCursor.All(ctx, &ranks)
+		rankCursor.Close(ctx)
+	}
+	skills := make([]ExploreSkill, 0)
+	for _, r := range ranks {
+		if r.Rank == "" {
+			continue
+		}
+		sub := subSkillMap[r.SubSkillID.Hex()]
+		main := mainSkillMap[sub.MainSkillID.Hex()]
+		skills = append(skills, ExploreSkill{
+			SubSkillID:    r.SubSkillID.Hex(),
+			DisplayName:   sub.DisplayName,
+			MainSkillName: main.Name,
+			Rank:          r.Rank,
+		})
 	}
 
-	// Build skill name map
-	skillNameMap := make(map[string]string)
-	for _, s := range skills {
-		skillNameMap[s.ID.Hex()] = s.SkillName
-	}
-
-	// Fetch user's uploads to build title → image URL map
+	// Uploads for thumbnail lookup
 	uploadCursor, _ := db.Col("uploads").Find(ctx, bson.M{"user_id": userObjID})
-	defer uploadCursor.Close(ctx)
 	var uploads []models.Upload
-	_ = uploadCursor.All(ctx, &uploads)
-
-	thumbMap := make(map[string]string) // lowercase title → image URL
+	if uploadCursor != nil {
+		_ = uploadCursor.All(ctx, &uploads)
+		uploadCursor.Close(ctx)
+	}
+	thumbMap := make(map[string]string)
 	for _, u := range uploads {
 		var imageURL string
 		if u.FileURL != "" {
-			// New uploads: Cloudinary URL
 			imageURL = u.FileURL
 		} else if u.FilePath != "" {
-			// Legacy uploads: local file path
 			storedName := filepath.Base(strings.ReplaceAll(u.FilePath, "\\", "/"))
 			if storedName != "" && storedName != "." {
 				imageURL = "/uploads/" + storedName
@@ -195,45 +195,22 @@ func GetPublicProfile(c *gin.Context) {
 		}
 	}
 
-	// Fetch only Public + Approved artworks
+	// Public + Approved artworks
 	artCursor, _ := db.Col("artworks").Find(ctx, bson.M{
 		"user_id":        userObjID,
 		"privacy_status": "Public",
 		"status":         "Approved",
 	})
-	defer artCursor.Close(ctx)
 	var allArtworks []models.Artwork
-	_ = artCursor.All(ctx, &allArtworks)
+	if artCursor != nil {
+		_ = artCursor.All(ctx, &allArtworks)
+		artCursor.Close(ctx)
+	}
 
 	artworks := make([]ExploreArtwork, 0, len(allArtworks))
 	for _, a := range allArtworks {
-		// Collect all skill names — prefer skill_ids, fall back to skill_id
-		allIDs := a.SkillIDs
-		if len(allIDs) == 0 && !a.SkillID.IsZero() {
-			allIDs = append(allIDs, a.SkillID)
-		}
-		var skillNames []string
-		for _, sid := range allIDs {
-			if name := skillNameMap[sid.Hex()]; name != "" {
-				skillNames = append(skillNames, name)
-			}
-		}
-		if skillNames == nil {
-			skillNames = []string{}
-		}
-		primarySkill := ""
-		if len(skillNames) > 0 {
-			primarySkill = skillNames[0]
-		}
-
-		artworks = append(artworks, ExploreArtwork{
-			ID:         a.ID.Hex(),
-			Title:      a.Title,
-			SkillName:  primarySkill,
-			SkillNames: skillNames,
-			ThumbUrl:   thumbMap[strings.ToLower(a.Title)],
-			UploadDate: a.UploadDate.Format("2 January 2006"),
-		})
+		thumb := thumbMap[strings.ToLower(a.Title)]
+		artworks = append(artworks, buildExploreArtwork(a, subSkillMap, mainSkillMap, thumb))
 	}
 
 	response.Success(c, http.StatusOK, ExploreArtist{
@@ -245,4 +222,62 @@ func GetPublicProfile(c *gin.Context) {
 		Artworks:       artworks,
 		ArtworkCount:   len(artworks),
 	})
+}
+
+// loadSkillMaps fetches sub_skills and main_skills into lookup maps.
+func loadSkillMaps(ctx context.Context) (map[string]models.SubSkill, map[string]models.MainSkill) {
+	subMap := make(map[string]models.SubSkill)
+	mainMap := make(map[string]models.MainSkill)
+
+	subCursor, _ := db.Col("sub_skills").Find(ctx, bson.M{})
+	if subCursor != nil {
+		var subs []models.SubSkill
+		_ = subCursor.All(ctx, &subs)
+		subCursor.Close(ctx)
+		for _, s := range subs {
+			subMap[s.ID.Hex()] = s
+		}
+	}
+
+	mainCursor, _ := db.Col("main_skills").Find(ctx, bson.M{})
+	if mainCursor != nil {
+		var mains []models.MainSkill
+		_ = mainCursor.All(ctx, &mains)
+		mainCursor.Close(ctx)
+		for _, m := range mains {
+			mainMap[m.ID.Hex()] = m
+		}
+	}
+
+	return subMap, mainMap
+}
+
+// buildExploreArtwork converts an Artwork to ExploreArtwork using the skill maps.
+func buildExploreArtwork(a models.Artwork, subMap map[string]models.SubSkill, mainMap map[string]models.MainSkill, thumb string) ExploreArtwork {
+	var skillNames []string
+	for _, sid := range a.SubSkillIDs {
+		sub := subMap[sid.Hex()]
+		name := sub.DisplayName
+		if main, ok := mainMap[sub.MainSkillID.Hex()]; ok {
+			name = main.Name + " › " + sub.DisplayName
+		}
+		if name != "" {
+			skillNames = append(skillNames, name)
+		}
+	}
+	if skillNames == nil {
+		skillNames = []string{}
+	}
+	primary := ""
+	if len(skillNames) > 0 {
+		primary = skillNames[0]
+	}
+	return ExploreArtwork{
+		ID:         a.ID.Hex(),
+		Title:      a.Title,
+		SkillName:  primary,
+		SkillNames: skillNames,
+		ThumbUrl:   thumb,
+		UploadDate: a.UploadDate.Format("2 January 2006"),
+	}
 }

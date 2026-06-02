@@ -128,9 +128,15 @@ func UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	file, _, err := c.Request.FormFile("avatar")
+	fileHeader, err := c.FormFile("avatar")
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Avatar file is required")
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to read avatar file")
 		return
 	}
 	defer file.Close()
@@ -138,7 +144,7 @@ func UploadAvatar(c *gin.Context) {
 	// Upload avatar to Cloudinary
 	uploaded, err := cloud.UploadFile(file, "avatars")
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to upload avatar: "+err.Error())
+		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 

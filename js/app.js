@@ -124,14 +124,14 @@ async function apiFetch(path, opts = {}) {
 // ── apiUpload — multipart/form-data requests ─────────────────────────────────
 // Do NOT set Content-Type manually — the browser sets it with the boundary.
 
-async function apiUpload(path, formData) {
+async function apiUpload(path, formData, method = 'POST') {
   let accessToken = await ensureToken();
   if (!accessToken) {
     return { ok: false, status: 401, data: { error_message: 'Session expired' } };
   }
 
   let res = await fetch(API_BASE + path, {
-    method: 'POST',
+    method,
     headers: { 'Authorization': 'Bearer ' + accessToken },
     body: formData,
   });
@@ -140,7 +140,7 @@ async function apiUpload(path, formData) {
     const ok = await refreshAccessToken();
     if (!ok) return { ok: false, status: 401, data: { error_message: 'Session expired' } };
     res = await fetch(API_BASE + path, {
-      method: 'POST',
+      method,
       headers: { 'Authorization': 'Bearer ' + TokenStore.getAccess() },
       body: formData,
     });

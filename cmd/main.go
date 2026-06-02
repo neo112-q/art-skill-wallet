@@ -44,6 +44,7 @@ func main() {
 		log.Fatalf("MongoDB connection failed: %v", err)
 	}
 	db.CreateIndexes()
+	handlers.StartExpiryWorker()
 
 	// ── Router ──────────────────────────────────────────────────────────
 	r := gin.Default()
@@ -85,7 +86,11 @@ func main() {
 	// Public data endpoints (no auth required)
 	api.GET("/explore", handlers.GetExplore)
 	api.GET("/users/:id/public", handlers.GetPublicProfile)
+	api.GET("/users/:id/ranks", handlers.GetUserRanks)
 	api.GET("/public/artworks/:id/proofs", handlers.GetPublicArtworkProofs)
+	api.GET("/main-skills", handlers.GetMainSkills)
+	api.GET("/main-skills/:id/sub-skills", handlers.GetSubSkills)
+	api.GET("/sub-skills/search", handlers.SearchSubSkills)
 
 	// Protected endpoints — valid JWT required
 	protected := api.Group("/")
@@ -93,12 +98,10 @@ func main() {
 	{
 		protected.GET("/me", handlers.GetMe)
 		protected.PUT("/me", handlers.UpdateMe)
-		protected.PUT("/me/avatar", handlers.UploadAvatar)
+		protected.POST("/me/avatar", handlers.UploadAvatar)
 		protected.GET("/history", handlers.GetHistory)
-		protected.GET("/skills", handlers.GetSkills)
-		protected.POST("/skills", handlers.CreateSkill)
-		protected.PUT("/skills/:id", handlers.UpdateSkill)
-		protected.DELETE("/skills/:id", handlers.DeleteSkill)
+		protected.GET("/my-ranks", handlers.GetMyRanks)
+		protected.POST("/main-skills/:id/sub-skills", handlers.CreateSubSkill)
 		protected.GET("/artworks", handlers.GetArtworks)
 		protected.POST("/artworks", handlers.CreateArtwork)
 		protected.PUT("/artworks/:id", handlers.UpdateArtwork)
@@ -118,8 +121,14 @@ func main() {
 	{
 		adminGroup.GET("/submissions", handlers.GetSubmissionsEnriched)
 		adminGroup.PUT("/submissions/:id", handlers.UpdateSubmissionStatus)
+		adminGroup.DELETE("/submissions/:id", handlers.AdminDeleteArtwork)
 		adminGroup.GET("/submissions/:id/proofs", handlers.GetSubmissionProofs)
-		adminGroup.GET("/skills", handlers.GetAllSkills)
+		adminGroup.POST("/submissions/:id/vote", handlers.VoteArtwork)
+		adminGroup.GET("/users", handlers.GetAllUsers)
+		adminGroup.PUT("/users/:id/ban", handlers.BanUser)
+		adminGroup.PUT("/users/:id/unban", handlers.UnbanUser)
+		adminGroup.POST("/main-skills", handlers.CreateMainSkill)
+		adminGroup.DELETE("/main-skills/:id", handlers.DeleteMainSkill)
 	}
 
 	// ── Start ───────────────────────────────────────────────────────────

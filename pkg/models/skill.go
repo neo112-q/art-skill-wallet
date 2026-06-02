@@ -6,35 +6,70 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Skill struct {
-	ID               primitive.ObjectID `bson:"_id,omitempty"        json:"id"`
-	UserID           primitive.ObjectID `bson:"user_id"              json:"user_id"`
-	SkillName        string             `bson:"skill_name"           json:"skill_name"`
-	Level            string             `bson:"level"                json:"level"`
-	DevelopmentGuide string             `bson:"development_guide"    json:"development_guide"`
-	CreatedAt        time.Time          `bson:"created_at"           json:"created_at"`
-	UpdatedAt        time.Time          `bson:"updated_at"           json:"updated_at"`
+// ── Main Skill (admin creates) ────────────────────────────────────────────────
+
+type MainSkill struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name      string             `bson:"name"          json:"name"`
+	CreatedBy primitive.ObjectID `bson:"created_by"    json:"created_by"`
+	CreatedAt time.Time          `bson:"created_at"    json:"created_at"`
 }
 
-type SkillRequest struct {
-	SkillName        string `json:"skill_name"        binding:"required"`
-	Level            string `json:"level"             binding:"required,oneof=Beginner Intermediate Advanced"`
-	DevelopmentGuide string `json:"development_guide"`
+type MainSkillRequest struct {
+	Name string `json:"name" binding:"required,min=2,max=50"`
 }
 
-// DefaultGuide returns a built-in development guide when the user leaves it empty.
-func DefaultGuide(level string) string {
-	switch level {
-	case "Beginner":
-		return "Start with the fundamentals: study basic shapes, proportions, and composition. " +
-			"Practice daily sketches (15-30 min). Follow beginner tutorials and copy master works to build muscle memory."
-	case "Intermediate":
-		return "Deepen your understanding: study anatomy, color theory, and lighting. " +
-			"Take on personal projects with deadlines. Seek feedback from peers and iterate on your weaknesses."
-	case "Advanced":
-		return "Refine your style and push boundaries: develop a signature aesthetic. " +
-			"Build a professional portfolio. Mentor others, contribute to community critiques, and explore cross-disciplinary techniques."
+// ── Sub Skill (any user creates or picks) ─────────────────────────────────────
+
+type SubSkill struct {
+	ID          primitive.ObjectID `bson:"_id,omitempty"  json:"id"`
+	MainSkillID primitive.ObjectID `bson:"main_skill_id"  json:"main_skill_id"`
+	Name        string             `bson:"name"           json:"name"`         // lowercase normalized
+	DisplayName string             `bson:"display_name"   json:"display_name"` // original casing
+	CreatedBy   primitive.ObjectID `bson:"created_by"     json:"created_by"`
+	CreatedAt   time.Time          `bson:"created_at"     json:"created_at"`
+}
+
+type SubSkillRequest struct {
+	DisplayName string `json:"display_name" binding:"required,min=2,max=50"`
+}
+
+// ── User Skill Rank (auto-updated on artwork approval) ────────────────────────
+
+type UserSkillRank struct {
+	ID            primitive.ObjectID `bson:"_id,omitempty"   json:"id"`
+	UserID        primitive.ObjectID `bson:"user_id"         json:"user_id"`
+	SubSkillID    primitive.ObjectID `bson:"sub_skill_id"    json:"sub_skill_id"`
+	ApprovalCount int                `bson:"approval_count"  json:"approval_count"`
+	Rank          string             `bson:"rank"            json:"rank"` // "" | "Beginner" | "Intermediate" | "Advanced"
+	UpdatedAt     time.Time          `bson:"updated_at"      json:"updated_at"`
+}
+
+// CalcRank returns the rank string for a given approval count.
+func CalcRank(count int) string {
+	switch {
+	case count >= 25:
+		return "Advanced"
+	case count >= 10:
+		return "Intermediate"
+	case count >= 1:
+		return "Beginner"
 	default:
 		return ""
+	}
+}
+
+// RankProgress returns how many approvals until the next rank.
+// Returns current count, target count, and next rank name.
+func RankProgress(count int) (current, target int, nextRank string) {
+	switch {
+	case count >= 25:
+		return count, 25, "Advanced" // already max
+	case count >= 10:
+		return count, 25, "Advanced"
+	case count >= 1:
+		return count, 10, "Intermediate"
+	default:
+		return count, 1, "Beginner"
 	}
 }

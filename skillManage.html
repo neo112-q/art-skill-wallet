@@ -53,118 +53,54 @@
     <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem;">
       <div>
         <h1 style="font-size:1.5rem; font-weight:800;">My Skills</h1>
-        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Track your skill levels and progress</p>
+        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Ranks are earned automatically when your artwork is approved</p>
       </div>
-      <div style="display:flex; gap:0.75rem;">
-        <button class="btn-neon" @click="openAddModal"><i class="fas fa-plus" style="font-size:0.7rem;"></i> Add Skill</button>
-        <a href="/upload.html" class="btn-outline"><i class="fas fa-cloud-upload-alt" style="font-size:0.7rem;"></i> Upload Art</a>
-      </div>
+      <a href="/upload.html" class="btn-neon"><i class="fas fa-cloud-upload-alt" style="font-size:0.7rem;"></i> Upload Art</a>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" style="text-align:center; padding:3rem; color:#888;">Loading skills...</div>
 
     <!-- Empty State -->
-    <div v-else-if="!skills.length" style="text-align:center; padding:3rem; color:#666;">
-      <p style="font-size:1.1rem; margin-bottom:1rem;">No skills yet.</p>
-      <button class="btn-neon" @click="openAddModal">+ Add Your First Skill</button>
+    <div v-else-if="!ranks.length" style="text-align:center; padding:3rem; color:#666;">
+      <p style="font-size:1.1rem; margin-bottom:0.5rem;">No skill ranks yet.</p>
+      <p style="font-size:0.85rem; color:#555; margin-bottom:1.5rem;">Upload artwork and get it approved to earn your first rank.</p>
+      <a href="/upload.html" class="btn-neon">+ Upload Artwork</a>
     </div>
 
     <!-- Skills Grid -->
     <div v-else class="skills-grid fade-in-2">
-      <div class="skill-card" v-for="s in skills" :key="s.id">
-        <h3>{{ s.skill_name }}</h3>
+      <div class="skill-card" v-for="r in ranks" :key="r.id">
+        <div style="font-size:0.72rem; color:#555; margin-bottom:0.25rem; text-transform:uppercase; letter-spacing:0.05em;">{{ r.main_skill_name }}</div>
+        <h3 style="margin-bottom:0.75rem;">{{ r.display_name }}</h3>
+
+        <!-- Progress bar -->
         <div class="meter" style="margin-bottom:0.25rem;">
-          <div class="seg seg-neon"></div>
-          <div class="seg" :class="s.level === 'Intermediate' || s.level === 'Advanced' ? 'seg-blue' : 'seg-empty'"></div>
-          <div class="seg" :class="s.level === 'Advanced' ? 'seg-neon' : 'seg-empty'"></div>
+          <div class="seg" :class="r.approval_count >= 1  ? 'seg-neon'  : 'seg-empty'"></div>
+          <div class="seg" :class="r.approval_count >= 10 ? 'seg-blue'  : 'seg-empty'"></div>
+          <div class="seg" :class="r.approval_count >= 25 ? 'seg-neon'  : 'seg-empty'"></div>
         </div>
         <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-        <p style="color:#aaa; font-size:0.75rem; margin-top:0.5rem;">Level : {{ levelNum(s.level) }}</p>
-        <p v-if="s.development_guide" style="color:#666; font-size:0.72rem; margin-top:0.35rem; line-height:1.4;">{{ s.development_guide }}</p>
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;">
-          <span class="badge" :class="badgeClass(s.level)">
-            <i class="fas" :class="badgeIcon(s.level)" style="font-size:0.7rem;"></i> {{ s.level }}
+
+        <!-- Approvals count & next milestone -->
+        <p style="color:#aaa; font-size:0.75rem; margin-top:0.5rem;">
+          {{ r.approval_count }} approval{{ r.approval_count !== 1 ? 's' : '' }}
+          <span v-if="r.rank !== 'Advanced'" style="color:#555;">
+            · {{ r.target - r.approval_count }} more to {{ r.next_rank }}
           </span>
-          <div style="display:flex; gap:0.4rem; flex-shrink:0;">
-            <button class="btn-edit-sm" @click="openEditModal(s)"><i class="fas fa-pen" style="font-size:0.7rem;"></i> Edit</button>
-            <button class="btn-edit-sm" style="color:#f55; border-color:#f55;" @click="deleteSkill(s)"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
-          </div>
+          <span v-else style="color:#CCFF00;"> · Max rank reached!</span>
+        </p>
+
+        <!-- Badge -->
+        <div style="margin-top:1rem;">
+          <span v-if="r.rank" class="badge" :class="badgeClass(r.rank)">
+            <i class="fas" :class="badgeIcon(r.rank)" style="font-size:0.7rem;"></i> {{ r.rank }}
+          </span>
+          <span v-else style="color:#555; font-size:0.8rem;">No rank yet</span>
         </div>
       </div>
     </div>
   </main>
-
-  <!-- Footer -->
-  <!-- <footer class="site-footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-logo">
-          <img src="/img/logoartskill.png" height="26" alt="ArtSkillWallet Logo">
-          <span class="footer-logo-text">ArtSkillWallet</span>
-        </div>
-        <p class="footer-desc">Trace your art skills, build your portfolio, and grow your creative career.</p>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-title">Product</p>
-        <a href="/explore.html">Explore</a>
-        <a href="/skillManage.html">Skills</a>
-        <a href="/explore.html">Community</a>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-title">Account</p>
-        <a href="/home.html">Login</a>
-        <a href="/home.html">Register</a>
-        <a href="/profile.html">Profile</a>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-title">Support</p>
-        <a href="#">FAQ</a>
-        <a href="#">Contact</a>
-        <a href="#">Privacy Policy</a>
-      </div>
-    </div>
-    <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
-  </footer> -->
-
-  <!-- Add / Edit Skill Modal -->
-  <div class="modal-overlay" :class="{ open: modalOpen }" @click.self="modalOpen=false">
-    <div class="modal-box">
-      <button class="modal-close" @click="modalOpen=false">&times;</button>
-      <h2 class="modal-title">{{ modalMode === 'add' ? 'Add New Skill' : 'Edit – ' + modalForm.skill_name }}</h2>
-
-      <div class="auth-field" style="margin-bottom:1rem;">
-        <label class="edit-label">Skill Name</label>
-        <input type="text" class="auth-input" v-model="modalForm.skill_name" placeholder="e.g. Character Design" :disabled="modalMode === 'edit'">
-      </div>
-
-      <p style="font-size:0.78rem; color:#666; margin-bottom:0.75rem;">Select the level for this skill:</p>
-      <div class="level-radio-group">
-        <div><input type="radio" v-model="modalForm.level" value="Beginner" id="lvl-beg"><label for="lvl-beg">🌱 Beginner</label></div>
-        <div><input type="radio" v-model="modalForm.level" value="Intermediate" id="lvl-int"><label for="lvl-int">🔥 Intermediate</label></div>
-        <div><input type="radio" v-model="modalForm.level" value="Advanced" id="lvl-adv"><label for="lvl-adv">👑 Advanced</label></div>
-      </div>
-
-      <!-- Default guide hint (#4) -->
-      <div v-if="defaultGuideForLevel" style="margin-top:0.75rem; background:#1a1a1a; border:1px solid #2A2A2A; border-radius:8px; padding:0.6rem 0.8rem; font-size:0.72rem; color:#888; line-height:1.5;">
-        <strong style="color:#CCFF00;">Suggested guide for {{ modalForm.level }}:</strong><br>
-        {{ defaultGuideForLevel }}
-        <button type="button" @click="modalForm.development_guide = defaultGuideForLevel"
-          style="display:block; margin-top:0.4rem; background:none; border:1px solid #CCFF00; color:#CCFF00; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.7rem; cursor:pointer;">
-          Use this guide
-        </button>
-      </div>
-
-      <div class="auth-field" style="margin-top:0.75rem;">
-        <label class="edit-label">Development Guide (optional — auto-filled if left empty)</label>
-        <textarea class="auth-input" v-model="modalForm.development_guide" rows="2" placeholder="Leave empty to use the default guide for your level..."></textarea>
-      </div>
-
-      <button class="modal-save-btn" @click="saveSkill" :disabled="saving" style="margin-top:1.25rem;">
-        {{ saving ? 'Saving...' : (modalMode === 'add' ? 'CREATE SKILL' : 'SAVE CHANGES') }}
-      </button>
-    </div>
-  </div>
 
 </div>
 
@@ -181,139 +117,38 @@ createApp({
       email: '',
       avatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
       dropdownOpen: false,
+      mobileOpen: false,
       loading: true,
-      skills: [],
-      modalOpen: false,
-      modalMode: 'add', // 'add' | 'edit'
-      modalForm: { id: '', skill_name: '', level: 'Beginner', development_guide: '' },
-      saving: false,
+      ranks: [],
     };
-  },
-  computed: {
-    defaultGuideForLevel() {
-      const guides = {
-        'Beginner': 'Start with the fundamentals: study basic shapes, proportions, and composition. Practice daily sketches (15-30 min). Follow beginner tutorials and copy master works to build muscle memory.',
-        'Intermediate': 'Deepen your understanding: study anatomy, color theory, and lighting. Take on personal projects with deadlines. Seek feedback from peers and iterate on your weaknesses.',
-        'Advanced': 'Refine your style and push boundaries: develop a signature aesthetic. Build a professional portfolio. Mentor others, contribute to community critiques, and explore cross-disciplinary techniques.',
-      };
-      return guides[this.modalForm.level] || '';
-    },
   },
   methods: {
     doLogout() { logout(); },
-    levelNum(l) { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
-    badgeClass(l) { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
-    badgeIcon(l) { return l === 'Beginner' ? 'fa-seedling' : l === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
-
-    // ── FETCH ALL → GET /skills ────────────────────────────────────────
-    async fetchSkills() {
-      this.loading = true;
-      console.log('[SKILLS] Fetching GET /skills …');
-      const r = await apiFetch('/skills');
-      console.log('[SKILLS] Response:', r.status, r.data);
-      if (r.ok) {
-        this.skills = r.data.data || [];
-        console.log('[SKILLS] Loaded', this.skills.length, 'skills');
-      } else {
-        console.error('[SKILLS] Failed to load:', r.data.error_message);
-        alert('Failed to load skills: ' + (r.data.error_message || 'Unknown error'));
-      }
-      this.loading = false;
-    },
-
-    // ── ADD MODAL ──────────────────────────────────────────────────────
-    openAddModal() {
-      this.modalMode = 'add';
-      this.modalForm = { id: '', skill_name: '', level: 'Beginner', development_guide: '' };
-      this.modalOpen = true;
-    },
-
-    // ── EDIT MODAL ─────────────────────────────────────────────────────
-    openEditModal(s) {
-      this.modalMode = 'edit';
-      this.modalForm = { id: s.id, skill_name: s.skill_name, level: s.level, development_guide: s.development_guide || '' };
-      this.modalOpen = true;
-    },
-
-    // ── SAVE (CREATE or UPDATE) ────────────────────────────────────────
-    async saveSkill() {
-      if (!this.modalForm.skill_name) { alert('Skill name is required.'); return; }
-      this.saving = true;
-
-      const payload = {
-        skill_name: this.modalForm.skill_name,
-        level: this.modalForm.level,
-        development_guide: this.modalForm.development_guide,
-      };
-
-      if (this.modalMode === 'add') {
-        // ── POST /skills ────────────────────────────────────────────
-        console.log('[SKILLS] Sending POST /skills …', payload);
-        const r = await apiFetch('/skills', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        console.log('[SKILLS] POST Response:', r.status, r.data);
-
-        if (r.ok) {
-          alert('Skill "' + payload.skill_name + '" created successfully!');
-          this.skills.push(r.data.data);
-          this.modalOpen = false;
-        } else {
-          alert('Failed to create skill: ' + (r.data.error_message || 'Unknown error'));
-          console.error('[SKILLS] POST failed:', r.data);
-        }
-      } else {
-        // ── PUT /skills/:id ─────────────────────────────────────────
-        console.log('[SKILLS] Sending PUT /skills/' + this.modalForm.id + ' …', payload);
-        const r = await apiFetch('/skills/' + this.modalForm.id, {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        });
-        console.log('[SKILLS] PUT Response:', r.status, r.data);
-
-        if (r.ok) {
-          alert('Skill "' + payload.skill_name + '" updated successfully!');
-          // Replace in local array
-          const idx = this.skills.findIndex(s => s.id === this.modalForm.id);
-          if (idx !== -1) this.skills[idx] = r.data.data;
-          this.modalOpen = false;
-        } else {
-          alert('Failed to update skill: ' + (r.data.error_message || 'Unknown error'));
-          console.error('[SKILLS] PUT failed:', r.data);
-        }
-      }
-      this.saving = false;
-    },
-
-    // ── DELETE → DELETE /skills/:id ────────────────────────────────────
-    async deleteSkill(s) {
-      if (!confirm('Delete "' + s.skill_name + '"? This cannot be undone.')) return;
-
-      console.log('[SKILLS] Sending DELETE /skills/' + s.id + ' …');
-      const r = await apiFetch('/skills/' + s.id, { method: 'DELETE' });
-      console.log('[SKILLS] DELETE Response:', r.status, r.data);
-
-      if (r.ok) {
-        alert('Skill "' + s.skill_name + '" deleted.');
-        this.skills = this.skills.filter(x => x.id !== s.id);
-      } else {
-        alert('Failed to delete: ' + (r.data.error_message || 'Unknown error'));
-        console.error('[SKILLS] DELETE failed:', r.data);
-      }
-    },
+    badgeClass(r) { return r === 'Beginner' ? 'badge-beg' : r === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
+    badgeIcon(r)  { return r === 'Beginner' ? 'fa-seedling' : r === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
   },
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
-    this.fetchSkills();
-    // Load user info from database
-    const r = await apiFetch('/me');
-    if (r.ok && r.data.data) {
-      const user = r.data.data;
-      this.username = user.username || TokenStore.getUsername();
-      this.email    = user.email    || '';
+
+    const [meRes, rankRes] = await Promise.all([
+      apiFetch('/me'),
+      apiFetch('/my-ranks'),
+    ]);
+
+    if (meRes.ok && meRes.data.data) {
+      const user = meRes.data.data;
+      this.username  = user.username || TokenStore.getUsername();
+      this.email     = user.email    || '';
       this.avatarUrl = user.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.username || 'U') + '&background=CCFF00&color=121212&bold=true&size=100';
     }
+
+    if (rankRes.ok && rankRes.data.data) {
+      this.ranks = rankRes.data.data;
+    } else {
+      console.error('[SKILLS] Failed to load ranks:', rankRes.data?.error_message);
+    }
+
+    this.loading = false;
   }
 }).mount('#app');
 </script>

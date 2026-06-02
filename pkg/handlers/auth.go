@@ -197,6 +197,12 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Block banned users
+	if user.Banned {
+		response.Error(c, http.StatusForbidden, "Your account has been banned. Please contact support.")
+		return
+	}
+
 	// Sign tokens — payload contains only sub + role, no sensitive data
 	accessToken, err := signAccessToken(user.ID.Hex(), user.Role)
 	if err != nil {

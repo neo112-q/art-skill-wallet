@@ -92,8 +92,8 @@
           <div class="artist-body">
             <h3 class="artist-name">{{ a.username }}</h3>
             <div class="artist-skills">
-              <span class="skill-badge" v-for="s in a.skills.slice(0, 4)" :key="s.id">
-                <span class="skill-badge-dot"></span>{{ s.skill_name }}
+              <span class="skill-badge" v-for="s in a.skills.slice(0, 4)" :key="s.sub_skill_id">
+                <span class="skill-badge-dot"></span>{{ s.main_skill_name }} › {{ s.display_name }}
               </span>
               <span v-if="a.skills.length > 4" class="skill-badge" style="opacity:0.5;">+{{ a.skills.length - 4 }} more</span>
             </div>
@@ -132,6 +132,7 @@ createApp({
       username: TokenStore.getUsername() || 'User',
       avatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
       dropdownOpen: false,
+      mobileOpen: false,
       loading: true,
       artists: [],
       filterName: '', filterSkill: '', filterLevel: '',
@@ -144,8 +145,8 @@ createApp({
       const l = this.filterLevel;
       return this.artists.filter(a => {
         if (n && !a.username.toLowerCase().includes(n)) return false;
-        if (s && !a.skills.some(sk => sk.skill_name.toLowerCase().includes(s))) return false;
-        if (l && !a.skills.some(sk => sk.level === l)) return false;
+        if (s && !a.skills.some(sk => sk.display_name.toLowerCase().includes(s))) return false;
+        if (l && !a.skills.some(sk => sk.rank === l)) return false;
         return true;
       });
     },

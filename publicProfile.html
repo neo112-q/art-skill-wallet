@@ -77,7 +77,7 @@
           <p class="profile-bio" v-else style="color:#444;">No bio yet.</p>
           <div class="stats-row">
             <div class="stat-item">
-              <span class="stat-value">{{ user.skills ? user.skills.length : 0 }}</span>
+              <span class="stat-value">{{ ranks.length }}</span>
               <p class="stat-label">Skills</p>
             </div>
             <div class="stat-item">
@@ -93,24 +93,37 @@
         <div class="section-hd">
           <h2>Skills</h2>
         </div>
-        <div v-if="user.skills && user.skills.length" class="skills-grid">
-          <div class="skill-card" v-for="s in user.skills" :key="s.id">
-            <h3>{{ s.skill_name }}</h3>
-            <div class="meter" style="margin-bottom:0.25rem;">
-              <div class="seg seg-neon"></div>
-              <div class="seg" :class="s.level === 'Intermediate' || s.level === 'Advanced' ? 'seg-blue' : 'seg-empty'"></div>
-              <div class="seg" :class="s.level === 'Advanced' ? 'seg-neon' : 'seg-empty'"></div>
+        <div v-if="!groupedRanks.length" style="color:#555;">No skill ranks yet.</div>
+        <div v-else style="display:flex; flex-direction:column; gap:0.5rem;">
+          <div v-for="group in groupedRanks" :key="group.mainName"
+               style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:10px; overflow:hidden;">
+            <!-- Main skill header -->
+            <div @click="toggleMain(group.mainName)"
+                 style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1rem; cursor:pointer; user-select:none;"
+                 @mouseenter="$event.currentTarget.style.background='rgba(204,255,0,0.04)'"
+                 @mouseleave="$event.currentTarget.style.background='transparent'">
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <span style="font-weight:700; font-size:0.95rem; color:white;">{{ group.mainName }}</span>
+                <span style="font-size:0.7rem; color:#555; background:#2A2A2A; padding:0.15rem 0.5rem; border-radius:99px;">
+                  {{ group.subs.length }} sub-skill{{ group.subs.length !== 1 ? 's' : '' }}
+                </span>
+              </div>
+              <i class="fas" :class="expandedMain === group.mainName ? 'fa-chevron-up' : 'fa-chevron-down'"
+                 style="color:#555; font-size:0.75rem;"></i>
             </div>
-            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p style="color:#aaa; font-size:0.75rem; margin-top:0.5rem;">Level : {{ levelNum(s.level) }}</p>
-            <div style="margin-top:0.75rem;">
-              <span class="badge" :class="badgeClass(s.level)">
-                <i class="fas" :class="badgeIcon(s.level)" style="font-size:0.7rem;"></i> {{ s.level }}
-              </span>
+            <!-- Sub-skills -->
+            <div v-if="expandedMain === group.mainName"
+                 style="border-top:1px solid #2A2A2A; padding:0.75rem 1rem; display:flex; flex-direction:column; gap:0.75rem;">
+              <div v-for="s in group.subs" :key="s.sub_skill_id" style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:0.85rem; color:#ccc; font-weight:600;">{{ s.display_name }}</span>
+                <span v-if="s.rank" class="badge" :class="badgeClass(s.rank)" style="font-size:0.68rem;">
+                  <i class="fas" :class="badgeIcon(s.rank)" style="font-size:0.6rem;"></i> {{ s.rank }}
+                </span>
+                <span v-else style="font-size:0.72rem; color:#555;">No rank</span>
+              </div>
             </div>
           </div>
         </div>
-        <p v-else style="color:#555;">No skills added yet.</p>
       </section>
 
       <!-- Approved Public Artworks -->
@@ -194,13 +207,28 @@ createApp({
       dropdownOpen: false,
       loading: true,
       user: null,
+      ranks: [],
+      expandedMain: null,
       artworkOpen: false,
       selectedArt: null,
       proofs: [],
       proofsLoading: false,
     };
   },
+  computed: {
+    groupedRanks() {
+      const map = {};
+      this.ranks.forEach(r => {
+        if (!map[r.main_skill_name]) map[r.main_skill_name] = [];
+        map[r.main_skill_name].push(r);
+      });
+      return Object.entries(map).map(([mainName, subs]) => ({ mainName, subs }));
+    },
+  },
   methods: {
+    toggleMain(name) { this.expandedMain = this.expandedMain === name ? null : name; },
+    badgeClass(r) { return r === 'Beginner' ? 'badge-beg' : r === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
+    badgeIcon(r)  { return r === 'Beginner' ? 'fa-seedling' : r === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
     initials(name) {
       if (!name) return '?';
       const parts = name.trim().split(/\s+/);
@@ -211,9 +239,6 @@ createApp({
       for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
       return 'hsl(' + (Math.abs(hash) % 360) + ', 50%, 25%)';
     },
-    levelNum(l)    { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
-    badgeClass(l)  { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
-    badgeIcon(l)   { return l === 'Beginner' ? 'fa-seedling' : l === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
 
     async openArtwork(art) {
       this.selectedArt  = art;
@@ -250,11 +275,18 @@ createApp({
     }
 
     try {
-      const res = await fetch('/api/v1/users/' + userId + '/public');
-      const body = await res.json();
-      if (res.ok && body.data) {
-        this.user = body.data;
+      const [pubRes, rankRes] = await Promise.all([
+        fetch('/api/v1/users/' + userId + '/public'),
+        fetch('/api/v1/users/' + userId + '/ranks'),
+      ]);
+      const pubBody  = await pubRes.json();
+      const rankBody = await rankRes.json();
+      if (pubRes.ok && pubBody.data) {
+        this.user = pubBody.data;
         document.title = this.user.username + ' – ArtSkillWallet';
+      }
+      if (rankRes.ok && rankBody.data) {
+        this.ranks = rankBody.data;
       }
     } catch (e) {
       console.error('[PUBLIC PROFILE] Error:', e);

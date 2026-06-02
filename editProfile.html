@@ -138,6 +138,7 @@ createApp({
     return {
       isAdmin: TokenStore.isAdmin(),
       dropdownOpen: false,
+      mobileOpen: false,
       loading: true,
       saving: false,
       msg: '', msgType: 'success',
@@ -184,17 +185,20 @@ createApp({
 
       // ── Step 1: Upload avatar if changed ──────────────────────────
       if (this.pendingAvatarFile) {
-        console.log('[EDIT] Uploading avatar …');
         const fd = new FormData();
         fd.append('avatar', this.pendingAvatarFile);
         const avRes = await apiUpload('/me/avatar', fd);
-        console.log('[EDIT] Avatar response:', avRes.status, avRes.data);
         if (avRes.ok) {
-          this.currentAvatar = avRes.data.data.profile_picture;
+          const newUrl = avRes.data.data?.profile_picture || avRes.data.data;
+          this.currentAvatar     = newUrl;
+          this.avatarPreview     = newUrl;
           this.pendingAvatarFile = null;
         } else {
-          this.msg = 'Avatar upload failed: ' + (avRes.data.error_message || 'Unknown'); this.msgType = 'error';
-          this.saving = false; return;
+          const errMsg = avRes.data?.error_message || ('HTTP ' + avRes.status);
+          this.msg = 'Avatar upload failed: ' + errMsg;
+          this.msgType = 'error';
+          this.saving = false;
+          return;
         }
       }
 

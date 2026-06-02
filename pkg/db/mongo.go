@@ -60,9 +60,27 @@ func CreateIndexes() {
 		Options: options.Index().SetUnique(true),
 	})
 
-	// ── skills ──────────────────────────────────────────────────────────
-	Database.Collection("skills").Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{Key: "user_id", Value: 1}},
+	// ── main_skills ─────────────────────────────────────────────────────
+	Database.Collection("main_skills").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "name", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+
+	// ── sub_skills ───────────────────────────────────────────────────────
+	Database.Collection("sub_skills").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: "main_skill_id", Value: 1}},
+	})
+	// Unique: no duplicate sub skill names under the same main skill
+	Database.Collection("sub_skills").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "main_skill_id", Value: 1}, {Key: "name", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+
+	// ── user_skill_ranks ─────────────────────────────────────────────────
+	// Unique: one rank entry per user per sub skill
+	Database.Collection("user_skill_ranks").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "sub_skill_id", Value: 1}},
+		Options: options.Index().SetUnique(true),
 	})
 
 	// ── artworks ────────────────────────────────────────────────────────

@@ -3,12 +3,15 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"art-skill-wallet/pkg/cloud"
 	"art-skill-wallet/pkg/db"
 	"art-skill-wallet/pkg/models"
 	"art-skill-wallet/pkg/response"
@@ -62,18 +65,32 @@ func GetSubmissionsEnriched(c *gin.Context) {
 		userMap[u.ID.Hex()] = u.Username
 	}
 
-	// Skills
-	skillCursor, err := db.Col("skills").Find(ctx, bson.M{})
+	// Sub skills
+	subSkillCursor, err := db.Col("sub_skills").Find(ctx, bson.M{})
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch skills")
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch sub skills")
 		return
 	}
-	defer skillCursor.Close(ctx)
-	var skills []models.Skill
-	_ = skillCursor.All(ctx, &skills)
-	skillMap := make(map[string]models.Skill)
-	for _, s := range skills {
-		skillMap[s.ID.Hex()] = s
+	defer subSkillCursor.Close(ctx)
+	var subSkills []models.SubSkill
+	_ = subSkillCursor.All(ctx, &subSkills)
+	subSkillMap := make(map[string]models.SubSkill)
+	for _, s := range subSkills {
+		subSkillMap[s.ID.Hex()] = s
+	}
+
+	// Main skills
+	mainSkillCursor, err := db.Col("main_skills").Find(ctx, bson.M{})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch main skills")
+		return
+	}
+	defer mainSkillCursor.Close(ctx)
+	var mainSkills []models.MainSkill
+	_ = mainSkillCursor.All(ctx, &mainSkills)
+	mainSkillMap := make(map[string]models.MainSkill)
+	for _, m := range mainSkills {
+		mainSkillMap[m.ID.Hex()] = m
 	}
 
 	rows := make([]SubmissionRow, 0, len(artworks))
@@ -86,24 +103,18 @@ func GetSubmissionsEnriched(c *gin.Context) {
 		if len(uname) >= 2 {
 			initials = string([]rune(uname)[:2])
 		}
-		// Collect all skill IDs — prefer skill_ids array, fall back to single skill_id
-		allIDs := a.SkillIDs
-		if len(allIDs) == 0 && !a.SkillID.IsZero() {
-			allIDs = []primitive.ObjectID{a.SkillID}
-		}
 
 		var skillNames []string
-		sLevel := ""
-		for _, sid := range allIDs {
-			if sk, ok := skillMap[sid.Hex()]; ok {
-				skillNames = append(skillNames, sk.SkillName)
-				if sLevel == "" {
-					sLevel = sk.Level // use level from first skill
+		for _, sid := range a.SubSkillIDs {
+			if sub, ok := subSkillMap[sid.Hex()]; ok {
+				name := sub.DisplayName
+				if main, ok := mainSkillMap[sub.MainSkillID.Hex()]; ok {
+					name = main.Name + " › " + sub.DisplayName
 				}
+				skillNames = append(skillNames, name)
 			}
 		}
 
-		// Primary skill name for backward compat
 		primarySkill := ""
 		if len(skillNames) > 0 {
 			primarySkill = skillNames[0]
@@ -120,7 +131,7 @@ func GetSubmissionsEnriched(c *gin.Context) {
 			Title:     a.Title,
 			Skill:     primarySkill,
 			Skills:    skillNames,
-			Level:     sLevel,
+			Level:     "",
 			Status:    status,
 			Submitted: a.UploadDate,
 		})
@@ -248,4 +259,263 @@ func UpdateSubmissionStatus(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Status updated to " + req.Status})
+}
+
+// VoteArtwork godoc
+// @Summary      Admin — cast a vote on a submission
+// @Tags         admin
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id   path   string             true "Artwork ID"
+// @Param        body body   models.VoteRequest  true "Vote payload"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/submissions/{id}/vote [post]
+func VoteArtwork(c *gin.Context) {
+	adminID, _ := c.Get("user_id")
+	adminObjID, err := primitive.ObjectIDFromHex(adminID.(string))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid admin ID")
+		return
+	}
+
+	artworkID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid artwork ID")
+		return
+	}
+
+	var req models.VoteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Load artwork
+	var artwork models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{"_id": artworkID}).Decode(&artwork); err != nil {
+		response.Error(c, http.StatusNotFound, "Artwork not found")
+		return
+	}
+
+	// Only allow voting on pending artworks
+	if artwork.Status != "Pending" {
+		response.Error(c, http.StatusBadRequest, "Artwork is already "+artwork.Status)
+		return
+	}
+
+	// Check if this admin already voted
+	for _, v := range artwork.Votes {
+		if v.AdminID == adminObjID {
+			response.Error(c, http.StatusConflict, "You have already voted on this artwork")
+			return
+		}
+	}
+
+	// Record the vote
+	newVote := models.ArtworkVote{
+		AdminID: adminObjID,
+		Vote:    req.Vote,
+		VotedAt: time.Now(),
+	}
+
+	approveCount := artwork.VoteApproveCount
+	rejectCount  := artwork.VoteRejectCount
+	if req.Vote == "approve" {
+		approveCount++
+	} else {
+		rejectCount++
+	}
+
+	// Count total admins to determine majority
+	totalAdmins, _ := db.Col("users").CountDocuments(ctx, bson.M{"role": "admin"})
+	majority := int((totalAdmins + 1) / 2) // ceil(total/2)
+	if majority < 1 {
+		majority = 1
+	}
+
+	// Update artwork with new vote
+	db.Col("artworks").UpdateOne(ctx, bson.M{"_id": artworkID}, bson.M{
+		"$push": bson.M{"votes": newVote},
+		"$set":  bson.M{
+			"vote_approve_count": approveCount,
+			"vote_reject_count":  rejectCount,
+			"updated_at":         time.Now(),
+		},
+	})
+
+	finalStatus := ""
+
+	// Check if majority reached
+	if approveCount >= majority {
+		finalStatus = "Approved"
+	} else if rejectCount >= majority {
+		finalStatus = "Rejected"
+	}
+
+	if finalStatus != "" {
+		db.Col("artworks").UpdateOne(ctx, bson.M{"_id": artworkID}, bson.M{
+			"$set": bson.M{"status": finalStatus, "updated_at": time.Now()},
+		})
+
+		// If approved → update user skill ranks
+		if finalStatus == "Approved" {
+			UpdateRanksAfterApproval(artwork.UserID, artwork.SubSkillIDs)
+		}
+	}
+
+	response.Success(c, http.StatusOK, gin.H{
+		"vote":          req.Vote,
+		"approve_count": approveCount,
+		"reject_count":  rejectCount,
+		"majority":      majority,
+		"status":        func() string { if finalStatus != "" { return finalStatus }; return "Pending" }(),
+	})
+}
+
+// AdminDeleteArtwork godoc
+// @Summary      Admin — permanently delete an artwork and all its proofs
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id path string true "Artwork ID"
+// @Success      200 {object} response.APIResponse
+// @Failure      400 {object} response.APIResponse
+// @Failure      404 {object} response.APIResponse
+// @Router       /admin/submissions/{id} [delete]
+func AdminDeleteArtwork(c *gin.Context) {
+	artworkID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid artwork ID")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Verify artwork exists
+	var artwork models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{"_id": artworkID}).Decode(&artwork); err != nil {
+		response.Error(c, http.StatusNotFound, "Artwork not found")
+		return
+	}
+
+	// Delete upload record + Cloudinary file
+	var upload models.Upload
+	if err := db.Col("uploads").FindOne(ctx, bson.M{
+		"user_id": artwork.UserID,
+		"title":   artwork.Title,
+	}).Decode(&upload); err == nil {
+		// Delete from Cloudinary if cloud upload
+		if upload.CloudinaryPublicID != "" {
+			_ = cloud.DeleteFile(upload.CloudinaryPublicID)
+		}
+		db.Col("uploads").DeleteOne(ctx, bson.M{"_id": upload.ID})
+	}
+
+	// Delete all proofs linked to this artwork
+	proofCursor, _ := db.Col("proofs").Find(ctx, bson.M{"artwork_id": artworkID})
+	if proofCursor != nil {
+		var proofs []models.Proof
+		_ = proofCursor.All(ctx, &proofs)
+		proofCursor.Close(ctx)
+		for _, p := range proofs {
+			// Delete proof file (local storage)
+			if p.FileURL != "" {
+				_ = removeLocalFile(p.FileURL)
+			}
+		}
+		db.Col("proofs").DeleteMany(ctx, bson.M{"artwork_id": artworkID})
+	}
+
+	// Delete the artwork itself
+	db.Col("artworks").DeleteOne(ctx, bson.M{"_id": artworkID})
+
+	response.Success(c, http.StatusOK, gin.H{"message": "Artwork deleted successfully"})
+}
+
+// ── User Management ───────────────────────────────────────────────────────────
+
+// GetAllUsers returns all users for the admin panel.
+func GetAllUsers(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cursor, err := db.Col("users").Find(ctx, bson.M{})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch users")
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var users []models.User
+	if err := cursor.All(ctx, &users); err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to decode users")
+		return
+	}
+	if users == nil {
+		users = []models.User{}
+	}
+	response.Success(c, http.StatusOK, users)
+}
+
+// BanUser sets banned=true on a user.
+func BanUser(c *gin.Context) {
+	userID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := db.Col("users").UpdateOne(ctx,
+		bson.M{"_id": userID},
+		bson.M{"$set": bson.M{"banned": true}},
+	)
+	if err != nil || result.MatchedCount == 0 {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+
+	// Revoke all refresh tokens so banned user is logged out immediately
+	db.Col("refresh_tokens").DeleteMany(ctx, bson.M{"user_id": userID})
+
+	response.Success(c, http.StatusOK, gin.H{"message": "User banned successfully"})
+}
+
+// UnbanUser sets banned=false on a user.
+func UnbanUser(c *gin.Context) {
+	userID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := db.Col("users").UpdateOne(ctx,
+		bson.M{"_id": userID},
+		bson.M{"$set": bson.M{"banned": false}},
+	)
+	if err != nil || result.MatchedCount == 0 {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+
+	response.Success(c, http.StatusOK, gin.H{"message": "User unbanned successfully"})
+}
+
+// removeLocalFile removes a file stored at a local /uploads/ URL.
+func removeLocalFile(fileURL string) error {
+	fname := filepath.Base(fileURL)
+	if fname == "" || fname == "." {
+		return nil
+	}
+	return os.Remove(filepath.Join(".", "uploads", fname))
 }

@@ -17,23 +17,14 @@ import (
 
 // HistoryEvent is a single timeline entry returned to the frontend.
 type HistoryEvent struct {
-	Type      string    `json:"type"`       // "upload" | "skill_created"
-	Date      time.Time `json:"date"`
-	Title     string    `json:"title"`
-	SkillName string    `json:"skill_name"`
-	Level     string    `json:"level"`
-	ArtworkID string    `json:"artwork_id,omitempty"`
-	SkillID   string    `json:"skill_id,omitempty"`
+	Type       string    `json:"type"` // "upload"
+	Date       time.Time `json:"date"`
+	Title      string    `json:"title"`
+	SkillNames []string  `json:"skill_names"`
+	Status     string    `json:"status"`
+	ArtworkID  string    `json:"artwork_id,omitempty"`
 }
 
-// GetHistory godoc
-// @Summary      Activity timeline for the logged-in user
-// @Description  Merges artwork uploads and skill creations into a single date-sorted timeline.
-// @Tags         history
-// @Security     BearerAuth
-// @Produce      json
-// @Success      200 {object} response.APIResponse
-// @Router       /history [get]
 func GetHistory(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))
@@ -45,7 +36,6 @@ func GetHistory(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// ── Fetch artworks ───────────────────────────────────────────────
 	artCursor, err := db.Col("artworks").Find(ctx, bson.M{"user_id": objID})
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to fetch artworks")
@@ -59,58 +49,34 @@ func GetHistory(c *gin.Context) {
 		return
 	}
 
-	// ── Fetch skills ─────────────────────────────────────────────────
-	skillCursor, err := db.Col("skills").Find(ctx, bson.M{"user_id": objID})
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch skills")
-		return
-	}
-	defer skillCursor.Close(ctx)
+	subSkillMap, mainSkillMap := loadSkillMaps(ctx)
 
-	var skills []models.Skill
-	if err := skillCursor.All(ctx, &skills); err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to decode skills")
-		return
-	}
-
-	// Build skill lookup
-	skillMap := make(map[string]models.Skill)
-	for _, s := range skills {
-		skillMap[s.ID.Hex()] = s
-	}
-
-	// ── Build timeline ───────────────────────────────────────────────
-	events := make([]HistoryEvent, 0, len(artworks)+len(skills))
-
+	events := make([]HistoryEvent, 0, len(artworks))
 	for _, a := range artworks {
-		sName := ""
-		sLevel := ""
-		if s, ok := skillMap[a.SkillID.Hex()]; ok {
-			sName = s.SkillName
-			sLevel = s.Level
+		var skillNames []string
+		for _, sid := range a.SubSkillIDs {
+			sub := subSkillMap[sid.Hex()]
+			name := sub.DisplayName
+			if main, ok := mainSkillMap[sub.MainSkillID.Hex()]; ok {
+				name = main.Name + " › " + sub.DisplayName
+			}
+			if name != "" {
+				skillNames = append(skillNames, name)
+			}
+		}
+		if skillNames == nil {
+			skillNames = []string{}
 		}
 		events = append(events, HistoryEvent{
-			Type:      "upload",
-			Date:      a.UploadDate,
-			Title:     a.Title,
-			SkillName: sName,
-			Level:     sLevel,
-			ArtworkID: a.ID.Hex(),
+			Type:       "upload",
+			Date:       a.UploadDate,
+			Title:      a.Title,
+			SkillNames: skillNames,
+			Status:     a.Status,
+			ArtworkID:  a.ID.Hex(),
 		})
 	}
 
-	for _, s := range skills {
-		events = append(events, HistoryEvent{
-			Type:      "skill_created",
-			Date:      s.CreatedAt,
-			Title:     s.SkillName + " added",
-			SkillName: s.SkillName,
-			Level:     s.Level,
-			SkillID:   s.ID.Hex(),
-		})
-	}
-
-	// Sort newest first
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].Date.After(events[j].Date)
 	})

@@ -64,7 +64,7 @@
         <p class="profile-bio" v-else style="color:#555;">No bio yet. <a href="/editProfile.html" style="color:#CCFF00;">Add one</a>.</p>
         <div class="stats-row">
           <div class="stat-item"><span class="stat-value">{{ totalPoints }}</span><p class="stat-label">Total Points</p></div>
-          <div class="stat-item"><span class="stat-value">{{ skills.length }}</span><p class="stat-label">Skills</p></div>
+          <div class="stat-item"><span class="stat-value">{{ ranks.length }}</span><p class="stat-label">Skills</p></div>
           <div class="stat-item"><span class="stat-value">{{ artworks.length }}</span><p class="stat-label">Artworks</p></div>
         </div>
       </div>
@@ -77,19 +77,46 @@
           <h2>Skill Showcase</h2>
           <a href="/skillManage.html" class="btn-neon">View All &rarr;</a>
         </div>
-        <div v-if="!skills.length" style="text-align:center; padding:2rem; color:#555;">
-          No skills yet. <a href="/skillManage.html" style="color:#CCFF00;">Add your first skill</a>.
+        <div v-if="!groupedRanks.length" style="text-align:center; padding:2rem; color:#555;">
+          No skill ranks yet. <a href="/upload.html" style="color:#CCFF00;">Upload artwork to earn ranks</a>.
         </div>
-        <div v-else class="skills-grid">
-          <div class="skill-card" v-for="s in skills.slice(0, 6)" :key="s.id">
-            <h3>{{ s.skill_name }}</h3>
-            <div class="meter">
-              <div class="seg seg-green"></div>
-              <div class="seg" :class="s.level !== 'Beginner' ? 'seg-blue' : 'seg-empty'"></div>
-              <div class="seg" :class="s.level === 'Advanced' ? 'seg-green' : 'seg-empty'"></div>
+        <div v-else style="display:flex; flex-direction:column; gap:0.5rem;">
+          <div v-for="group in groupedRanks" :key="group.mainName"
+               style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:10px; overflow:hidden;">
+            <!-- Main skill header (clickable) -->
+            <div @click="toggleMain(group.mainName)"
+                 style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1rem; cursor:pointer; user-select:none;"
+                 @mouseenter="$event.currentTarget.style.background='rgba(204,255,0,0.04)'"
+                 @mouseleave="$event.currentTarget.style.background='transparent'">
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <span style="font-weight:700; font-size:0.95rem; color:white;">{{ group.mainName }}</span>
+                <span style="font-size:0.7rem; color:#555; background:#2A2A2A; padding:0.15rem 0.5rem; border-radius:99px;">
+                  {{ group.subs.length }} sub-skill{{ group.subs.length !== 1 ? 's' : '' }}
+                </span>
+              </div>
+              <i class="fas" :class="expandedMain === group.mainName ? 'fa-chevron-up' : 'fa-chevron-down'"
+                 style="color:#555; font-size:0.75rem; transition:transform 0.2s;"></i>
             </div>
-            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
-            <p class="level-text">Level : {{ levelNum(s.level) }}</p>
+            <!-- Sub-skills (expandable) -->
+            <div v-if="expandedMain === group.mainName" style="border-top:1px solid #2A2A2A; padding:0.75rem 1rem; display:flex; flex-direction:column; gap:0.75rem;">
+              <div v-for="s in group.subs" :key="s.sub_skill_id" style="display:flex; flex-direction:column; gap:0.3rem;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <span style="font-size:0.85rem; color:#ccc; font-weight:600;">{{ s.display_name }}</span>
+                  <span v-if="s.rank" class="badge" :class="badgeClass(s.rank)" style="font-size:0.68rem;">
+                    <i class="fas" :class="badgeIcon(s.rank)" style="font-size:0.6rem;"></i> {{ s.rank }}
+                  </span>
+                  <span v-else style="font-size:0.72rem; color:#555;">No rank</span>
+                </div>
+                <div class="meter" style="margin:0;">
+                  <div class="seg" :class="s.approval_count >= 1  ? 'seg-neon' : 'seg-empty'"></div>
+                  <div class="seg" :class="s.approval_count >= 10 ? 'seg-blue' : 'seg-empty'"></div>
+                  <div class="seg" :class="s.approval_count >= 25 ? 'seg-neon' : 'seg-empty'"></div>
+                </div>
+                <span style="font-size:0.7rem; color:#555;">{{ s.approval_count }} approval{{ s.approval_count !== 1 ? 's' : '' }}
+                  <span v-if="s.rank !== 'Advanced'"> · {{ s.target - s.approval_count }} to {{ s.next_rank }}</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -252,9 +279,11 @@ createApp({
     return {
       isAdmin: TokenStore.isAdmin(),
       dropdownOpen: false,
+      mobileOpen: false,
       loading: true,
       user: { username: TokenStore.getUsername() || '', email: '', bio: '', profile_picture: '' },
-      skills: [],
+      ranks: [],
+      expandedMain: null,
       artworks: [],
       uploads: [],
       // Artwork detail popup
@@ -272,42 +301,54 @@ createApp({
     displayAvatar() {
       return this.user.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.user.username || 'U') + '&background=CCFF00&color=121212&bold=true&size=200';
     },
+    groupedRanks() {
+      const map = {};
+      this.ranks.forEach(r => {
+        if (!map[r.main_skill_name]) map[r.main_skill_name] = [];
+        map[r.main_skill_name].push(r);
+      });
+      return Object.entries(map).map(([mainName, subs]) => ({ mainName, subs }));
+    },
+    subSkillMap() {
+      const m = {};
+      this.ranks.forEach(r => { m[r.sub_skill_id] = r.display_name; });
+      return m;
+    },
     totalPoints() {
-      let pts = 0;
-      this.skills.forEach(s => { pts += s.level === 'Advanced' ? 500 : s.level === 'Intermediate' ? 250 : 100; });
-      pts += this.artworks.length * 50;
+      let pts = this.artworks.length * 50;
+      this.ranks.forEach(r => {
+        pts += r.rank === 'Advanced' ? 500 : r.rank === 'Intermediate' ? 250 : r.rank === 'Beginner' ? 100 : 0;
+      });
       return pts.toLocaleString();
     },
   },
   methods: {
     doLogout() { logout(); },
-    levelNum(l) { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
+    toggleMain(name) { this.expandedMain = this.expandedMain === name ? null : name; },
+    badgeClass(r) { return r === 'Beginner' ? 'badge-beg' : r === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
+    badgeIcon(r)  { return r === 'Beginner' ? 'fa-seedling' : r === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
     formatDate(d) {
       if (!d) return '';
       return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     },
 
     enrichArtworks() {
-      const skillMap = {};
-      this.skills.forEach(s => { skillMap[s.id] = s.skill_name; });
       const uploadsByTitle = {};
       this.uploads.forEach(u => {
         let url = '';
         if (u.file_url) {
-          // New: Cloudinary URL
           url = u.file_url;
         } else if (u.file_path) {
-          // Legacy: local file path
           const parts = u.file_path.replace(/\\/g, '/').split('/');
           const fname = parts[parts.length - 1];
           if (fname) url = '/uploads/' + fname;
         }
         if (url) uploadsByTitle[u.title.toLowerCase()] = url;
       });
+      const subMap = this.subSkillMap;
       this.artworks.forEach(a => {
-        // Support multiple skills — join all names, fall back to single skill_id
-        const ids = (a.skill_ids && a.skill_ids.length) ? a.skill_ids : (a.skill_id ? [a.skill_id] : []);
-        a._skillNames = ids.map(id => skillMap[id]).filter(Boolean);
+        const ids = a.sub_skill_ids || [];
+        a._skillNames = ids.map(id => subMap[id]).filter(Boolean);
         a._skillName  = a._skillNames.join(', ') || '—';
         a._thumbUrl   = uploadsByTitle[(a.title || '').toLowerCase()] || '';
       });
@@ -402,12 +443,12 @@ createApp({
     document.addEventListener('click', () => { this.dropdownOpen = false; });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { this.closeArtwork(); this.editArtOpen = false; } });
 
-    const [meRes, skillRes, artRes, upRes] = await Promise.all([
-      apiFetch('/me'), apiFetch('/skills'), apiFetch('/artworks'), apiFetch('/uploads'),
+    const [meRes, rankRes, artRes, upRes] = await Promise.all([
+      apiFetch('/me'), apiFetch('/my-ranks'), apiFetch('/artworks'), apiFetch('/uploads'),
     ]);
 
     if (meRes.ok && meRes.data.data) Object.assign(this.user, meRes.data.data);
-    if (skillRes.ok && skillRes.data.data) this.skills = skillRes.data.data;
+    if (rankRes.ok && rankRes.data.data) this.ranks = rankRes.data.data;
     if (artRes.ok && artRes.data.data) this.artworks = artRes.data.data;
     if (upRes.ok && upRes.data.data) this.uploads = upRes.data.data;
 
