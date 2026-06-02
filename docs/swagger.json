@@ -1,0 +1,1695 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Track art skills, manage portfolios, and grow your creative career.",
+        "title": "ArtSkillWallet API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/admin/main-skills": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Create a new main skill category (admin only)",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/main-skills/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Rename a main skill category (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Main Skill ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Delete a main skill and all its sub-skills (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Main Skill ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/sub-skills/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Rename a sub-skill (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sub-Skill ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Delete a sub-skill (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sub-Skill ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/submissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin — list all submissions with user and skill names",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/submissions/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin — approve or reject a submission",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.StatusUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin — permanently delete an artwork and all its proofs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/submissions/{id}/proofs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin — view proofs for a submission",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/submissions/{id}/vote": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin — cast a vote on a submission",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Vote payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VoteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List all users (admin only)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/ban": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Ban a user (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/unban": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Unban a user (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/artworks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artworks"
+                ],
+                "summary": "List all artworks for the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artworks"
+                ],
+                "summary": "Create a new artwork record",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/artworks/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates title, description, and privacy of an artwork owned by the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artworks"
+                ],
+                "summary": "Update artwork metadata",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ArtworkUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently removes an artwork and all linked proofs (files + records).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artworks"
+                ],
+                "summary": "Delete an artwork and its proofs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login and receive JWT access + refresh tokens",
+                "parameters": [
+                    {
+                        "description": "Login payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Revoke the refresh token",
+                "parameters": [
+                    {
+                        "description": "Refresh token to revoke",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RefreshRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Exchange a valid refresh token for a new access token",
+                "parameters": [
+                    {
+                        "description": "Refresh payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RefreshRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "Register payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/explore": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "explore"
+                ],
+                "summary": "List public approved artists and their artworks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "history"
+                ],
+                "summary": "Get the authenticated user's artwork submission history",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/main-skills": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "List all main skill categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/main-skills/{id}/sub-skills": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "List sub-skills under a main skill",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Main Skill ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Create a sub-skill under a main skill",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Main Skill ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get the currently authenticated user's profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Update the authenticated user's profile",
+                "parameters": [
+                    {
+                        "description": "Profile fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/avatar": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Upload or replace the user's profile picture",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Avatar image",
+                        "name": "avatar",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/my-ranks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Get the authenticated user's skill ranks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/proofs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all proof files linked to the given artwork_id.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "proofs"
+                ],
+                "summary": "List proofs for an artwork",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID to fetch proofs for",
+                        "name": "artwork_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Accepts a multipart/form-data request with a file and an artwork_id.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "proofs"
+                ],
+                "summary": "Upload a proof file linked to an artwork",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Proof file (image/video/PDF, max 10 MB)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Artwork ID this proof belongs to",
+                        "name": "artwork_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/proofs/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "proofs"
+                ],
+                "summary": "Replace the file of an existing proof",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Proof ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "New proof file (image/video/PDF, max 10 MB)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes the proof file from disk and deletes the record. Validates artwork ownership.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "proofs"
+                ],
+                "summary": "Delete a proof by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Proof ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/artworks/{id}/proofs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get proofs for a public approved artwork (no auth required)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artwork ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sub-skills/search": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Search sub-skills by name across all categories",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/uploads": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns every upload document belonging to the authenticated user, newest first.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "List all uploads for the logged-in user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Accepts a multipart/form-data request containing a file plus title and description fields.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "Upload a file with metadata",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File to upload (max 50 MB)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Optional description",
+                        "name": "description",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/uploads/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the title and description of an upload owned by the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "Update upload metadata",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID (ObjectID hex)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated metadata",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UploadUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes the file from local storage and deletes the metadata record from MongoDB.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "Delete an upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID (ObjectID hex)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/public": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "explore"
+                ],
+                "summary": "Get a user's public profile with artworks and ranks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/ranks": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "skills"
+                ],
+                "summary": "Get a public user's skill ranks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.ArtworkUpdateRequest": {
+            "type": "object",
+            "required": [
+                "privacy_status",
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "privacy_status": {
+                    "type": "string",
+                    "enum": [
+                        "Public",
+                        "Private"
+                    ]
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RefreshRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 3
+                }
+            }
+        },
+        "models.StatusUpdateRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Pending",
+                        "Approved",
+                        "Rejected"
+                    ]
+                }
+            }
+        },
+        "models.UpdateProfileRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "username"
+            ],
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 3
+                }
+            }
+        },
+        "models.UploadUpdateRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.VoteRequest": {
+            "type": "object",
+            "required": [
+                "vote"
+            ],
+            "properties": {
+                "vote": {
+                    "type": "string",
+                    "enum": [
+                        "approve",
+                        "reject"
+                    ]
+                }
+            }
+        },
+        "response.APIResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error_message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Enter: Bearer \u003cyour_access_token\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

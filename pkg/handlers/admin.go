@@ -144,7 +144,13 @@ func GetSubmissionsEnriched(c *gin.Context) {
 	response.Success(c, http.StatusOK, rows)
 }
 
-// GetPublicArtworkProofs returns proofs for a public+approved artwork — no auth required.
+// GetPublicArtworkProofs godoc
+// @Summary      Get proofs for a public approved artwork (no auth required)
+// @Tags         admin
+// @Produce      json
+// @Param        id path string true "Artwork ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /public/artworks/{id}/proofs [get]
 func GetPublicArtworkProofs(c *gin.Context) {
 	artworkID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -423,7 +429,13 @@ func AdminDeleteArtwork(c *gin.Context) {
 
 // ── User Management ───────────────────────────────────────────────────────────
 
-// GetAllUsers returns all users for the admin panel.
+// GetAllUsers godoc
+// @Summary      List all users (admin only)
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/users [get]
 func GetAllUsers(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -446,7 +458,14 @@ func GetAllUsers(c *gin.Context) {
 	response.Success(c, http.StatusOK, users)
 }
 
-// BanUser sets banned=true on a user.
+// BanUser godoc
+// @Summary      Ban a user (admin only)
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id path string true "User ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/users/{id}/ban [put]
 func BanUser(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -472,7 +491,14 @@ func BanUser(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{"message": "User banned successfully"})
 }
 
-// UnbanUser sets banned=false on a user.
+// UnbanUser godoc
+// @Summary      Unban a user (admin only)
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id path string true "User ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/users/{id}/unban [put]
 func UnbanUser(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {

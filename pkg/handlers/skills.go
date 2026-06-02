@@ -17,7 +17,12 @@ import (
 
 // ── Main Skills ───────────────────────────────────────────────────────────────
 
-// GetMainSkills returns all main skills. Public — no auth required.
+// GetMainSkills godoc
+// @Summary      List all main skill categories
+// @Tags         skills
+// @Produce      json
+// @Success      200 {object} response.APIResponse
+// @Router       /main-skills [get]
 func GetMainSkills(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -40,7 +45,14 @@ func GetMainSkills(c *gin.Context) {
 	response.Success(c, http.StatusOK, skills)
 }
 
-// CreateMainSkill creates a new main skill. Admin only.
+// CreateMainSkill godoc
+// @Summary      Create a new main skill category (admin only)
+// @Tags         skills
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Success      201 {object} response.APIResponse
+// @Router       /admin/main-skills [post]
 func CreateMainSkill(c *gin.Context) {
 	adminID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(adminID.(string))
@@ -81,7 +93,15 @@ func CreateMainSkill(c *gin.Context) {
 	response.Success(c, http.StatusCreated, skill)
 }
 
-// UpdateMainSkill renames a main skill. Admin only.
+// UpdateMainSkill godoc
+// @Summary      Rename a main skill category (admin only)
+// @Tags         skills
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "Main Skill ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/main-skills/{id} [put]
 func UpdateMainSkill(c *gin.Context) {
 	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -123,7 +143,14 @@ func UpdateMainSkill(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{"message": "Main skill updated", "name": name})
 }
 
-// DeleteMainSkill deletes a main skill and all its sub skills. Admin only.
+// DeleteMainSkill godoc
+// @Summary      Delete a main skill and all its sub-skills (admin only)
+// @Tags         skills
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id path string true "Main Skill ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/main-skills/{id} [delete]
 func DeleteMainSkill(c *gin.Context) {
 	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -142,7 +169,13 @@ func DeleteMainSkill(c *gin.Context) {
 
 // ── Sub Skills ────────────────────────────────────────────────────────────────
 
-// GetSubSkills returns all sub skills under a main skill. Public.
+// GetSubSkills godoc
+// @Summary      List sub-skills under a main skill
+// @Tags         skills
+// @Produce      json
+// @Param        id path string true "Main Skill ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /main-skills/{id}/sub-skills [get]
 func GetSubSkills(c *gin.Context) {
 	mainID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -171,7 +204,15 @@ func GetSubSkills(c *gin.Context) {
 	response.Success(c, http.StatusOK, skills)
 }
 
-// CreateSubSkill creates a new sub skill or returns existing one. Any user.
+// CreateSubSkill godoc
+// @Summary      Create a sub-skill under a main skill
+// @Tags         skills
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "Main Skill ID"
+// @Success      201 {object} response.APIResponse
+// @Router       /main-skills/{id}/sub-skills [post]
 func CreateSubSkill(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))
@@ -232,7 +273,15 @@ func CreateSubSkill(c *gin.Context) {
 	response.Success(c, http.StatusCreated, skill)
 }
 
-// UpdateSubSkill updates the display_name of a sub skill. Admin only.
+// UpdateSubSkill godoc
+// @Summary      Rename a sub-skill (admin only)
+// @Tags         skills
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "Sub-Skill ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/sub-skills/{id} [put]
 func UpdateSubSkill(c *gin.Context) {
 	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -266,7 +315,14 @@ func UpdateSubSkill(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{"message": "Sub skill updated", "display_name": displayName})
 }
 
-// DeleteSubSkill deletes a sub skill. Admin only.
+// DeleteSubSkill godoc
+// @Summary      Delete a sub-skill (admin only)
+// @Tags         skills
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id path string true "Sub-Skill ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /admin/sub-skills/{id} [delete]
 func DeleteSubSkill(c *gin.Context) {
 	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -286,7 +342,13 @@ func DeleteSubSkill(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{"message": "Sub skill deleted"})
 }
 
-// SearchSubSkills searches sub skills by name across all main skills. Public.
+// SearchSubSkills godoc
+// @Summary      Search sub-skills by name across all categories
+// @Tags         skills
+// @Produce      json
+// @Param        q query string true "Search query"
+// @Success      200 {object} response.APIResponse
+// @Router       /sub-skills/search [get]
 func SearchSubSkills(c *gin.Context) {
 	q := strings.ToLower(strings.TrimSpace(c.Query("q")))
 	if q == "" {
@@ -316,7 +378,13 @@ func SearchSubSkills(c *gin.Context) {
 
 // ── User Skill Ranks ──────────────────────────────────────────────────────────
 
-// GetMyRanks returns the authenticated user's skill ranks with sub skill details.
+// GetMyRanks godoc
+// @Summary      Get the authenticated user's skill ranks
+// @Tags         skills
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {object} response.APIResponse
+// @Router       /my-ranks [get]
 func GetMyRanks(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))
@@ -377,7 +445,13 @@ func GetMyRanks(c *gin.Context) {
 	response.Success(c, http.StatusOK, rows)
 }
 
-// GetUserRanks returns a public user's skill ranks (for public profile).
+// GetUserRanks godoc
+// @Summary      Get a public user's skill ranks
+// @Tags         skills
+// @Produce      json
+// @Param        id path string true "User ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /users/{id}/ranks [get]
 func GetUserRanks(c *gin.Context) {
 	userObjID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {

@@ -1,0 +1,1074 @@
+basePath: /api/v1
+definitions:
+  models.ArtworkUpdateRequest:
+    properties:
+      description:
+        type: string
+      privacy_status:
+        enum:
+        - Public
+        - Private
+        type: string
+      title:
+        type: string
+    required:
+    - privacy_status
+    - title
+    type: object
+  models.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  models.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        maxLength: 30
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  models.StatusUpdateRequest:
+    properties:
+      status:
+        enum:
+        - Pending
+        - Approved
+        - Rejected
+        type: string
+    required:
+    - status
+    type: object
+  models.UpdateProfileRequest:
+    properties:
+      bio:
+        type: string
+      email:
+        type: string
+      new_password:
+        type: string
+      old_password:
+        type: string
+      username:
+        maxLength: 30
+        minLength: 3
+        type: string
+    required:
+    - email
+    - username
+    type: object
+  models.UploadUpdateRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  models.VoteRequest:
+    properties:
+      vote:
+        enum:
+        - approve
+        - reject
+        type: string
+    required:
+    - vote
+    type: object
+  response.APIResponse:
+    properties:
+      data: {}
+      error_message:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Track art skills, manage portfolios, and grow your creative career.
+  title: ArtSkillWallet API
+  version: "1.0"
+paths:
+  /admin/main-skills:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new main skill category (admin only)
+      tags:
+      - skills
+  /admin/main-skills/{id}:
+    delete:
+      parameters:
+      - description: Main Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a main skill and all its sub-skills (admin only)
+      tags:
+      - skills
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Main Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Rename a main skill category (admin only)
+      tags:
+      - skills
+  /admin/sub-skills/{id}:
+    delete:
+      parameters:
+      - description: Sub-Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a sub-skill (admin only)
+      tags:
+      - skills
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sub-Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Rename a sub-skill (admin only)
+      tags:
+      - skills
+  /admin/submissions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin — list all submissions with user and skill names
+      tags:
+      - admin
+  /admin/submissions/{id}:
+    delete:
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin — permanently delete an artwork and all its proofs
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.StatusUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin — approve or reject a submission
+      tags:
+      - admin
+  /admin/submissions/{id}/proofs:
+    get:
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin — view proofs for a submission
+      tags:
+      - admin
+  /admin/submissions/{id}/vote:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Vote payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.VoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin — cast a vote on a submission
+      tags:
+      - admin
+  /admin/users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List all users (admin only)
+      tags:
+      - admin
+  /admin/users/{id}/ban:
+    put:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Ban a user (admin only)
+      tags:
+      - admin
+  /admin/users/{id}/unban:
+    put:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Unban a user (admin only)
+      tags:
+      - admin
+  /artworks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List all artworks for the authenticated user
+      tags:
+      - artworks
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new artwork record
+      tags:
+      - artworks
+  /artworks/{id}:
+    delete:
+      description: Permanently removes an artwork and all linked proofs (files + records).
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete an artwork and its proofs
+      tags:
+      - artworks
+    put:
+      consumes:
+      - application/json
+      description: Updates title, description, and privacy of an artwork owned by
+        the authenticated user.
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.ArtworkUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update artwork metadata
+      tags:
+      - artworks
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Login and receive JWT access + refresh tokens
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh token to revoke
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Revoke the refresh token
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Exchange a valid refresh token for a new access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Register payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /explore:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: List public approved artists and their artworks
+      tags:
+      - explore
+  /history:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get the authenticated user's artwork submission history
+      tags:
+      - history
+  /main-skills:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: List all main skill categories
+      tags:
+      - skills
+  /main-skills/{id}/sub-skills:
+    get:
+      parameters:
+      - description: Main Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: List sub-skills under a main skill
+      tags:
+      - skills
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Main Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a sub-skill under a main skill
+      tags:
+      - skills
+  /me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get the currently authenticated user's profile
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Profile fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update the authenticated user's profile
+      tags:
+      - user
+  /me/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Avatar image
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload or replace the user's profile picture
+      tags:
+      - user
+  /my-ranks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get the authenticated user's skill ranks
+      tags:
+      - skills
+  /proofs:
+    get:
+      description: Returns all proof files linked to the given artwork_id.
+      parameters:
+      - description: Artwork ID to fetch proofs for
+        in: query
+        name: artwork_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List proofs for an artwork
+      tags:
+      - proofs
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts a multipart/form-data request with a file and an artwork_id.
+      parameters:
+      - description: Proof file (image/video/PDF, max 10 MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Artwork ID this proof belongs to
+        in: formData
+        name: artwork_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload a proof file linked to an artwork
+      tags:
+      - proofs
+  /proofs/{id}:
+    delete:
+      description: Removes the proof file from disk and deletes the record. Validates
+        artwork ownership.
+      parameters:
+      - description: Proof ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a proof by ID
+      tags:
+      - proofs
+    put:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Proof ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New proof file (image/video/PDF, max 10 MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Replace the file of an existing proof
+      tags:
+      - proofs
+  /public/artworks/{id}/proofs:
+    get:
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get proofs for a public approved artwork (no auth required)
+      tags:
+      - admin
+  /sub-skills/search:
+    get:
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Search sub-skills by name across all categories
+      tags:
+      - skills
+  /uploads:
+    get:
+      description: Returns every upload document belonging to the authenticated user,
+        newest first.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List all uploads for the logged-in user
+      tags:
+      - uploads
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts a multipart/form-data request containing a file plus title
+        and description fields.
+      parameters:
+      - description: File to upload (max 50 MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Document title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Optional description
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload a file with metadata
+      tags:
+      - uploads
+  /uploads/{id}:
+    delete:
+      description: Removes the file from local storage and deletes the metadata record
+        from MongoDB.
+      parameters:
+      - description: Upload ID (ObjectID hex)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete an upload
+      tags:
+      - uploads
+    put:
+      consumes:
+      - application/json
+      description: Updates the title and description of an upload owned by the authenticated
+        user.
+      parameters:
+      - description: Upload ID (ObjectID hex)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated metadata
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.UploadUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update upload metadata
+      tags:
+      - uploads
+  /users/{id}/public:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get a user's public profile with artworks and ranks
+      tags:
+      - explore
+  /users/{id}/ranks:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get a public user's skill ranks
+      tags:
+      - skills
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter: Bearer <your_access_token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -45,6 +45,12 @@ type ExploreArtist struct {
 	ArtworkCount   int              `json:"artwork_count"`
 }
 
+// GetExplore godoc
+// @Summary      List public approved artists and their artworks
+// @Tags         explore
+// @Produce      json
+// @Success      200 {object} response.APIResponse
+// @Router       /explore [get]
 func GetExplore(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -132,6 +138,13 @@ func GetExplore(c *gin.Context) {
 	response.Success(c, http.StatusOK, artists)
 }
 
+// GetPublicProfile godoc
+// @Summary      Get a user's public profile with artworks and ranks
+// @Tags         explore
+// @Produce      json
+// @Param        id path string true "User ID"
+// @Success      200 {object} response.APIResponse
+// @Router       /users/{id}/public [get]
 func GetPublicProfile(c *gin.Context) {
 	userObjID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {

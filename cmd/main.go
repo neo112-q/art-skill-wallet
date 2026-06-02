@@ -1,3 +1,14 @@
+// @title           ArtSkillWallet API
+// @version         1.0
+// @description     Track art skills, manage portfolios, and grow your creative career.
+// @host            localhost:8080
+// @BasePath        /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in              header
+// @name            Authorization
+// @description     Enter: Bearer <your_access_token>
+
 package main
 
 import (
@@ -7,7 +18,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
 
+	_ "art-skill-wallet/docs"
 	"art-skill-wallet/pkg/db"
 	"art-skill-wallet/pkg/handlers"
 	"art-skill-wallet/pkg/middleware"
@@ -49,6 +63,9 @@ func main() {
 	// ── Router ──────────────────────────────────────────────────────────
 	r := gin.Default()
 
+	// Swagger UI
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	// Static assets
 	r.Static("/css", filepath.Join(root, "css"))
 	r.Static("/js", filepath.Join(root, "js"))
@@ -62,8 +79,6 @@ func main() {
 	r.StaticFile("/publicProfile.html", filepath.Join(root, "publicProfile.html"))
 
 	// ── Protected HTML pages (JS guard handles redirect) ────────────────
-	// HTML is served freely; the real lock is on the API.
-	// Each page includes auth.js which redirects to home if no valid token.
 	r.StaticFile("/profile.html", filepath.Join(root, "profile.html"))
 	r.StaticFile("/history.html", filepath.Join(root, "history.html"))
 	r.StaticFile("/upload.html", filepath.Join(root, "upload.html"))
@@ -141,6 +156,7 @@ func main() {
 		port = "8080"
 	}
 	log.Printf("Server listening on :%s", port)
+	log.Printf("Swagger UI: http://localhost:%s/swagger/index.html", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}

@@ -18,6 +18,13 @@ import (
 
 // ── Artworks ──────────────────────────────────────────────────────────────────
 
+// GetArtworks godoc
+// @Summary      List all artworks for the authenticated user
+// @Tags         artworks
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {object} response.APIResponse
+// @Router       /artworks [get]
 func GetArtworks(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))
@@ -48,6 +55,14 @@ func GetArtworks(c *gin.Context) {
 	response.Success(c, http.StatusOK, artworks)
 }
 
+// CreateArtwork godoc
+// @Summary      Create a new artwork record
+// @Tags         artworks
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Success      201 {object} response.APIResponse
+// @Router       /artworks [post]
 func CreateArtwork(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))

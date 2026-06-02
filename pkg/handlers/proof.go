@@ -197,7 +197,16 @@ func GetProofs(c *gin.Context) {
 
 // ── Update Proof ─────────────────────────────────────────────────────────────
 
-// UpdateProof replaces the file of an existing proof. Validates ownership.
+// UpdateProof godoc
+// @Summary      Replace the file of an existing proof
+// @Tags         proofs
+// @Security     BearerAuth
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        id   path     string true "Proof ID"
+// @Param        file formData file   true "New proof file (image/video/PDF, max 10 MB)"
+// @Success      200 {object} response.APIResponse
+// @Router       /proofs/{id} [put]
 func UpdateProof(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))

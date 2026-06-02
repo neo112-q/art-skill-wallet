@@ -25,6 +25,13 @@ type HistoryEvent struct {
 	ArtworkID  string    `json:"artwork_id,omitempty"`
 }
 
+// GetHistory godoc
+// @Summary      Get the authenticated user's artwork submission history
+// @Tags         history
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {object} response.APIResponse
+// @Router       /history [get]
 func GetHistory(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))
