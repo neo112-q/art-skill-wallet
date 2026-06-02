@@ -138,7 +138,7 @@
           <a href="/upload.html" class="btn-neon">+ Add Artwork</a>
         </div>
         <div v-if="!artworks.length" style="text-align:center; padding:2rem; color:#555;">
-          No artworks yet. <a href="/upload.html" style="color:#CCFF00;">Upload your first piece</a>.
+          No artworks yet. <span style="color:#CCFF00; text-decoration:none;">Upload your first piece</span>.
         </div>
         <div v-else class="portfolio-grid">
           <div class="portfolio-item" v-for="a in artworks" :key="a.id" @click="openArtwork(a)" style="cursor:pointer; position:relative;">
