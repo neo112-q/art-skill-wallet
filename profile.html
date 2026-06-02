@@ -315,9 +315,10 @@ createApp({
       return m;
     },
     totalPoints() {
-      let pts = this.artworks.length * 50;
+      let pts = 0;
+      this.artworks.forEach(a => { if (a.status === 'Approved') pts += 10; });
       this.ranks.forEach(r => {
-        pts += r.rank === 'Advanced' ? 500 : r.rank === 'Intermediate' ? 250 : r.rank === 'Beginner' ? 100 : 0;
+        pts += r.rank === 'Advanced' ? 200 : r.rank === 'Intermediate' ? 100 : r.rank === 'Beginner' ? 50 : 0;
       });
       return pts.toLocaleString();
     },

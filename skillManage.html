@@ -61,16 +61,48 @@
     <!-- Loading -->
     <div v-if="loading" style="text-align:center; padding:3rem; color:#888;">Loading skills...</div>
 
+    <template v-else>
+
+    <!-- Filter bar -->
+    <div v-if="ranks.length" class="fade-in-2" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; padding:0.85rem 1rem; display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; margin-bottom:1.5rem;">
+      <!-- Search -->
+      <div style="display:flex; align-items:center; gap:0.5rem; background:#121212; border:1px solid #2A2A2A; border-radius:8px; padding:0.4rem 0.75rem; flex:1; min-width:160px;">
+        <i class="fas fa-search" style="color:#555; font-size:0.8rem;"></i>
+        <input type="text" v-model="filterName" placeholder="Search skill..." style="background:transparent; border:none; outline:none; color:white; font-size:0.83rem; width:100%;">
+      </div>
+      <!-- Main skill filter -->
+      <select v-model="filterMain" style="background:#121212; border:1px solid #2A2A2A; border-radius:8px; padding:0.4rem 0.75rem; color:white; font-size:0.83rem; outline:none;">
+        <option value="">All Categories</option>
+        <option v-for="m in uniqueMains" :key="m" :value="m">{{ m }}</option>
+      </select>
+      <!-- Rank filter -->
+      <select v-model="filterRank" style="background:#121212; border:1px solid #2A2A2A; border-radius:8px; padding:0.4rem 0.75rem; color:white; font-size:0.83rem; outline:none;">
+        <option value="">All Ranks</option>
+        <option>Beginner</option>
+        <option>Intermediate</option>
+        <option>Advanced</option>
+      </select>
+      <!-- Clear -->
+      <button v-if="filterName || filterMain || filterRank" @click="filterName=''; filterMain=''; filterRank=''"
+        style="background:none; border:1px solid #2A2A2A; border-radius:8px; padding:0.4rem 0.75rem; color:#888; font-size:0.8rem; cursor:pointer;">
+        Clear
+      </button>
+      <span style="font-size:0.75rem; color:#555; margin-left:auto;">{{ filteredRanks.length }} skill{{ filteredRanks.length !== 1 ? 's' : '' }}</span>
+    </div>
+
     <!-- Empty State -->
-    <div v-else-if="!ranks.length" style="text-align:center; padding:3rem; color:#666;">
+    <div v-if="!ranks.length" style="text-align:center; padding:3rem; color:#666;">
       <p style="font-size:1.1rem; margin-bottom:0.5rem;">No skill ranks yet.</p>
       <p style="font-size:0.85rem; color:#555; margin-bottom:1.5rem;">Upload artwork and get it approved to earn your first rank.</p>
       <a href="/upload.html" class="btn-neon">+ Upload Artwork</a>
     </div>
+    <div v-else-if="!filteredRanks.length" style="text-align:center; padding:2rem; color:#555;">
+      No skills match your filters.
+    </div>
 
     <!-- Skills Grid -->
     <div v-else class="skills-grid fade-in-2">
-      <div class="skill-card" v-for="r in ranks" :key="r.id">
+      <div class="skill-card" v-for="r in filteredRanks" :key="r.id">
         <div style="font-size:0.72rem; color:#555; margin-bottom:0.25rem; text-transform:uppercase; letter-spacing:0.05em;">{{ r.main_skill_name }}</div>
         <h3 style="margin-bottom:0.75rem;">{{ r.display_name }}</h3>
 
@@ -100,6 +132,8 @@
         </div>
       </div>
     </div>
+
+    </template>
   </main>
 
 </div>
@@ -120,7 +154,25 @@ createApp({
       mobileOpen: false,
       loading: true,
       ranks: [],
+      filterName: '',
+      filterMain: '',
+      filterRank: '',
     };
+  },
+  computed: {
+    uniqueMains() {
+      return [...new Set(this.ranks.map(r => r.main_skill_name).filter(Boolean))];
+    },
+    filteredRanks() {
+      const n = this.filterName.toLowerCase();
+      const m = this.filterMain;
+      const r = this.filterRank;
+      return this.ranks.filter(rank =>
+        (!n || rank.display_name.toLowerCase().includes(n) || rank.main_skill_name.toLowerCase().includes(n)) &&
+        (!m || rank.main_skill_name === m) &&
+        (!r || rank.rank === r)
+      );
+    },
   },
   methods: {
     doLogout() { logout(); },

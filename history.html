@@ -54,20 +54,33 @@
         <h2 class="filter-title">Filter</h2>
         <div class="filter-group">
           <label class="filter-label">Title</label>
-          <input type="text" class="filter-input" v-model="filterTitle" placeholder="Search...">
+          <input type="text" class="filter-input" v-model="filterTitle" placeholder="Search title...">
         </div>
         <div class="filter-group">
           <label class="filter-label">Skill</label>
-          <input type="text" class="filter-input" v-model="filterSkill" placeholder="e.g. Illustration">
+          <input type="text" class="filter-input" v-model="filterSkill" placeholder="e.g. Watercolor">
         </div>
         <div class="filter-group">
-          <label class="filter-label">Type</label>
-          <select class="filter-input" v-model="filterType">
-            <option value="">All</option>
-            <option value="upload">Uploads</option>
-            <option value="skill_created">Skills Added</option>
+          <label class="filter-label">Status</label>
+          <select class="filter-input" v-model="filterStatus">
+            <option value="">All Status</option>
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Rejected</option>
           </select>
         </div>
+        <div class="filter-group">
+          <label class="filter-label">Sort</label>
+          <select class="filter-input" v-model="sortDir">
+            <option value="desc">Newest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
+        </div>
+        <button v-if="filterTitle || filterSkill || filterStatus || sortDir !== 'desc'"
+          @click="filterTitle=''; filterSkill=''; filterStatus=''; sortDir='desc'"
+          style="width:100%; margin-top:0.5rem; background:none; border:1px solid #2A2A2A; border-radius:8px; padding:0.45rem; color:#888; font-size:0.8rem; cursor:pointer;">
+          Clear Filters
+        </button>
       </div>
     </aside>
 
@@ -96,14 +109,14 @@
                 <span v-else class="timeline-icon">⬆️</span>
               </div>
               <div class="timeline-text">
-                <p v-if="ev.type === 'upload'">You uploaded :<br><strong>{{ ev.title }}</strong></p>
-                <p v-else>You added skill :<br><strong>{{ ev.title }}</strong></p>
-                <!-- Multiple skills support -->
+                <p>You uploaded :<br><strong>{{ ev.title }}</strong></p>
                 <template v-if="ev.skill_names && ev.skill_names.length">
                   <span class="timeline-tag" v-for="sn in ev.skill_names" :key="sn">{{ sn }}</span>
                 </template>
-                <span class="timeline-tag" v-else-if="ev.skill_name">{{ ev.skill_name }}</span>
-                <span class="timeline-tag" v-if="ev.level">{{ ev.level }}</span>
+                <span v-if="ev.status" style="font-size:0.68rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:4px; margin-left:0.25rem;"
+                  :style="{ background: ev.status==='Approved' ? 'rgba(34,197,94,0.15)' : ev.status==='Rejected' ? 'rgba(239,68,68,0.15)' : 'rgba(234,179,8,0.15)', color: ev.status==='Approved' ? '#4ade80' : ev.status==='Rejected' ? '#f87171' : '#fbbf24' }">
+                  {{ ev.status }}
+                </span>
               </div>
             </div>
           </div>
@@ -130,7 +143,9 @@ createApp({
       events: [],
       filterTitle: '',
       filterSkill: '',
-      filterType: '',
+      filterStatus: '',
+      sortDir: 'desc',
+      mobileOpen: false,
     };
   },
   computed: {
@@ -140,14 +155,18 @@ createApp({
     filteredEvents() {
       const t = this.filterTitle.toLowerCase();
       const s = this.filterSkill.toLowerCase();
-      const tp = this.filterType;
-      return this.events.filter(e =>
-        (!t || e.title.toLowerCase().includes(t)) &&
-        (!s || (e.skill_name || '').toLowerCase().includes(s)) &&
-        (!tp || e.type === tp)
+      const st = this.filterStatus;
+      let result = this.events.filter(e =>
+        (!t  || e.title.toLowerCase().includes(t)) &&
+        (!s  || (e.skill_names || []).some(sn => sn.toLowerCase().includes(s))) &&
+        (!st || e.status === st)
       );
+      result = [...result].sort((a, b) => {
+        const diff = new Date(a.date) - new Date(b.date);
+        return this.sortDir === 'asc' ? diff : -diff;
+      });
+      return result;
     },
-    // Group filtered events by date string (day)
     groupedEvents() {
       const groups = [];
       const map = {};
