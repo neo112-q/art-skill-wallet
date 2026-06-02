@@ -45,11 +45,30 @@
     </div>
   </nav>
 
+  <!-- Mobile Nav Drawer -->
+  <div class="mobile-nav" :class="{ open: mobileOpen }" @click.self="mobileOpen=false">
+    <a href="/explore.html" class="mobile-nav-link"><i class="fas fa-compass"></i> Explore</a>
+    <a href="/skillManage.html" class="mobile-nav-link"><i class="fas fa-star"></i> Skills</a>
+    <a href="/history.html" class="mobile-nav-link active"><i class="fas fa-history"></i> History</a>
+    <div class="mobile-nav-divider"></div>
+    <a href="/profile.html" class="mobile-nav-link"><i class="fas fa-user"></i> Profile</a>
+    <a v-if="isAdmin" href="/admin.html" class="mobile-nav-link"><i class="fas fa-shield-alt"></i> Admin</a>
+    <button class="mobile-nav-link" style="background:none;border:none;cursor:pointer;color:#ff6b6b;width:100%;text-align:left;" @click="doLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <!-- Mobile Filter Toggle -->
+  <div class="mobile-filter-bar">
+    <button class="mobile-filter-btn" @click="filterOpen = !filterOpen">
+      <i class="fas fa-filter"></i> Filters
+      <span v-if="filterTitle || filterSkill || filterStatus" class="mobile-filter-badge">●</span>
+    </button>
+  </div>
+
   <!-- Two-column layout -->
   <div class="two-col-layout">
 
     <!-- Filter Panel -->
-    <aside class="filter-panel">
+    <aside class="filter-panel" :class="{ 'mobile-open': filterOpen }">
       <div class="filter-card">
         <h2 class="filter-title">Filter</h2>
         <div class="filter-group">
@@ -138,6 +157,7 @@ createApp({
     return {
       isAdmin: TokenStore.isAdmin(),
       username: TokenStore.getUsername() || 'User',
+      profilePicture: '',
       dropdownOpen: false,
       loading: true,
       events: [],
@@ -146,11 +166,12 @@ createApp({
       filterStatus: '',
       sortDir: 'desc',
       mobileOpen: false,
+      filterOpen: false,
     };
   },
   computed: {
     displayAvatar() {
-      return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.username) + '&background=CCFF00&color=121212&bold=true&size=100';
+      return this.profilePicture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.username) + '&background=CCFF00&color=121212&bold=true&size=100';
     },
     filteredEvents() {
       const t = this.filterTitle.toLowerCase();
@@ -188,6 +209,9 @@ createApp({
   },
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
+
+    const meRes = await apiFetch('/me');
+    if (meRes.ok && meRes.data.data?.profile_picture) this.profilePicture = meRes.data.data.profile_picture;
 
     console.log('[HISTORY] Fetching GET /history …');
     const r = await apiFetch('/history');

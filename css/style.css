@@ -761,31 +761,82 @@ input[type="radio"]:checked + .privacy-btn { background: var(--neon); color: #12
 
 /* =====================================================================
    RESPONSIVE
+   Breakpoints:
+     ≤ 1024px  iPad landscape / small laptops
+     ≤  768px  iPad portrait  / small tablets
+     ≤  640px  Phone
    ===================================================================== */
-@media (min-width: 768px) {
-  .art-panel { display: block; }
+
+/* === MOBILE FILTER BAR (hidden by default, shown on phone) === */
+.mobile-filter-bar { display: none; padding: 0.75rem 1rem 0; }
+.mobile-filter-btn {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--card); border: 1px solid var(--border);
+  color: #ccc; font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700;
+  padding: 0.5rem 1.1rem; border-radius: 9999px; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
 }
+.mobile-filter-btn:hover { border-color: var(--neon); color: var(--neon); }
+.mobile-filter-badge { color: var(--neon); font-size: 0.6rem; }
+
+/* === iPad landscape / small laptops (≤ 1024px) === */
+@media (max-width: 1024px) {
+  .art-panel { display: block; }
+  .filter-panel { width: 180px; }
+}
+
+/* === iPad portrait / small tablets (≤ 768px) === */
 @media (max-width: 768px) {
-  .hamburger-btn { display: flex; }
-  .nav-links { display: none !important; }
   .navbar-inner { padding: 0.75rem 1rem; }
   .cards-section { padding: 2rem 1rem; }
-  .filter-panel { width: 160px; }
-  .features-grid { grid-template-columns: 1fr; }
   .footer-inner { flex-direction: column; gap: 1.5rem; }
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .profile-tab { white-space: nowrap; }
+  .page-main { padding-left: 1rem; padding-right: 1rem; }
+  /* Narrower sidebar on iPad portrait */
+  .filter-panel { width: 160px; }
+  .filter-card { padding: 1rem; }
+}
+
+/* === Phone (≤ 640px) === */
+@media (max-width: 640px) {
+  /* Navbar: hamburger replaces links and avatar */
+  .hamburger-btn { display: flex; }
+  .nav-links { display: none !important; }
+  .btn-outline { display: none; }
+  .avatar-wrapper { display: none; }
+  /* Profile layout stacks */
   .profile-section { flex-direction: column; text-align: center; align-items: center; }
   .profile-name-row { justify-content: center; }
   .stats-row { justify-content: center; }
   .section-hd { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-}
-@media (max-width: 600px) {
+  /* Filter: hide sidebar, show toggle button instead */
+  .mobile-filter-bar { display: block; padding-top: 72px; }
+  .two-col-layout { flex-direction: column; gap: 0; padding-left: 1rem; padding-right: 1rem; padding-top: 0.5rem; }
   .filter-panel { display: none; }
-  .two-col-layout { padding-left: 1rem; padding-right: 1rem; }
+  .filter-panel.mobile-open { display: block; }
+  /* Grids collapse to single column */
   .artist-grid { grid-template-columns: 1fr; }
-  .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid { grid-template-columns: 1fr; }
   .cards-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
+  .features-grid { grid-template-columns: 1fr; }
+  /* Modals */
   .artwork-modal { margin: 0.5rem; max-height: 95vh; overflow-y: auto; }
+  .artwork-modal-body { padding: 1rem 1.25rem 1.5rem; }
   .modal-box { margin: 0.5rem; }
+  /* Timeline: remove wide date column */
+  .timeline-wrap { padding-left: 1.5rem; }
+  .timeline-line { left: 8px; }
+  .timeline-dot { left: -18px; }
+  .timeline-date { display: none; }
+  .timeline-area { padding: 1rem 0; }
+  /* Hero */
+  .hero-text { padding-left: 1rem; font-size: clamp(2rem, 8vw, 3.5rem); }
+  /* Misc */
+  .level-radio-group { flex-wrap: wrap; }
+  .edit-field-group { grid-template-columns: 1fr; }
+  .edit-avatar-section { flex-direction: column; align-items: flex-start; }
 }

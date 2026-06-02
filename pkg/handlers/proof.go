@@ -195,6 +195,90 @@ func GetProofs(c *gin.Context) {
 	response.Success(c, http.StatusOK, proofs)
 }
 
+// ── Update Proof ─────────────────────────────────────────────────────────────
+
+// UpdateProof replaces the file of an existing proof. Validates ownership.
+func UpdateProof(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	objID, err := primitive.ObjectIDFromHex(userID.(string))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	proofID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid proof ID")
+		return
+	}
+
+	if err := c.Request.ParseMultipartForm(maxProofSize); err != nil {
+		response.Error(c, http.StatusBadRequest, "File too large (max 10 MB) or invalid form data")
+		return
+	}
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "File field 'file' is required")
+		return
+	}
+	defer file.Close()
+
+	mime := header.Header.Get("Content-Type")
+	if !isAllowedProofMIME(mime) {
+		response.Error(c, http.StatusBadRequest, "Invalid file type. Allowed: image/*, video/*, application/pdf")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Fetch existing proof
+	var proof models.Proof
+	if err := db.Col("proofs").FindOne(ctx, bson.M{"_id": proofID}).Decode(&proof); err != nil {
+		response.Error(c, http.StatusNotFound, "Proof not found")
+		return
+	}
+
+	// Verify artwork ownership
+	var artwork models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{
+		"_id": proof.ArtworkID, "user_id": objID,
+	}).Decode(&artwork); err != nil {
+		response.Error(c, http.StatusForbidden, "You do not own this proof")
+		return
+	}
+
+	// Save new file
+	ext := filepath.Ext(header.Filename)
+	storedName := fmt.Sprintf("proof-%s%s", proofID.Hex(), ext)
+	dir := filepath.Join(".", "uploads")
+	_ = os.MkdirAll(dir, 0o755)
+	destPath := filepath.Join(dir, storedName)
+
+	if err := c.SaveUploadedFile(header, destPath); err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to save proof file")
+		return
+	}
+
+	// Delete old file if different name
+	if proof.FileURL != "" {
+		oldName := filepath.Base(proof.FileURL)
+		if oldName != storedName {
+			_ = os.Remove(filepath.Join(".", "uploads", oldName))
+		}
+	}
+
+	newURL := "/uploads/" + storedName
+	newType := deriveFileType(mime)
+
+	db.Col("proofs").UpdateOne(ctx, bson.M{"_id": proofID}, bson.M{
+		"$set": bson.M{"file_url": newURL, "file_type": newType},
+	})
+
+	response.Success(c, http.StatusOK, gin.H{"id": proofID.Hex(), "file_url": newURL, "file_type": newType})
+}
+
 // ── Delete Proof ─────────────────────────────────────────────────────────────
 
 // DeleteProof godoc

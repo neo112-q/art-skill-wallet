@@ -111,8 +111,14 @@
                 @input="subDropOpen = true"
                 @click.stop
                 :disabled="subLoading"
+                style="padding-right:2.25rem;"
               >
               <div v-if="subLoading" style="position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); color:#555; font-size:0.75rem;">Loading...</div>
+              <button v-else type="button" @click.stop="subDropOpen = !subDropOpen" :disabled="!subSkills.length"
+                style="position:absolute; right:0.5rem; top:50%; transform:translateY(-50%);
+                       background:none; border:none; color:#555; cursor:pointer; padding:0.25rem; line-height:1;">
+                <i class="fas fa-chevron-down" style="font-size:0.75rem;"></i>
+              </button>
 
               <!-- Dropdown -->
               <div class="skill-dropdown" :class="{ open: subDropOpen && filteredSubs.length }">
@@ -449,8 +455,10 @@ createApp({
   },
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; this.subDropOpen = false; });
-    const r = await apiFetch('/main-skills');
-    if (r.ok) this.mainSkills = r.data.data || [];
+
+    const [meRes, skillsRes] = await Promise.all([apiFetch('/me'), apiFetch('/main-skills')]);
+    if (meRes.ok && meRes.data.data?.profile_picture) this.avatarUrl = meRes.data.data.profile_picture;
+    if (skillsRes.ok) this.mainSkills = skillsRes.data.data || [];
   }
 }).mount('#app');
 </script>

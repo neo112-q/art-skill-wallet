@@ -19,15 +19,17 @@ import (
 
 // SubmissionRow is the enriched row returned to the admin table.
 type SubmissionRow struct {
-	ID        string    `json:"id"`
-	User      string    `json:"user"`
-	Initials  string    `json:"initials"`
-	Title     string    `json:"title"`
-	Skill     string    `json:"skill"`    // primary skill name (backward compat)
-	Skills    []string  `json:"skills"`   // all skill names
-	Level     string    `json:"level"`
-	Status    string    `json:"status"`
-	Submitted time.Time `json:"submitted"`
+	ID               string    `json:"id"`
+	User             string    `json:"user"`
+	Initials         string    `json:"initials"`
+	Title            string    `json:"title"`
+	Skill            string    `json:"skill"`    // primary skill name (backward compat)
+	Skills           []string  `json:"skills"`   // all skill names
+	Level            string    `json:"level"`
+	Status           string    `json:"status"`
+	Submitted        time.Time `json:"submitted"`
+	VoteApproveCount int       `json:"vote_approve_count"`
+	VoteRejectCount  int       `json:"vote_reject_count"`
 }
 
 // GetSubmissionsEnriched godoc
@@ -125,15 +127,17 @@ func GetSubmissionsEnriched(c *gin.Context) {
 			status = "Pending"
 		}
 		rows = append(rows, SubmissionRow{
-			ID:        a.ID.Hex(),
-			User:      uname,
-			Initials:  initials,
-			Title:     a.Title,
-			Skill:     primarySkill,
-			Skills:    skillNames,
-			Level:     "",
-			Status:    status,
-			Submitted: a.UploadDate,
+			ID:               a.ID.Hex(),
+			User:             uname,
+			Initials:         initials,
+			Title:            a.Title,
+			Skill:            primarySkill,
+			Skills:           skillNames,
+			Level:            "",
+			Status:           status,
+			Submitted:        a.UploadDate,
+			VoteApproveCount: a.VoteApproveCount,
+			VoteRejectCount:  a.VoteRejectCount,
 		})
 	}
 
@@ -347,32 +351,12 @@ func VoteArtwork(c *gin.Context) {
 		},
 	})
 
-	finalStatus := ""
-
-	// Check if majority reached
-	if approveCount >= majority {
-		finalStatus = "Approved"
-	} else if rejectCount >= majority {
-		finalStatus = "Rejected"
-	}
-
-	if finalStatus != "" {
-		db.Col("artworks").UpdateOne(ctx, bson.M{"_id": artworkID}, bson.M{
-			"$set": bson.M{"status": finalStatus, "updated_at": time.Now()},
-		})
-
-		// If approved → update user skill ranks
-		if finalStatus == "Approved" {
-			UpdateRanksAfterApproval(artwork.UserID, artwork.SubSkillIDs)
-		}
-	}
-
 	response.Success(c, http.StatusOK, gin.H{
 		"vote":          req.Vote,
 		"approve_count": approveCount,
 		"reject_count":  rejectCount,
 		"majority":      majority,
-		"status":        func() string { if finalStatus != "" { return finalStatus }; return "Pending" }(),
+		"status":        artwork.Status,
 	})
 }
 

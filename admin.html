@@ -52,7 +52,7 @@
     <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
       <div>
         <h1 style="font-size:1.5rem; font-weight:800;">Admin Panel</h1>
-        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Manage submissions and users</p>
+        <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Manage submissions , users and skills</p>
       </div>
       <span v-if="activeTab==='submissions'" style="background:#CCFF00; color:#121212; font-size:0.75rem; font-weight:700; padding:0.35rem 1rem; border-radius:999px;">{{ pendingCount }} Pending</span>
       <span v-if="activeTab==='users'" style="background:#CCFF00; color:#121212; font-size:0.75rem; font-weight:700; padding:0.35rem 1rem; border-radius:999px;">{{ users.length }} Users</span>
@@ -69,6 +69,11 @@
         :style="{ borderBottom: activeTab==='users' ? '2px solid #CCFF00' : '2px solid transparent', color: activeTab==='users' ? '#CCFF00' : '#666' }"
         style="background:none; border:none; padding:0.6rem 1.25rem; font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; cursor:pointer; margin-bottom:-1px;">
         <i class="fas fa-users" style="margin-right:0.4rem;"></i> Users
+      </button>
+      <button @click="activeTab='skills'; loadSkills()"
+        :style="{ borderBottom: activeTab==='skills' ? '2px solid #CCFF00' : '2px solid transparent', color: activeTab==='skills' ? '#CCFF00' : '#666' }"
+        style="background:none; border:none; padding:0.6rem 1.25rem; font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; cursor:pointer; margin-bottom:-1px;">
+        <i class="fas fa-star" style="margin-right:0.4rem;"></i> Skills
       </button>
     </div>
 
@@ -137,9 +142,6 @@
                 </button>
                 <button v-if="row.status !== 'Rejected'" class="btn-reject" @click="setStatus(row, 'Rejected')" :disabled="row._saving">
                   <i class="fas fa-times"></i> Reject
-                </button>
-                <button class="btn-view" style="border-color:#ef4444; color:#ef4444;" @click="deleteRow(row)" :disabled="row._saving" title="Delete">
-                  <i class="fas fa-trash"></i>
                 </button>
               </div>
             </td>
@@ -227,6 +229,85 @@
       </div>
 
     </div><!-- end users tab -->
+
+    <!-- ── SKILLS TAB ─────────────────────────────────────────────────────── -->
+    <div v-if="activeTab==='skills'">
+
+      <!-- Filter bar -->
+      <div style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:0.5rem; background:#121212; border:1px solid #2A2A2A; border-radius:8px; padding:0.4rem 0.75rem; flex:1; min-width:160px;">
+          <i class="fas fa-search" style="color:#555; font-size:0.8rem;"></i>
+          <input type="text" v-model="skillSearch" placeholder="Filter skills..." style="background:transparent; border:none; outline:none; color:white; font-size:0.83rem; width:100%;">
+        </div>
+        <span style="font-size:0.78rem; color:#555;">{{ filteredSkills.length }} / {{ mainSkillsData.length }} categories</span>
+      </div>
+
+      <div v-if="skillsLoading" style="text-align:center; padding:3rem; color:#888;">Loading skills...</div>
+      <div v-else>
+        <div v-for="main in filteredSkills" :key="main.id" style="background:#1C1C1C; border:1px solid #2A2A2A; border-radius:12px; margin-bottom:1rem; overflow:hidden;">
+          <!-- Main skill header -->
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1.25rem; background:#161616; border-bottom:1px solid #2A2A2A;">
+            <span style="font-weight:700; color:#fff; font-size:0.95rem;">{{ main.name }}</span>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="font-size:0.75rem; color:#555; margin-right:0.5rem;">{{ main.subs.length }} sub-skills</span>
+              <button class="btn-edit-sm" @click="openEditMain(main)">
+                <i class="fas fa-pen"></i> Edit
+              </button>
+              <button class="btn-edit-sm" style="border-color:#ef4444; color:#ef4444;" @click="deleteMain(main)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <!-- Sub-skills list -->
+          <div v-if="main.subs.length" style="padding:0.5rem 0;">
+            <div v-for="sub in main.subs" :key="sub.id"
+              style="display:flex; align-items:center; justify-content:space-between; padding:0.55rem 1.25rem; border-bottom:1px solid #1a1a1a;">
+              <span style="font-size:0.85rem; color:#ccc;">{{ sub.display_name }}</span>
+              <div style="display:flex; gap:0.5rem;">
+                <button class="btn-edit-sm" @click="openEditSub(sub)">
+                  <i class="fas fa-pen"></i> Edit
+                </button>
+                <button class="btn-edit-sm" style="border-color:#ef4444; color:#ef4444;" @click="deleteSub(sub, main)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div v-else style="padding:0.75rem 1.25rem; color:#555; font-size:0.82rem;">No sub-skills.</div>
+        </div>
+        <div v-if="!filteredSkills.length && !skillsLoading" style="text-align:center; padding:3rem; color:#555;">No skills match your filter.</div>
+      </div>
+    </div><!-- end skills tab -->
+
+    <!-- ── EDIT MAIN SKILL MODAL ───────────────────────────────────────────── -->
+    <div class="modal-overlay" :class="{ open: editMainOpen }" @click.self="editMainOpen=false">
+      <div class="modal-box">
+        <button class="modal-close" @click="editMainOpen=false">&times;</button>
+        <h2 class="modal-title">Edit Main Skill</h2>
+        <div style="margin-bottom:1.25rem;">
+          <label class="edit-label" style="display:block; margin-bottom:0.4rem;">Name</label>
+          <input type="text" class="edit-input" v-model="editMainForm.name" placeholder="e.g. Painting" @keyup.enter="saveEditMain">
+        </div>
+        <button class="modal-save-btn" @click="saveEditMain" :disabled="editMainSaving">
+          {{ editMainSaving ? 'Saving…' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ── EDIT SUB-SKILL MODAL ─────────────────────────────────────────── -->
+    <div class="modal-overlay" :class="{ open: editSubOpen }" @click.self="editSubOpen=false">
+      <div class="modal-box">
+        <button class="modal-close" @click="editSubOpen=false">&times;</button>
+        <h2 class="modal-title">Edit Sub-Skill</h2>
+        <div style="margin-bottom:1.25rem;">
+          <label class="edit-label" style="display:block; margin-bottom:0.4rem;">Display Name</label>
+          <input type="text" class="edit-input" v-model="editSubForm.display_name" placeholder="e.g. Watercolor" @keyup.enter="saveEditSub">
+        </div>
+        <button class="modal-save-btn" @click="saveEditSub" :disabled="editSubSaving">
+          {{ editSubSaving ? 'Saving…' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
 
   </main>
 
@@ -316,9 +397,6 @@
           <button v-if="viewData.status !== 'Rejected'" class="btn-reject" @click="setStatus(viewData, 'Rejected')">
             <i class="fas fa-times"></i> Reject
           </button>
-          <button class="btn-reject" style="margin-left:auto;" @click="deleteRow(viewData)">
-            <i class="fas fa-trash"></i> Delete Artwork
-          </button>
         </div>
       </div>
     </div>
@@ -335,6 +413,7 @@ createApp({
   data() {
     return {
       username: TokenStore.getUsername() || 'Admin',
+      profilePicture: '',
       dropdownOpen: false,
       mobileOpen: false,
       loading: true,
@@ -349,13 +428,33 @@ createApp({
       users: [],
       usersLoading: false,
       userSearch: '',
+      // Skills tab
+      mainSkillsData: [],
+      skillsLoading: false,
+      skillSearch: '',
+      editMainOpen: false,
+      editMainTarget: null,
+      editMainForm: { name: '' },
+      editMainSaving: false,
+      editSubOpen: false,
+      editSubTarget: null,
+      editSubForm: { display_name: '' },
+      editSubSaving: false,
     };
   },
   computed: {
     displayAvatar() {
-      return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.username) + '&background=CCFF00&color=121212&bold=true&size=100';
+      return this.profilePicture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.username) + '&background=CCFF00&color=121212&bold=true&size=100';
     },
     pendingCount() { return this.rows.filter(r => r.status === 'Pending').length; },
+    filteredSkills() {
+      const q = this.skillSearch.toLowerCase().trim();
+      if (!q) return this.mainSkillsData;
+      return this.mainSkillsData.filter(m =>
+        m.name.toLowerCase().includes(q) ||
+        m.subs.some(s => s.display_name.toLowerCase().includes(q))
+      );
+    },
     filteredUsers() {
       const q = this.userSearch.toLowerCase();
       if (!q) return this.users;
@@ -406,6 +505,80 @@ createApp({
 
     // ── Approve / Reject → PUT /admin/submissions/:id ─────────────
     // ── User management ───────────────────────────────────────────────
+    openEditMain(main) {
+      this.editMainTarget = main;
+      this.editMainForm.name = main.name;
+      this.editMainOpen = true;
+    },
+    async saveEditMain() {
+      if (!this.editMainForm.name.trim()) return;
+      this.editMainSaving = true;
+      const r = await apiFetch('/admin/main-skills/' + this.editMainTarget.id, {
+        method: 'PUT',
+        body: JSON.stringify({ name: this.editMainForm.name.trim() }),
+      });
+      if (r.ok) {
+        this.editMainTarget.name = this.editMainForm.name.trim();
+        this.editMainOpen = false;
+      } else {
+        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+      }
+      this.editMainSaving = false;
+    },
+    async deleteMain(main) {
+      if (!confirm('Delete "' + main.name + '" and all its sub-skills? This cannot be undone.')) return;
+      const r = await apiFetch('/admin/main-skills/' + main.id, { method: 'DELETE' });
+      if (r.ok) {
+        this.mainSkillsData = this.mainSkillsData.filter(m => m.id !== main.id);
+      } else {
+        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+      }
+    },
+
+    async loadSkills() {
+      if (this.mainSkillsData.length) return;
+      this.skillsLoading = true;
+      const r = await apiFetch('/main-skills');
+      if (r.ok && r.data.data) {
+        const mains = r.data.data;
+        const withSubs = await Promise.all(mains.map(async m => {
+          const s = await apiFetch('/main-skills/' + m.id + '/sub-skills');
+          return { ...m, subs: (s.ok && s.data.data) ? s.data.data : [] };
+        }));
+        this.mainSkillsData = withSubs;
+      }
+      this.skillsLoading = false;
+    },
+    openEditSub(sub) {
+      this.editSubTarget = sub;
+      this.editSubForm.display_name = sub.display_name;
+      this.editSubOpen = true;
+    },
+    async saveEditSub() {
+      if (!this.editSubForm.display_name.trim()) return;
+      this.editSubSaving = true;
+      const r = await apiFetch('/admin/sub-skills/' + this.editSubTarget.id, {
+        method: 'PUT',
+        body: JSON.stringify({ display_name: this.editSubForm.display_name.trim() }),
+      });
+      if (r.ok) {
+        this.editSubTarget.display_name = this.editSubForm.display_name.trim();
+        this.editSubOpen = false;
+      } else {
+        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+      }
+      this.editSubSaving = false;
+    },
+    async deleteSub(sub, main) {
+      if (!confirm('Delete sub-skill "' + sub.display_name + '"? This cannot be undone.')) return;
+      const r = await apiFetch('/admin/sub-skills/' + sub.id, { method: 'DELETE' });
+      if (r.ok) {
+        main.subs = main.subs.filter(s => s.id !== sub.id);
+      } else {
+        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+      }
+    },
+
     async loadUsers() {
       if (this.users.length) return; // already loaded
       this.usersLoading = true;
@@ -434,19 +607,6 @@ createApp({
       }
     },
 
-    async deleteRow(row) {
-      if (!confirm(`Delete "${row.title}" permanently?\nThis cannot be undone.`)) return;
-      row._saving = true;
-      const r = await apiFetch('/admin/submissions/' + row.id, { method: 'DELETE' });
-      if (r.ok) {
-        this.rows = this.rows.filter(rw => rw.id !== row.id);
-        this.viewOpen = false;
-      } else {
-        alert('Delete failed: ' + (r.data.error_message || 'Unknown error'));
-        row._saving = false;
-      }
-    },
-
     async setStatus(row, newStatus) {
       row._saving = true;
       const vote = newStatus === 'Approved' ? 'approve' : 'reject';
@@ -459,15 +619,11 @@ createApp({
         const d = r.data.data;
         row.vote_approve_count = d.approve_count;
         row.vote_reject_count  = d.reject_count;
-        if (d.status && d.status !== 'Pending') {
-          row.status = d.status;
-        }
         // sync the matching row in rows[] if called from modal
         const listRow = this.rows.find(rw => rw.id === row.id);
         if (listRow && listRow !== row) {
           listRow.vote_approve_count = d.approve_count;
           listRow.vote_reject_count  = d.reject_count;
-          listRow.status = row.status;
         }
       } else {
         alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
@@ -477,6 +633,9 @@ createApp({
   },
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
+
+    const meRes = await apiFetch('/me');
+    if (meRes.ok && meRes.data.data?.profile_picture) this.profilePicture = meRes.data.data.profile_picture;
 
     console.log('[ADMIN] Fetching GET /admin/submissions …');
     const r = await apiFetch('/admin/submissions');

@@ -46,11 +46,22 @@
     </div>
   </nav>
 
+  <!-- Mobile Nav Drawer -->
+  <div class="mobile-nav" :class="{ open: mobileOpen }" @click.self="mobileOpen=false">
+    <a href="/explore.html" class="mobile-nav-link"><i class="fas fa-compass"></i> Explore</a>
+    <a href="/skillManage.html" class="mobile-nav-link active"><i class="fas fa-star"></i> Skills</a>
+    <a href="/history.html" class="mobile-nav-link"><i class="fas fa-history"></i> History</a>
+    <div class="mobile-nav-divider"></div>
+    <a href="/profile.html" class="mobile-nav-link"><i class="fas fa-user"></i> Profile</a>
+    <a v-if="isAdmin" href="/admin.html" class="mobile-nav-link"><i class="fas fa-shield-alt"></i> Admin</a>
+    <button class="mobile-nav-link" style="background:none;border:none;cursor:pointer;color:#ff6b6b;width:100%;text-align:left;" @click="doLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
   <!-- Main -->
   <main class="page-main" style="max-width:960px; margin:0 auto; min-height:calc(100vh - 64px - 280px);">
 
     <!-- Header -->
-    <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem;">
+    <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:2rem;">
       <div>
         <h1 style="font-size:1.5rem; font-weight:800;">My Skills</h1>
         <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Ranks are earned automatically when your artwork is approved</p>

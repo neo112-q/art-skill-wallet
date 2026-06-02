@@ -112,6 +112,7 @@ func main() {
 		protected.DELETE("/uploads/:id", handlers.DeleteUpload)
 		protected.GET("/proofs", handlers.GetProofs)
 		protected.POST("/proofs", handlers.CreateProof)
+		protected.PUT("/proofs/:id", handlers.UpdateProof)
 		protected.DELETE("/proofs/:id", handlers.DeleteProof)
 	}
 
@@ -128,7 +129,10 @@ func main() {
 		adminGroup.PUT("/users/:id/ban", handlers.BanUser)
 		adminGroup.PUT("/users/:id/unban", handlers.UnbanUser)
 		adminGroup.POST("/main-skills", handlers.CreateMainSkill)
+		adminGroup.PUT("/main-skills/:id", handlers.UpdateMainSkill)
 		adminGroup.DELETE("/main-skills/:id", handlers.DeleteMainSkill)
+		adminGroup.PUT("/sub-skills/:id", handlers.UpdateSubSkill)
+		adminGroup.DELETE("/sub-skills/:id", handlers.DeleteSubSkill)
 	}
 
 	// ── Start ───────────────────────────────────────────────────────────

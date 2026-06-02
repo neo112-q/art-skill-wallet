@@ -46,6 +46,17 @@
     </div>
   </nav>
 
+  <!-- Mobile Nav Drawer -->
+  <div class="mobile-nav" :class="{ open: mobileOpen }" @click.self="mobileOpen=false">
+    <a href="/explore.html" class="mobile-nav-link"><i class="fas fa-compass"></i> Explore</a>
+    <a href="/skillManage.html" class="mobile-nav-link"><i class="fas fa-star"></i> Skills</a>
+    <a href="/history.html" class="mobile-nav-link"><i class="fas fa-history"></i> History</a>
+    <div class="mobile-nav-divider"></div>
+    <a href="/profile.html" class="mobile-nav-link active"><i class="fas fa-user"></i> Profile</a>
+    <a v-if="isAdmin" href="/admin.html" class="mobile-nav-link"><i class="fas fa-shield-alt"></i> Admin</a>
+    <button class="mobile-nav-link" style="background:none;border:none;cursor:pointer;color:#ff6b6b;width:100%;text-align:left;" @click="doLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
   <!-- Loading -->
   <main v-if="loading" class="page-main" style="text-align:center; padding:6rem 1rem; color:#888;">Loading profile...</main>
 
@@ -214,6 +225,15 @@
               <span style="position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.7); color:#ccc; font-size:0.6rem; padding:0.1rem 0.3rem; border-radius:3px;">
                 {{ p.file_type }}
               </span>
+              <!-- Edit button -->
+              <button @click="triggerEditProof(p)"
+                style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.65); border:none; color:#CCFF00; width:22px; height:22px; border-radius:4px; cursor:pointer; font-size:0.65rem; display:flex; align-items:center; justify-content:center;"
+                title="Replace file">
+                <i class="fas fa-pen"></i>
+              </button>
+              <!-- Hidden file input per proof -->
+              <input type="file" :ref="'proofInput_' + p.id" accept="image/*,video/*,application/pdf"
+                style="display:none;" @change="submitEditProof(p, $event)">
             </div>
           </div>
         </div>
@@ -424,6 +444,25 @@ createApp({
     },
 
     // ── Delete artwork ────────────────────────────────────────────────
+    triggerEditProof(proof) {
+      const input = this.$refs['proofInput_' + proof.id];
+      if (input) (Array.isArray(input) ? input[0] : input).click();
+    },
+    async submitEditProof(proof, event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const form = new FormData();
+      form.append('file', file);
+      const r = await apiUpload('/proofs/' + proof.id, form, 'PUT');
+      if (r.ok && r.data.data) {
+        proof.file_url = r.data.data.file_url + '?t=' + Date.now();
+        proof.file_type = r.data.data.file_type;
+      } else {
+        alert('Failed to update proof: ' + (r.data?.error_message || 'Unknown error'));
+      }
+      event.target.value = '';
+    },
+
     async deleteArtwork() {
       if (!this.selectedArt) return;
       if (!confirm('Delete "' + this.selectedArt.title + '"? This will also remove all linked proofs. This cannot be undone.')) return;

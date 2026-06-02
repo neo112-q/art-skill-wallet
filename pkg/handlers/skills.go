@@ -81,6 +81,48 @@ func CreateMainSkill(c *gin.Context) {
 	response.Success(c, http.StatusCreated, skill)
 }
 
+// UpdateMainSkill renames a main skill. Admin only.
+func UpdateMainSkill(c *gin.Context) {
+	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid skill ID")
+		return
+	}
+
+	var req struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	name := strings.TrimSpace(req.Name)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check duplicate (excluding self)
+	count, _ := db.Col("main_skills").CountDocuments(ctx, bson.M{
+		"_id":  bson.M{"$ne": skillID},
+		"name": bson.M{"$regex": "^" + name + "$", "$options": "i"},
+	})
+	if count > 0 {
+		response.Error(c, http.StatusConflict, "A main skill with that name already exists")
+		return
+	}
+
+	result, err := db.Col("main_skills").UpdateOne(ctx,
+		bson.M{"_id": skillID},
+		bson.M{"$set": bson.M{"name": name}},
+	)
+	if err != nil || result.MatchedCount == 0 {
+		response.Error(c, http.StatusNotFound, "Main skill not found")
+		return
+	}
+
+	response.Success(c, http.StatusOK, gin.H{"message": "Main skill updated", "name": name})
+}
+
 // DeleteMainSkill deletes a main skill and all its sub skills. Admin only.
 func DeleteMainSkill(c *gin.Context) {
 	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
@@ -188,6 +230,60 @@ func CreateSubSkill(c *gin.Context) {
 		return
 	}
 	response.Success(c, http.StatusCreated, skill)
+}
+
+// UpdateSubSkill updates the display_name of a sub skill. Admin only.
+func UpdateSubSkill(c *gin.Context) {
+	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid skill ID")
+		return
+	}
+
+	var req struct {
+		DisplayName string `json:"display_name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	normalized := strings.ToLower(strings.TrimSpace(req.DisplayName))
+	displayName := strings.TrimSpace(req.DisplayName)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := db.Col("sub_skills").UpdateOne(ctx,
+		bson.M{"_id": skillID},
+		bson.M{"$set": bson.M{"name": normalized, "display_name": displayName}},
+	)
+	if err != nil || result.MatchedCount == 0 {
+		response.Error(c, http.StatusNotFound, "Sub skill not found")
+		return
+	}
+
+	response.Success(c, http.StatusOK, gin.H{"message": "Sub skill updated", "display_name": displayName})
+}
+
+// DeleteSubSkill deletes a sub skill. Admin only.
+func DeleteSubSkill(c *gin.Context) {
+	skillID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid skill ID")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := db.Col("sub_skills").DeleteOne(ctx, bson.M{"_id": skillID})
+	if err != nil || result.DeletedCount == 0 {
+		response.Error(c, http.StatusNotFound, "Sub skill not found")
+		return
+	}
+
+	response.Success(c, http.StatusOK, gin.H{"message": "Sub skill deleted"})
 }
 
 // SearchSubSkills searches sub skills by name across all main skills. Public.
