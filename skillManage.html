@@ -47,7 +47,7 @@
   </nav>
 
   <!-- Main -->
-  <main class="page-main" style="max-width:960px; margin:0 auto;">
+  <main class="page-main" style="max-width:960px; margin:0 auto; min-height:calc(100vh - 64px - 280px);">
 
     <!-- Header -->
     <div class="fade-in" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem;">
@@ -96,7 +96,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="site-footer">
+  <!-- <footer class="site-footer">
     <div class="footer-inner">
       <div>
         <div class="footer-logo">
@@ -125,7 +125,7 @@
       </div>
     </div>
     <div class="footer-bottom">&copy; 2025 ArtSkillWallet. All rights reserved.</div>
-  </footer>
+  </footer> -->
 
   <!-- Add / Edit Skill Modal -->
   <div class="modal-overlay" :class="{ open: modalOpen }" @click.self="modalOpen=false">
