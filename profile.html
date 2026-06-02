@@ -292,9 +292,17 @@ createApp({
       this.skills.forEach(s => { skillMap[s.id] = s.skill_name; });
       const uploadsByTitle = {};
       this.uploads.forEach(u => {
-        const parts = (u.file_path || '').replace(/\\/g, '/').split('/');
-        const fname = parts[parts.length - 1];
-        if (fname) uploadsByTitle[u.title.toLowerCase()] = '/uploads/' + fname;
+        let url = '';
+        if (u.file_url) {
+          // New: Cloudinary URL
+          url = u.file_url;
+        } else if (u.file_path) {
+          // Legacy: local file path
+          const parts = u.file_path.replace(/\\/g, '/').split('/');
+          const fname = parts[parts.length - 1];
+          if (fname) url = '/uploads/' + fname;
+        }
+        if (url) uploadsByTitle[u.title.toLowerCase()] = url;
       });
       this.artworks.forEach(a => {
         // Support multiple skills — join all names, fall back to single skill_id

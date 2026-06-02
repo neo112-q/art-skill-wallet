@@ -2,10 +2,7 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -13,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"art-skill-wallet/pkg/cloud"
 	"art-skill-wallet/pkg/db"
 	"art-skill-wallet/pkg/models"
 	"art-skill-wallet/pkg/response"
@@ -34,13 +32,6 @@ func isAllowedUploadMIME(mime string) bool {
 	return false
 }
 
-// uploadsDir returns the absolute path to the uploads folder,
-// creating it if it doesn't exist.
-func uploadsDir() string {
-	dir := filepath.Join(".", "uploads")
-	_ = os.MkdirAll(dir, 0o755)
-	return dir
-}
 
 // ── Create Upload ────────────────────────────────────────────────────────────
 
@@ -97,38 +88,35 @@ func CreateUpload(c *gin.Context) {
 	}
 	description := c.PostForm("description")
 
-	// ── Save file to disk ───────────────────────────────────────────────
-	docID := primitive.NewObjectID()
-	ext := filepath.Ext(header.Filename)
-	storedName := fmt.Sprintf("%s%s", docID.Hex(), ext)
-	destPath := filepath.Join(uploadsDir(), storedName)
-
-	if err := c.SaveUploadedFile(header, destPath); err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to save file")
+	// ── Upload to Cloudinary ────────────────────────────────────────────
+	uploaded, err := cloud.UploadFile(file, "artworks")
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to upload file to Cloudinary: "+err.Error())
 		return
 	}
 
 	// ── Insert record into MongoDB ──────────────────────────────────────
 	now := time.Now()
 	doc := models.Upload{
-		ID:          docID,
-		UserID:      objID,
-		Title:       title,
-		Description: description,
-		FileName:    header.Filename,
-		FilePath:    destPath,
-		FileSize:    header.Size,
-		MimeType:    header.Header.Get("Content-Type"),
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:                 primitive.NewObjectID(),
+		UserID:             objID,
+		Title:              title,
+		Description:        description,
+		FileName:           header.Filename,
+		FileURL:            uploaded.URL,
+		CloudinaryPublicID: uploaded.PublicID,
+		FileSize:           header.Size,
+		MimeType:           header.Header.Get("Content-Type"),
+		CreatedAt:          now,
+		UpdatedAt:          now,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if _, err := db.Col("uploads").InsertOne(ctx, doc); err != nil {
-		// Roll back the saved file on DB failure
-		_ = os.Remove(destPath)
+		// Roll back Cloudinary upload on DB failure
+		_ = cloud.DeleteFile(uploaded.PublicID)
 		response.Error(c, http.StatusInternalServerError, "Failed to save upload record")
 		return
 	}
@@ -290,8 +278,8 @@ func DeleteUpload(c *gin.Context) {
 		return
 	}
 
-	// Remove the physical file (best-effort — don't fail the response if this errors)
-	_ = os.Remove(doc.FilePath)
+	// Delete from Cloudinary (best-effort)
+	_ = cloud.DeleteFile(doc.CloudinaryPublicID)
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Upload deleted successfully"})
 }

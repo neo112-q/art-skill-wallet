@@ -177,13 +177,21 @@ func GetPublicProfile(c *gin.Context) {
 	var uploads []models.Upload
 	_ = uploadCursor.All(ctx, &uploads)
 
-	thumbMap := make(map[string]string) // lowercase title → /uploads/<storedFilename>
+	thumbMap := make(map[string]string) // lowercase title → image URL
 	for _, u := range uploads {
-		// FilePath is the full disk path e.g. "./uploads/686abc123.jpg"
-		// Extract just the stored filename using filepath.Base
-		storedName := filepath.Base(strings.ReplaceAll(u.FilePath, "\\", "/"))
-		if storedName != "" && storedName != "." {
-			thumbMap[strings.ToLower(u.Title)] = "/uploads/" + storedName
+		var imageURL string
+		if u.FileURL != "" {
+			// New uploads: Cloudinary URL
+			imageURL = u.FileURL
+		} else if u.FilePath != "" {
+			// Legacy uploads: local file path
+			storedName := filepath.Base(strings.ReplaceAll(u.FilePath, "\\", "/"))
+			if storedName != "" && storedName != "." {
+				imageURL = "/uploads/" + storedName
+			}
+		}
+		if imageURL != "" {
+			thumbMap[strings.ToLower(u.Title)] = imageURL
 		}
 	}
 

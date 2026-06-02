@@ -2,16 +2,15 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
+
+	"art-skill-wallet/pkg/cloud"
 
 	"art-skill-wallet/pkg/db"
 	"art-skill-wallet/pkg/models"
@@ -129,26 +128,21 @@ func UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	file, header, err := c.Request.FormFile("avatar")
+	file, _, err := c.Request.FormFile("avatar")
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Avatar file is required")
 		return
 	}
 	defer file.Close()
 
-	// Save to ./uploads/avatar-<userId>.<ext>
-	ext := filepath.Ext(header.Filename)
-	storedName := fmt.Sprintf("avatar-%s%s", objID.Hex(), ext)
-	dir := filepath.Join(".", "uploads")
-	_ = os.MkdirAll(dir, 0o755)
-	destPath := filepath.Join(dir, storedName)
-
-	if err := c.SaveUploadedFile(header, destPath); err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to save avatar")
+	// Upload avatar to Cloudinary
+	uploaded, err := cloud.UploadFile(file, "avatars")
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to upload avatar: "+err.Error())
 		return
 	}
 
-	publicURL := "/uploads/" + storedName
+	publicURL := uploaded.URL
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
