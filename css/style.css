@@ -360,6 +360,13 @@ textarea.auth-input { resize: none; height: 70px; }
 .filter-input:focus { border-color: rgba(204,255,0,0.5); }
 .filter-input::placeholder { color: #555; }
 
+/* Fix select dropdown text & option colors */
+select.filter-input { color: #fff; cursor: pointer; }
+select.filter-input option {
+  background: #1c1c1c;
+  color: #fff;
+}
+
 .timeline-area { flex: 1; padding: 2rem 0; }
 .timeline-wrap { position: relative; padding-left: 110px; }
 .timeline-line { position: absolute; left: 90px; top: 0; bottom: 0; width: 2px; background: var(--border); }

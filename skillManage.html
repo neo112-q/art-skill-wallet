@@ -179,7 +179,7 @@ createApp({
       isAdmin: TokenStore.isAdmin(),
       username: TokenStore.getUsername() || 'User',
       email: '',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
+      avatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
       dropdownOpen: false,
       loading: true,
       skills: [],
@@ -303,9 +303,17 @@ createApp({
       }
     },
   },
-  mounted() {
+  async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
     this.fetchSkills();
+    // Load user info from database
+    const r = await apiFetch('/me');
+    if (r.ok && r.data.data) {
+      const user = r.data.data;
+      this.username = user.username || TokenStore.getUsername();
+      this.email    = user.email    || '';
+      this.avatarUrl = user.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.username || 'U') + '&background=CCFF00&color=121212&bold=true&size=100';
+    }
   }
 }).mount('#app');
 </script>
