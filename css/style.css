@@ -761,10 +761,6 @@ input[type="radio"]:checked + .privacy-btn { background: var(--neon); color: #12
 
 /* =====================================================================
    RESPONSIVE
-   Breakpoints:
-     ≤ 1024px  iPad landscape / small laptops
-     ≤  768px  iPad portrait  / small tablets
-     ≤  640px  Phone
    ===================================================================== */
 
 /* === MOBILE FILTER BAR (hidden by default, shown on phone) === */
