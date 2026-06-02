@@ -274,10 +274,10 @@ textarea.auth-input { resize: none; height: 70px; }
 .section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
 .section-hd h2 { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0; }
 
-.skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-.skill-card { background: var(--card); border-radius: 0.875rem; padding: 1rem; border: 1px solid var(--border); transition: border-color 0.2s, transform 0.2s; }
+.skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+.skill-card { background: var(--card); border-radius: 0.875rem; padding: 1.25rem 1.25rem 1rem; border: 1px solid var(--border); transition: border-color 0.2s, transform 0.2s; min-width: 0; }
 .skill-card:hover { border-color: var(--neon); transform: translateY(-3px); }
-.skill-card h3 { font-size: 0.85rem; font-weight: 700; color: #fff; margin: 0 0 8px; }
+.skill-card h3 { font-size: 0.95rem; font-weight: 700; color: #fff; margin: 0 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .meter { display: flex; gap: 3px; margin-bottom: 6px; }
 .seg { height: 6px; flex: 1; border-radius: 99px; }
 .seg-green { background: var(--neon); }

@@ -20,7 +20,8 @@ type SubmissionRow struct {
 	User      string    `json:"user"`
 	Initials  string    `json:"initials"`
 	Title     string    `json:"title"`
-	Skill     string    `json:"skill"`
+	Skill     string    `json:"skill"`    // primary skill name (backward compat)
+	Skills    []string  `json:"skills"`   // all skill names
 	Level     string    `json:"level"`
 	Status    string    `json:"status"`
 	Submitted time.Time `json:"submitted"`
@@ -85,12 +86,29 @@ func GetSubmissionsEnriched(c *gin.Context) {
 		if len(uname) >= 2 {
 			initials = string([]rune(uname)[:2])
 		}
-		sName := ""
-		sLevel := ""
-		if sk, ok := skillMap[a.SkillID.Hex()]; ok {
-			sName = sk.SkillName
-			sLevel = sk.Level
+		// Collect all skill IDs — prefer skill_ids array, fall back to single skill_id
+		allIDs := a.SkillIDs
+		if len(allIDs) == 0 && !a.SkillID.IsZero() {
+			allIDs = []primitive.ObjectID{a.SkillID}
 		}
+
+		var skillNames []string
+		sLevel := ""
+		for _, sid := range allIDs {
+			if sk, ok := skillMap[sid.Hex()]; ok {
+				skillNames = append(skillNames, sk.SkillName)
+				if sLevel == "" {
+					sLevel = sk.Level // use level from first skill
+				}
+			}
+		}
+
+		// Primary skill name for backward compat
+		primarySkill := ""
+		if len(skillNames) > 0 {
+			primarySkill = skillNames[0]
+		}
+
 		status := a.Status
 		if status == "" {
 			status = "Pending"
@@ -100,7 +118,8 @@ func GetSubmissionsEnriched(c *gin.Context) {
 			User:      uname,
 			Initials:  initials,
 			Title:     a.Title,
-			Skill:     sName,
+			Skill:     primarySkill,
+			Skills:    skillNames,
 			Level:     sLevel,
 			Status:    status,
 			Submitted: a.UploadDate,
@@ -108,6 +127,46 @@ func GetSubmissionsEnriched(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, rows)
+}
+
+// GetPublicArtworkProofs returns proofs for a public+approved artwork — no auth required.
+func GetPublicArtworkProofs(c *gin.Context) {
+	artworkID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid artwork ID")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Only allow proofs for public + approved artworks
+	var artwork models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{
+		"_id":            artworkID,
+		"privacy_status": "Public",
+		"status":         "Approved",
+	}).Decode(&artwork); err != nil {
+		response.Error(c, http.StatusNotFound, "Artwork not found or not public")
+		return
+	}
+
+	cursor, err := db.Col("proofs").Find(ctx, bson.M{"artwork_id": artworkID})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch proofs")
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var proofs []models.Proof
+	if err := cursor.All(ctx, &proofs); err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to decode proofs")
+		return
+	}
+	if proofs == nil {
+		proofs = []models.Proof{}
+	}
+	response.Success(c, http.StatusOK, proofs)
 }
 
 // GetSubmissionProofs godoc

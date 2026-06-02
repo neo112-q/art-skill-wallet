@@ -98,7 +98,11 @@
               <div class="timeline-text">
                 <p v-if="ev.type === 'upload'">You uploaded :<br><strong>{{ ev.title }}</strong></p>
                 <p v-else>You added skill :<br><strong>{{ ev.title }}</strong></p>
-                <span class="timeline-tag" v-if="ev.skill_name">{{ ev.skill_name }}</span>
+                <!-- Multiple skills support -->
+                <template v-if="ev.skill_names && ev.skill_names.length">
+                  <span class="timeline-tag" v-for="sn in ev.skill_names" :key="sn">{{ sn }}</span>
+                </template>
+                <span class="timeline-tag" v-else-if="ev.skill_name">{{ ev.skill_name }}</span>
                 <span class="timeline-tag" v-if="ev.level">{{ ev.level }}</span>
               </div>
             </div>

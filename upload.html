@@ -77,16 +77,52 @@
         <textarea class="input-field textarea" v-model="form.description" placeholder="Describe your work..."></textarea>
       </section>
 
-      <!-- Skill Selector -->
+      <!-- Skill Selector (multi-select) -->
       <section class="form-section">
         <h2 class="section-title">Skill in Art <span style="color:#f55;">*</span></h2>
-        <div style="display:flex; flex-direction:column; gap:0.4rem;">
-          <select class="input-field" v-model="form.skill_id" v-if="userSkills.length">
-            <option value="" disabled>Select a skill...</option>
-            <option v-for="s in userSkills" :key="s.id" :value="s.id">{{ s.skill_name }} ({{ s.level }})</option>
-          </select>
-          <p v-else style="color:#666; font-size:0.82rem;">No skills found. <a href="/skillManage.html" style="color:#CCFF00;">Add a skill first</a>.</p>
+
+        <div v-if="userSkills.length" style="display:flex; flex-direction:column; gap:0.6rem;">
+
+          <!-- Search input -->
+          <div class="skill-search-wrap">
+            <input
+              type="text"
+              class="input-field"
+              v-model="skillQuery"
+              placeholder="Search your skills..."
+              @focus="skillDropOpen = true"
+              @input="skillDropOpen = true"
+              @click.stop
+            >
+            <!-- Dropdown -->
+            <div class="skill-dropdown" :class="{ open: skillDropOpen && filteredSkills.length }">
+              <div
+                v-for="s in filteredSkills"
+                :key="s.id"
+                class="skill-option"
+                :class="{ selected: isSkillSelected(s.id) }"
+                @click.stop="toggleSkill(s)"
+              >
+                <span>{{ s.skill_name }}</span>
+                <span style="font-size:0.68rem; color:#888; margin-left:auto;">{{ s.level }}</span>
+                <i v-if="isSkillSelected(s.id)" class="fas fa-check" style="color:var(--neon); margin-left:0.5rem; font-size:0.7rem;"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected skill tags -->
+          <div class="skill-tags" v-if="selectedSkills.length">
+            <span class="skill-tag" v-for="s in selectedSkills" :key="s.id">
+              {{ s.skill_name }}
+              <button class="skill-tag-remove" @click="removeSkill(s.id)">✕</button>
+            </span>
+          </div>
+          <p v-else style="font-size:0.75rem; color:#555;">No skills selected yet — search and click to add.</p>
+
         </div>
+        <p v-else style="color:#666; font-size:0.82rem;">
+          No skills found. <a href="/skillManage.html" style="color:#CCFF00;">Add a skill first</a>.
+        </p>
       </section>
 
       <!-- Evidence / Proof (REQUIRED — #2) -->
@@ -174,16 +210,36 @@ createApp({
       username: TokenStore.getUsername() || 'User',
       avatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
       dropdownOpen: false,
-      form: { title: '', description: '', skill_id: '', privacy: 'Public' },
+      form: { title: '', description: '', privacy: 'Public' },
       artworkFile: null,
       evidenceFile: null,
       userSkills: [],
+      selectedSkills: [],   // array of selected skill objects
+      skillQuery: '',
+      skillDropOpen: false,
       publishing: false,
       publishStatus: 'Uploading...',
     };
   },
+  computed: {
+    filteredSkills() {
+      const q = this.skillQuery.toLowerCase();
+      return this.userSkills.filter(s => s.skill_name.toLowerCase().includes(q));
+    },
+  },
   methods: {
     doLogout() { logout(); },
+    isSkillSelected(id) { return this.selectedSkills.some(s => s.id === id); },
+    toggleSkill(skill) {
+      if (this.isSkillSelected(skill.id)) {
+        this.removeSkill(skill.id);
+      } else {
+        this.selectedSkills.push(skill);
+      }
+      this.skillQuery = '';
+      this.skillDropOpen = false;
+    },
+    removeSkill(id) { this.selectedSkills = this.selectedSkills.filter(s => s.id !== id); },
     formatSize(bytes) {
       if (bytes < 1024) return bytes + ' B';
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -196,9 +252,9 @@ createApp({
 
     async publish() {
       // ── Validation ────────────────────────────────────────────────
-      if (!this.artworkFile) { alert('Please select an artwork file.'); return; }
-      if (!this.form.title)  { alert('Title is required.'); return; }
-      if (!this.form.skill_id) { alert('Please select a skill.'); return; }
+      if (!this.artworkFile)          { alert('Please select an artwork file.'); return; }
+      if (!this.form.title)           { alert('Title is required.'); return; }
+      if (!this.selectedSkills.length){ alert('Please select at least one skill.'); return; }
       // #2 — Enforce proof upload
       if (!this.evidenceFile) { alert('Evidence file is required. Please attach a before-after image or process video as proof of your work.'); return; }
 
@@ -223,7 +279,8 @@ createApp({
         const artRes = await apiFetch('/artworks', {
           method: 'POST',
           body: JSON.stringify({
-            skill_id: this.form.skill_id,
+            skill_id:  this.selectedSkills[0].id,
+            skill_ids: this.selectedSkills.map(s => s.id),
             title: this.form.title,
             description: this.form.description || '',
             privacy_status: this.form.privacy,
@@ -263,7 +320,7 @@ createApp({
     },
   },
   mounted() {
-    document.addEventListener('click', () => { this.dropdownOpen = false; });
+    document.addEventListener('click', () => { this.dropdownOpen = false; this.skillDropOpen = false; });
     apiFetch('/skills').then(r => {
       if (r.ok) { this.userSkills = r.data.data || []; }
     });

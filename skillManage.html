@@ -82,13 +82,13 @@
         <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
         <p style="color:#aaa; font-size:0.75rem; margin-top:0.5rem;">Level : {{ levelNum(s.level) }}</p>
         <p v-if="s.development_guide" style="color:#666; font-size:0.72rem; margin-top:0.35rem; line-height:1.4;">{{ s.development_guide }}</p>
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:1rem;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;">
           <span class="badge" :class="badgeClass(s.level)">
             <i class="fas" :class="badgeIcon(s.level)" style="font-size:0.7rem;"></i> {{ s.level }}
           </span>
-          <div style="display:flex; gap:0.4rem;">
+          <div style="display:flex; gap:0.4rem; flex-shrink:0;">
             <button class="btn-edit-sm" @click="openEditModal(s)"><i class="fas fa-pen" style="font-size:0.7rem;"></i> Edit</button>
-            <button class="btn-edit-sm" style="color:#f55;" @click="deleteSkill(s)"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+            <button class="btn-edit-sm" style="color:#f55; border-color:#f55;" @click="deleteSkill(s)"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
           </div>
         </div>
       </div>
