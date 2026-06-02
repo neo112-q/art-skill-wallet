@@ -15,7 +15,12 @@ type User struct {
 	ProfilePicture string             `bson:"profile_picture"    json:"profile_picture"`
 	Role           string             `bson:"role"               json:"role"`
 	Banned         bool               `bson:"banned"             json:"banned"`
-	CreatedAt      time.Time          `bson:"created_at"         json:"created_at"`
+	GoogleID       string             `bson:"google_id,omitempty"        json:"google_id,omitempty"`
+	OTPHash        string             `bson:"otp_hash,omitempty"         json:"-"`
+	OTPExpiresAt   time.Time          `bson:"otp_expires_at,omitempty"   json:"-"`
+	ResetToken     string             `bson:"reset_token,omitempty"      json:"-"`
+	ResetExpiresAt time.Time          `bson:"reset_expires_at,omitempty" json:"-"`
+	CreatedAt      time.Time          `bson:"created_at"                 json:"created_at"`
 }
 
 type RegisterRequest struct {

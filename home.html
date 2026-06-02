@@ -129,7 +129,11 @@
       <!-- Login Panel -->
       <div class="auth-panel" :class="{ active: authTab === 'login' }">
         <div v-if="authMsg && authTab === 'login'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
-        <div class="auth-divider"><span>Login with credentials</span></div>
+        <button class="auth-google-btn" @click="loginWithGoogle">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google">
+          Continue with Google
+        </button>
+        <div class="auth-divider"><span>or login with credentials</span></div>
         <div class="auth-field">
           <label>อีเมล</label>
           <input type="email" v-model="loginEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" @keyup.enter="handleLogin">
@@ -143,22 +147,46 @@
         <p class="auth-switch">Don't have an account? <span @click="authTab='register'; authMsg=''">Register</span></p>
       </div>
 
-      <!-- Forgot Panel -->
+      <!-- Forgot Panel — Step 1: กรอกอีเมล -->
       <div class="auth-panel" :class="{ active: authTab === 'forgot' }">
         <div v-if="authMsg && authTab === 'forgot'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
-        <p style="font-size:0.8rem;color:#888;margin:0 0 1rem;">Enter your email and we'll send a reset link.</p>
+        <p style="font-size:0.8rem;color:#888;margin:0 0 1rem;">กรอกอีเมลเพื่อรับรหัส OTP 6 หลัก</p>
         <div class="auth-field">
-          <label>Email</label>
-          <input type="email" v-model="forgotEmail" class="auth-input" placeholder="you@example.com" autocomplete="email">
+          <label>อีเมล</label>
+          <input type="email" v-model="forgotEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" @keyup.enter="handleSendOTP">
         </div>
-        <button class="auth-submit" @click="handleForgot">SEND RESET LINK</button>
+        <button class="auth-submit" @click="handleSendOTP" :disabled="authLoading">{{ authLoading ? 'กำลังส่ง...' : 'SEND OTP' }}</button>
         <p class="auth-switch"><span @click="authTab='login'; authMsg=''">&larr; Back to Login</span></p>
+      </div>
+
+      <!-- Forgot Panel — Step 2: กรอก OTP + รหัสใหม่ -->
+      <div class="auth-panel" :class="{ active: authTab === 'otp' }">
+        <div v-if="authMsg && authTab === 'otp'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
+        <p style="font-size:0.8rem;color:#aaa;margin:0 0 1rem;">ส่ง OTP ไปยัง <strong style="color:#fff;">{{ forgotEmail }}</strong> แล้ว</p>
+        <div class="auth-field">
+          <label>รหัส OTP 6 หลัก</label>
+          <input type="text" v-model="otpCode" class="auth-input" placeholder="000000" maxlength="6" inputmode="numeric" @keyup.enter="handleVerifyOTP">
+        </div>
+        <div class="auth-field">
+          <label>รหัสผ่านใหม่</label>
+          <input type="password" v-model="newPassword" class="auth-input" placeholder="••••••••" autocomplete="new-password">
+        </div>
+        <div class="auth-field">
+          <label>ยืนยันรหัสผ่านใหม่</label>
+          <input type="password" v-model="newPasswordConfirm" class="auth-input" placeholder="••••••••" autocomplete="new-password" @keyup.enter="handleVerifyOTP">
+        </div>
+        <button class="auth-submit" @click="handleVerifyOTP" :disabled="authLoading">{{ authLoading ? 'กำลังตรวจสอบ...' : 'CONFIRM' }}</button>
+        <p class="auth-switch"><span @click="authTab='forgot'; authMsg=''">&larr; ส่ง OTP ใหม่</span></p>
       </div>
 
       <!-- Register Panel -->
       <div class="auth-panel" :class="{ active: authTab === 'register' }">
         <div v-if="authMsg && authTab === 'register'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
-        <div class="auth-divider"><span>Create your account</span></div>
+        <button class="auth-google-btn" @click="loginWithGoogle">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google">
+          Register with Google
+        </button>
+        <div class="auth-divider"><span>or create account manually</span></div>
         <div class="auth-field">
           <label>ชื่อผู้ใช้</label>
           <input type="text" v-model="regUsername" class="auth-input" placeholder="your_username" autocomplete="username">
@@ -196,7 +224,7 @@ createApp({
       authOpen: false, authTab: 'login', authMsg: '', authMsgType: 'error', authLoading: false,
       loginEmail: '', loginPassword: '',
       regUsername: '', regEmail: '', regPassword: '', regConfirm: '',
-      forgotEmail: '',
+      forgotEmail: '', otpCode: '', newPassword: '', newPasswordConfirm: '',
       featured: [
         { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80' },
         { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80' },
@@ -287,13 +315,69 @@ createApp({
       this.authLoading = false;
     },
 
-    handleForgot() {
-      if (!this.forgotEmail) { this.authMsg = 'Please enter your email.'; this.authMsgType = 'error'; return; }
-      this.authMsg = 'Reset link sent! Check your inbox.'; this.authMsgType = 'success';
+    loginWithGoogle() {
+      window.location.href = '/api/v1/auth/google?mode=login';
+    },
+
+    async handleSendOTP() {
+      this.authMsg = '';
+      if (!this.forgotEmail) { this.authMsg = 'กรุณากรอกอีเมล'; this.authMsgType = 'error'; return; }
+      this.authLoading = true;
+      try {
+        const r = await apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email: this.forgotEmail }) });
+        if (r.ok) {
+          this.authTab = 'otp'; this.authMsg = 'ส่ง OTP แล้ว กรุณาตรวจสอบอีเมล'; this.authMsgType = 'success';
+        } else {
+          this.authMsg = r.data.error_message || 'เกิดข้อผิดพลาด'; this.authMsgType = 'error';
+        }
+      } catch { this.authMsg = 'Connection error.'; this.authMsgType = 'error'; }
+      this.authLoading = false;
+    },
+
+    async handleVerifyOTP() {
+      this.authMsg = '';
+      if (!this.otpCode) { this.authMsg = 'กรุณากรอก OTP'; this.authMsgType = 'error'; return; }
+      if (!this.newPassword) { this.authMsg = 'กรุณากรอกรหัสผ่านใหม่'; this.authMsgType = 'error'; return; }
+      if (this.newPassword !== this.newPasswordConfirm) { this.authMsg = 'รหัสผ่านไม่ตรงกัน'; this.authMsgType = 'error'; return; }
+      if (this.newPassword.length < 6) { this.authMsg = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; this.authMsgType = 'error'; return; }
+      this.authLoading = true;
+      try {
+        const r = await apiFetch('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email: this.forgotEmail, otp: this.otpCode }) });
+        if (!r.ok) { this.authMsg = r.data.error_message || 'OTP ไม่ถูกต้อง'; this.authMsgType = 'error'; this.authLoading = false; return; }
+        const resetToken = r.data.data.reset_token;
+        const r2 = await apiFetch('/auth/reset-password', { method: 'POST', body: JSON.stringify({ reset_token: resetToken, new_password: this.newPassword }) });
+        if (r2.ok) {
+          this.authMsg = 'ตั้งรหัสผ่านใหม่สำเร็จ กรุณา Login'; this.authMsgType = 'success';
+          this.otpCode = ''; this.newPassword = ''; this.newPasswordConfirm = '';
+          setTimeout(() => { this.authTab = 'login'; this.authMsg = ''; }, 1800);
+        } else {
+          this.authMsg = r2.data.error_message || 'เกิดข้อผิดพลาด'; this.authMsgType = 'error';
+        }
+      } catch { this.authMsg = 'Connection error.'; this.authMsgType = 'error'; }
+      this.authLoading = false;
     },
   },
   mounted() {
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeAuth(); });
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('access_token')) {
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+      const username = params.get('username');
+      const role = params.get('role');
+      TokenStore.set(access_token, refresh_token, role, username);
+      window.history.replaceState({}, '', '/home.html');
+      window.location.href = (role === 'admin') ? '/admin.html' : '/profile.html';
+      return;
+    }
+    if (params.get('oauth_error')) {
+      const err = params.get('oauth_error');
+      window.history.replaceState({}, '', '/home.html');
+      const msgs = { banned: 'บัญชีนี้ถูกแบน', email_not_found: 'ไม่พบอีเมลนี้ในระบบ', db_error: 'เกิดข้อผิดพลาด', token_error: 'เกิดข้อผิดพลาด', google_failed: 'Google login ล้มเหลว' };
+      this.authMsg = msgs[err] || 'เกิดข้อผิดพลาด: ' + err; this.authMsgType = 'error';
+      this.authTab = 'login'; this.authOpen = true; document.body.style.overflow = 'hidden';
+    }
   }
 }).mount('#app');
 </script>

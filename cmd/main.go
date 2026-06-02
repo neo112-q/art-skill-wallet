@@ -96,6 +96,11 @@ func main() {
 		auth.POST("/login", handlers.Login)
 		auth.POST("/refresh", handlers.Refresh)
 		auth.POST("/logout", middleware.JWTAuth(), handlers.Logout)
+		auth.GET("/google", handlers.GoogleOAuthRedirect)
+		auth.GET("/google/callback", handlers.GoogleOAuthCallback)
+		auth.POST("/forgot-password", handlers.ForgotPassword)
+		auth.POST("/verify-otp", handlers.VerifyOTP)
+		auth.POST("/reset-password", handlers.ResetPassword)
 	}
 
 	// Public data endpoints (no auth required)
