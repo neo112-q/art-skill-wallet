@@ -72,7 +72,6 @@
           <a href="/editProfile.html" class="btn-edit">edit profile</a>
         </div>
         <p class="profile-bio" v-if="user.bio">Bio: "{{ user.bio }}"</p>
-        <p class="profile-bio" v-else style="color:#555;">No bio yet. <a href="/editProfile.html" style="color:#CCFF00;">Add one</a>.</p>
         <div class="stats-row">
           <div class="stat-item"><span class="stat-value">{{ totalPoints }}</span><p class="stat-label">Total Points</p></div>
           <div class="stat-item"><span class="stat-value">{{ ranks.length }}</span><p class="stat-label">Skills</p></div>
