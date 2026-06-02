@@ -39,6 +39,9 @@
           <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
+      <button class="hamburger-btn" :class="{ open: mobileOpen }" @click="mobileOpen = !mobileOpen" aria-label="Menu">
+        <span class="hamburger-bar"></span><span class="hamburger-bar"></span><span class="hamburger-bar"></span>
+      </button>
     </div>
   </nav>
 

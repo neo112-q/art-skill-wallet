@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -22,10 +23,22 @@
         <a href="#features" class="nav-link" @click.prevent="scrollTo('#features')">Skills</a>
         <a href="#about" class="nav-link" @click.prevent="scrollTo('#about')">About</a>
       </div>
-      <button v-if="!loggedIn" class="btn-outline" @click="openAuth('login')">Login / Register</button>
-      <a v-else class="btn-outline" :href="isAdmin ? '/admin.html' : '/profile.html'">Go to Profile</a>
+      <button v-if="!loggedIn" class="btn-outline" @click="openAuth('login')" style="margin-right:0.25rem;">Login / Register</button>
+      <a v-else class="btn-outline" :href="isAdmin ? '/admin.html' : '/profile.html'" style="margin-right:0.25rem;">Go to Profile</a>
+      <button class="hamburger-btn" :class="{ open: mobileOpen }" @click="mobileOpen = !mobileOpen" aria-label="Menu">
+        <span class="hamburger-bar"></span><span class="hamburger-bar"></span><span class="hamburger-bar"></span>
+      </button>
     </div>
   </nav>
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" :class="{ open: mobileOpen }" @click.self="mobileOpen=false">
+    <a href="/explore.html" class="mobile-nav-link"><i class="fas fa-compass"></i> Explore</a>
+    <a href="#features" class="mobile-nav-link" @click.prevent="scrollTo('#features'); mobileOpen=false"><i class="fas fa-star"></i> Skills</a>
+    <a href="#about" class="mobile-nav-link" @click.prevent="scrollTo('#about'); mobileOpen=false"><i class="fas fa-info-circle"></i> About</a>
+    <div class="mobile-nav-divider"></div>
+    <a v-if="!loggedIn" href="#" class="mobile-nav-link" @click.prevent="mobileOpen=false; openAuth('login')"><i class="fas fa-sign-in-alt"></i> Login / Register</a>
+    <a v-else :href="isAdmin ? '/admin.html' : '/profile.html'" class="mobile-nav-link"><i class="fas fa-user"></i> Go to Profile</a>
+  </div>
 
   <!-- Hero -->
   <div style="padding-top:64px;">
@@ -178,6 +191,7 @@ createApp({
     return {
       loggedIn: TokenStore.isLoggedIn(),
       isAdmin: TokenStore.isAdmin(),
+      mobileOpen: false,
       authOpen: false, authTab: 'login', authMsg: '', authMsgType: 'error', authLoading: false,
       loginEmail: '', loginPassword: '',
       regUsername: '', regEmail: '', regPassword: '', regConfirm: '',
