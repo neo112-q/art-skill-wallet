@@ -160,7 +160,7 @@
 
         <div class="artwork-meta" style="margin-top:0.5rem;">
           <span class="artwork-meta-item">{{ formatDate(selectedArt.upload_date) }}</span>
-          <span class="artwork-meta-tag">{{ selectedArt._skillName || '—' }}</span>
+          <span class="artwork-meta-tag" v-for="n in (selectedArt._skillNames && selectedArt._skillNames.length ? selectedArt._skillNames : ['—'])" :key="n">{{ n }}</span>
           <span class="artwork-meta-tag">{{ selectedArt.privacy_status }}</span>
         </div>
 
@@ -297,8 +297,11 @@ createApp({
         if (fname) uploadsByTitle[u.title.toLowerCase()] = '/uploads/' + fname;
       });
       this.artworks.forEach(a => {
-        a._skillName = skillMap[a.skill_id] || '';
-        a._thumbUrl = uploadsByTitle[(a.title || '').toLowerCase()] || '';
+        // Support multiple skills — join all names, fall back to single skill_id
+        const ids = (a.skill_ids && a.skill_ids.length) ? a.skill_ids : (a.skill_id ? [a.skill_id] : []);
+        a._skillNames = ids.map(id => skillMap[id]).filter(Boolean);
+        a._skillName  = a._skillNames.join(', ') || '—';
+        a._thumbUrl   = uploadsByTitle[(a.title || '').toLowerCase()] || '';
       });
     },
 

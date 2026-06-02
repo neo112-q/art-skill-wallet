@@ -27,6 +27,29 @@ import (
 // @Success      200 {object} response.APIResponse
 // @Failure      400 {object} response.APIResponse
 // @Router       /skills [get]
+// GetAllSkills returns all skills across all users — admin only
+func GetAllSkills(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cursor, err := db.Col("skills").Find(ctx, bson.M{})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch skills")
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var skills []models.Skill
+	if err := cursor.All(ctx, &skills); err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to decode skills")
+		return
+	}
+	if skills == nil {
+		skills = []models.Skill{}
+	}
+	response.Success(c, http.StatusOK, skills)
+}
+
 func GetSkills(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	objID, err := primitive.ObjectIDFromHex(userID.(string))
@@ -264,26 +287,40 @@ func CreateArtwork(c *gin.Context) {
 		return
 	}
 
-	skillObjID, err := primitive.ObjectIDFromHex(req.SkillID)
-	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid skill ID")
-		return
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Validate that the skill exists and belongs to this user
-	var skill models.Skill
-	if err := db.Col("skills").FindOne(ctx, bson.M{"_id": skillObjID, "user_id": objID}).Decode(&skill); err != nil {
-		response.Error(c, http.StatusBadRequest, "Skill not found or does not belong to you")
+	// Build the full list of skill IDs from skill_ids (preferred) or fall back to skill_id
+	rawIDs := req.SkillIDs
+	if len(rawIDs) == 0 && req.SkillID != "" {
+		rawIDs = []string{req.SkillID}
+	}
+	if len(rawIDs) == 0 {
+		response.Error(c, http.StatusBadRequest, "At least one skill is required")
 		return
+	}
+
+	var skillObjIDs []primitive.ObjectID
+	for _, sid := range rawIDs {
+		id, err := primitive.ObjectIDFromHex(sid)
+		if err != nil {
+			response.Error(c, http.StatusBadRequest, "Invalid skill ID: "+sid)
+			return
+		}
+		// Validate skill belongs to this user
+		var skill models.Skill
+		if err := db.Col("skills").FindOne(ctx, bson.M{"_id": id, "user_id": objID}).Decode(&skill); err != nil {
+			response.Error(c, http.StatusBadRequest, "Skill not found or does not belong to you: "+sid)
+			return
+		}
+		skillObjIDs = append(skillObjIDs, id)
 	}
 
 	artwork := models.Artwork{
 		ID:            primitive.NewObjectID(),
 		UserID:        objID,
-		SkillID:       skillObjID,
+		SkillID:       skillObjIDs[0],   // primary skill (backward compat)
+		SkillIDs:      skillObjIDs,      // all selected skills
 		Title:         req.Title,
 		Description:   req.Description,
 		PrivacyStatus: req.PrivacyStatus,

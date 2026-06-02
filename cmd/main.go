@@ -116,6 +116,7 @@ func main() {
 		adminGroup.GET("/submissions", handlers.GetSubmissionsEnriched)
 		adminGroup.PUT("/submissions/:id", handlers.UpdateSubmissionStatus)
 		adminGroup.GET("/submissions/:id/proofs", handlers.GetSubmissionProofs)
+		adminGroup.GET("/skills", handlers.GetAllSkills)
 	}
 
 	// ── Start ───────────────────────────────────────────────────────────

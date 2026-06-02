@@ -100,7 +100,12 @@
               </div>
             </td>
             <td class="td-cell" style="font-weight:600; color:white;">{{ row.title }}</td>
-            <td class="td-cell" style="color:#aaa;">{{ row.skill }}</td>
+            <td class="td-cell" style="color:#aaa;">
+              <template v-if="row.skills && row.skills.length">
+                <span v-for="(sk, i) in row.skills" :key="sk">{{ sk }}<span v-if="i < row.skills.length - 1">, </span></span>
+              </template>
+              <span v-else>{{ row.skill || '—' }}</span>
+            </td>
             <td class="td-cell"><span class="badge" :class="badgeClass(row.level)">{{ row.level }}</span></td>
             <td class="td-cell" style="color:#666; white-space:nowrap;">{{ formatDate(row.submitted) }}</td>
             <td class="td-cell"><span class="status" :class="'status-' + row.status.toLowerCase()">{{ row.status }}</span></td>
@@ -161,7 +166,15 @@
       <h2 class="modal-title">{{ viewData.title || 'Submission Detail' }}</h2>
       <div v-if="viewData.title">
         <div class="view-row"><span class="view-label">User</span><span class="view-value">{{ viewData.user }}</span></div>
-        <div class="view-row"><span class="view-label">Skill</span><span class="view-value">{{ viewData.skill }}</span></div>
+        <div class="view-row">
+          <span class="view-label">Skill</span>
+          <span class="view-value">
+            <template v-if="viewData.skills && viewData.skills.length">
+              <span v-for="(sk, i) in viewData.skills" :key="sk">{{ sk }}<span v-if="i < viewData.skills.length - 1">, </span></span>
+            </template>
+            <span v-else>{{ viewData.skill || '—' }}</span>
+          </span>
+        </div>
         <div class="view-row"><span class="view-label">Level</span><span class="view-value">{{ viewData.level }}</span></div>
         <div class="view-row"><span class="view-label">Submitted</span><span class="view-value">{{ formatDate(viewData.submitted) }}</span></div>
         <div class="view-row"><span class="view-label">Status</span><span class="view-value">{{ viewData.status }}</span></div>
@@ -302,7 +315,14 @@ createApp({
     console.log('[ADMIN] Response:', r.status, r.data);
 
     if (r.ok && r.data.data) {
-      this.rows = r.data.data.map(row => ({ ...row, _saving: false }));
+      // Backend already enriches skill names — no extra fetch needed
+      this.rows = r.data.data.map(row => {
+        return {
+          ...row,
+          skills: row.skills && row.skills.length ? row.skills : (row.skill ? [row.skill] : []),
+          _saving: false,
+        };
+      });
       console.log('[ADMIN] Loaded', this.rows.length, 'submissions');
     } else {
       console.error('[ADMIN] Failed:', r.data.error_message);

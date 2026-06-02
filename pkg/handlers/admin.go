@@ -20,7 +20,8 @@ type SubmissionRow struct {
 	User      string    `json:"user"`
 	Initials  string    `json:"initials"`
 	Title     string    `json:"title"`
-	Skill     string    `json:"skill"`
+	Skill     string    `json:"skill"`    // primary skill name (backward compat)
+	Skills    []string  `json:"skills"`   // all skill names
 	Level     string    `json:"level"`
 	Status    string    `json:"status"`
 	Submitted time.Time `json:"submitted"`
@@ -85,12 +86,29 @@ func GetSubmissionsEnriched(c *gin.Context) {
 		if len(uname) >= 2 {
 			initials = string([]rune(uname)[:2])
 		}
-		sName := ""
-		sLevel := ""
-		if sk, ok := skillMap[a.SkillID.Hex()]; ok {
-			sName = sk.SkillName
-			sLevel = sk.Level
+		// Collect all skill IDs — prefer skill_ids array, fall back to single skill_id
+		allIDs := a.SkillIDs
+		if len(allIDs) == 0 && !a.SkillID.IsZero() {
+			allIDs = []primitive.ObjectID{a.SkillID}
 		}
+
+		var skillNames []string
+		sLevel := ""
+		for _, sid := range allIDs {
+			if sk, ok := skillMap[sid.Hex()]; ok {
+				skillNames = append(skillNames, sk.SkillName)
+				if sLevel == "" {
+					sLevel = sk.Level // use level from first skill
+				}
+			}
+		}
+
+		// Primary skill name for backward compat
+		primarySkill := ""
+		if len(skillNames) > 0 {
+			primarySkill = skillNames[0]
+		}
+
 		status := a.Status
 		if status == "" {
 			status = "Pending"
@@ -100,7 +118,8 @@ func GetSubmissionsEnriched(c *gin.Context) {
 			User:      uname,
 			Initials:  initials,
 			Title:     a.Title,
-			Skill:     sName,
+			Skill:     primarySkill,
+			Skills:    skillNames,
 			Level:     sLevel,
 			Status:    status,
 			Submitted: a.UploadDate,
