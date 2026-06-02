@@ -83,7 +83,8 @@
       </div>
 
       <div v-else class="artist-grid">
-        <div class="artist-card" v-for="a in filteredArtists" :key="a.id">
+        <div class="artist-card" v-for="a in filteredArtists" :key="a.id"
+             @click="goToProfile(a.id)" style="cursor:pointer;">
           <img v-if="a.profile_picture" :src="a.profile_picture" :alt="a.username" class="artist-thumb">
           <div v-else class="artist-thumb-placeholder" :style="{ background: avatarColor(a.username) }">
             <span style="font-size:2rem; font-weight:800; color:rgba(255,255,255,0.7);">{{ initials(a.username) }}</span>
@@ -151,6 +152,7 @@ createApp({
   },
   methods: {
     doLogout() { logout(); },
+    goToProfile(userId) { window.location.href = '/publicProfile.html?id=' + userId; },
     initials(name) {
       if (!name) return '?';
       const parts = name.trim().split(/\s+/);

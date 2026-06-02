@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile – ArtSkillWallet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- Navbar -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="/home.html" class="nav-logo">
+        <img src="/img/logoartskill.png" height="32" alt="ArtSkillWallet Logo">
+        <span class="nav-logo-text">ArtSkillWallet</span>
+      </a>
+      <div class="nav-links">
+        <a href="/explore.html" class="nav-link active">Explore</a>
+        <a href="/skillManage.html" class="nav-link">Skills</a>
+        <a href="/history.html" class="nav-link">History</a>
+      </div>
+      <div class="avatar-wrapper" v-if="loggedIn">
+        <img :src="myAvatarUrl" alt="User avatar" class="avatar-sm" @click.stop="dropdownOpen = !dropdownOpen">
+        <div class="avatar-dropdown" :class="{ open: dropdownOpen }">
+          <div class="avatar-dropdown-header">
+            <img :src="myAvatarUrl" alt="User avatar" class="avatar-dropdown-pic">
+            <div><p class="avatar-dropdown-name">{{ myUsername }}</p></div>
+          </div>
+          <div class="avatar-dropdown-divider"></div>
+          <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
+          <a v-if="isAdmin" href="/admin.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">🛡️</span> Admin</a>
+          <div class="avatar-dropdown-divider"></div>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="logout()"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
+        </div>
+      </div>
+      <a v-else href="/home.html" class="btn-outline">Login / Register</a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="page-main">
+
+    <!-- Loading -->
+    <div v-if="loading" style="text-align:center; padding:4rem; color:#888;">
+      <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i>
+      <p style="margin-top:1rem;">Loading profile...</p>
+    </div>
+
+    <!-- Not found -->
+    <div v-else-if="!user" style="text-align:center; padding:4rem; color:#555;">
+      <p style="font-size:1.2rem;">User not found.</p>
+      <a href="/explore.html" class="btn-neon" style="margin-top:1rem; display:inline-block;">← Back to Explore</a>
+    </div>
+
+    <!-- Profile -->
+    <div v-else>
+
+      <!-- Back link -->
+      <a href="/explore.html" class="edit-profile-back" style="display:inline-block; margin-top:1.5rem;">← Back to Explore</a>
+
+      <!-- Profile header -->
+      <section class="profile-section fade-in">
+        <img v-if="user.profile_picture" :src="user.profile_picture" :alt="user.username" class="avatar-lg">
+        <div v-else class="avatar-lg" :style="{ background: avatarColor(user.username), display:'flex', alignItems:'center', justifyContent:'center' }">
+          <span style="font-size:2rem; font-weight:800; color:rgba(255,255,255,0.8);">{{ initials(user.username) }}</span>
+        </div>
+
+        <div class="profile-details">
+          <div class="profile-name-row">
+            <h1 class="profile-name">{{ user.username }}</h1>
+          </div>
+          <p class="profile-bio" v-if="user.bio">{{ user.bio }}</p>
+          <p class="profile-bio" v-else style="color:#444;">No bio yet.</p>
+          <div class="stats-row">
+            <div class="stat-item">
+              <span class="stat-value">{{ user.skills ? user.skills.length : 0 }}</span>
+              <p class="stat-label">Skills</p>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ user.artwork_count || 0 }}</span>
+              <p class="stat-label">Artworks</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Skills -->
+      <section class="fade-in-2" style="margin-bottom:2rem;">
+        <div class="section-hd">
+          <h2>Skills</h2>
+        </div>
+        <div v-if="user.skills && user.skills.length" class="skills-grid">
+          <div class="skill-card" v-for="s in user.skills" :key="s.id">
+            <h3>{{ s.skill_name }}</h3>
+            <div class="meter" style="margin-bottom:0.25rem;">
+              <div class="seg seg-neon"></div>
+              <div class="seg" :class="s.level === 'Intermediate' || s.level === 'Advanced' ? 'seg-blue' : 'seg-empty'"></div>
+              <div class="seg" :class="s.level === 'Advanced' ? 'seg-neon' : 'seg-empty'"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+            <p style="color:#aaa; font-size:0.75rem; margin-top:0.5rem;">Level : {{ levelNum(s.level) }}</p>
+            <div style="margin-top:0.75rem;">
+              <span class="badge" :class="badgeClass(s.level)">
+                <i class="fas" :class="badgeIcon(s.level)" style="font-size:0.7rem;"></i> {{ s.level }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <p v-else style="color:#555;">No skills added yet.</p>
+      </section>
+
+      <!-- Approved Public Artworks -->
+      <section class="fade-in-3" style="margin-bottom:3rem;">
+        <div class="section-hd">
+          <h2>Artworks</h2>
+        </div>
+        <div v-if="user.artworks && user.artworks.length" class="portfolio-grid">
+          <div v-for="art in user.artworks" :key="art.id"
+               class="portfolio-item" @click="openArtwork(art)" style="cursor:pointer;">
+            <img v-if="art.thumb_url" :src="art.thumb_url" :alt="art.title">
+            <div v-else style="width:100%;height:100%;background:var(--card);display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-image" style="font-size:2rem;color:#333;"></i>
+            </div>
+            <div class="portfolio-overlay"></div>
+          </div>
+        </div>
+        <p v-else style="color:#555;">No public artworks yet.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Artwork Detail Popup -->
+  <div class="artwork-overlay" :class="{ open: artworkOpen }" @click.self="closeArtwork">
+    <div class="artwork-modal" v-if="selectedArt">
+      <button class="artwork-modal-close" @click="closeArtwork">&times;</button>
+
+      <!-- Image -->
+      <img v-if="selectedArt.thumb_url" :src="selectedArt.thumb_url" :alt="selectedArt.title" class="artwork-modal-img">
+      <div v-else style="width:100%; height:200px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-radius:1.25rem 1.25rem 0 0;">
+        <i class="fas fa-image" style="font-size:3rem; color:#333;"></i>
+      </div>
+
+      <div class="artwork-modal-body">
+        <h2 class="artwork-modal-title">{{ selectedArt.title }}</h2>
+
+        <div class="artwork-meta">
+          <span class="artwork-meta-item">{{ selectedArt.upload_date }}</span>
+          <template v-if="selectedArt.skill_names && selectedArt.skill_names.length">
+            <span class="artwork-meta-tag" v-for="sn in selectedArt.skill_names" :key="sn">{{ sn }}</span>
+          </template>
+          <span class="artwork-meta-tag" v-else-if="selectedArt.skill_name">{{ selectedArt.skill_name }}</span>
+        </div>
+
+        <p class="artwork-log" v-if="selectedArt.description">{{ selectedArt.description }}</p>
+
+        <!-- Proofs -->
+        <div style="margin-top:1rem; border-top:1px solid #2A2A2A; padding-top:1rem;">
+          <h3 style="font-size:0.85rem; font-weight:700; margin-bottom:0.75rem;">
+            <i class="fas fa-file-alt" style="color:#CCFF00;"></i> Evidence / Proofs
+          </h3>
+          <div v-if="proofsLoading" style="color:#888; font-size:0.8rem;">Loading...</div>
+          <div v-else-if="!proofs.length" style="color:#555; font-size:0.8rem;">No proofs attached.</div>
+          <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <div v-for="p in proofs" :key="p.id">
+              <a v-if="p.file_type === 'image'" :href="p.file_url" target="_blank">
+                <img :src="p.file_url" style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A;">
+              </a>
+              <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:180px; border-radius:6px; border:1px solid #2A2A2A;"></video>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const { createApp } = Vue;
+createApp({
+  data() {
+    return {
+      loggedIn:    TokenStore.isLoggedIn(),
+      isAdmin:     TokenStore.isAdmin(),
+      myUsername:  TokenStore.getUsername() || '',
+      myAvatarUrl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(TokenStore.getUsername() || 'U') + '&background=CCFF00&color=121212&bold=true&size=100',
+      dropdownOpen: false,
+      loading: true,
+      user: null,
+      artworkOpen: false,
+      selectedArt: null,
+      proofs: [],
+      proofsLoading: false,
+    };
+  },
+  methods: {
+    initials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
+    },
+    avatarColor(name) {
+      let hash = 0;
+      for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return 'hsl(' + (Math.abs(hash) % 360) + ', 50%, 25%)';
+    },
+    levelNum(l)    { return l === 'Beginner' ? 1 : l === 'Intermediate' ? 2 : 3; },
+    badgeClass(l)  { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
+    badgeIcon(l)   { return l === 'Beginner' ? 'fa-seedling' : l === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
+
+    async openArtwork(art) {
+      this.selectedArt  = art;
+      this.artworkOpen  = true;
+      this.proofs       = [];
+      this.proofsLoading = true;
+      document.body.style.overflow = 'hidden';
+
+      try {
+        const r = await fetch('/api/v1/public/artworks/' + art.id + '/proofs');
+        const body = await r.json();
+        if (r.ok && body.data) this.proofs = body.data;
+      } catch (e) { console.error(e); }
+
+      this.proofsLoading = false;
+    },
+
+    closeArtwork() {
+      this.artworkOpen = false;
+      this.selectedArt = null;
+      document.body.style.overflow = '';
+    },
+  },
+  async mounted() {
+    document.addEventListener('click', () => { this.dropdownOpen = false; });
+
+    // Get user ID from URL ?id=...
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('id');
+
+    if (!userId) {
+      this.loading = false;
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/v1/users/' + userId + '/public');
+      const body = await res.json();
+      if (res.ok && body.data) {
+        this.user = body.data;
+        document.title = this.user.username + ' – ArtSkillWallet';
+      }
+    } catch (e) {
+      console.error('[PUBLIC PROFILE] Error:', e);
+    }
+
+    this.loading = false;
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

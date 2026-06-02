@@ -58,6 +58,7 @@ func main() {
 	r.StaticFile("/", filepath.Join(root, "home.html"))
 	r.StaticFile("/home.html", filepath.Join(root, "home.html"))
 	r.StaticFile("/explore.html", filepath.Join(root, "explore.html"))
+	r.StaticFile("/publicProfile.html", filepath.Join(root, "publicProfile.html"))
 
 	// ── Protected HTML pages (JS guard handles redirect) ────────────────
 	// HTML is served freely; the real lock is on the API.
@@ -83,6 +84,8 @@ func main() {
 
 	// Public data endpoints (no auth required)
 	api.GET("/explore", handlers.GetExplore)
+	api.GET("/users/:id/public", handlers.GetPublicProfile)
+	api.GET("/public/artworks/:id/proofs", handlers.GetPublicArtworkProofs)
 
 	// Protected endpoints — valid JWT required
 	protected := api.Group("/")

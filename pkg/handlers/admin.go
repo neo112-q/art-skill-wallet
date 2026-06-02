@@ -129,6 +129,46 @@ func GetSubmissionsEnriched(c *gin.Context) {
 	response.Success(c, http.StatusOK, rows)
 }
 
+// GetPublicArtworkProofs returns proofs for a public+approved artwork — no auth required.
+func GetPublicArtworkProofs(c *gin.Context) {
+	artworkID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid artwork ID")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Only allow proofs for public + approved artworks
+	var artwork models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{
+		"_id":            artworkID,
+		"privacy_status": "Public",
+		"status":         "Approved",
+	}).Decode(&artwork); err != nil {
+		response.Error(c, http.StatusNotFound, "Artwork not found or not public")
+		return
+	}
+
+	cursor, err := db.Col("proofs").Find(ctx, bson.M{"artwork_id": artworkID})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch proofs")
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var proofs []models.Proof
+	if err := cursor.All(ctx, &proofs); err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to decode proofs")
+		return
+	}
+	if proofs == nil {
+		proofs = []models.Proof{}
+	}
+	response.Success(c, http.StatusOK, proofs)
+}
+
 // GetSubmissionProofs godoc
 // @Summary      Admin — view proofs for a submission
 // @Tags         admin
