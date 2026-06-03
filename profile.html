@@ -404,7 +404,8 @@ createApp({
         description: this.selectedArt.description || '',
         privacy_status: this.selectedArt.privacy_status || 'Public',
       };
-      this.editArtOpen = true;
+      this.artworkOpen = false;
+      this.$nextTick(() => { this.editArtOpen = true; });
     },
 
     async saveEditArtwork() {

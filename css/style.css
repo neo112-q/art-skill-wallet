@@ -595,7 +595,7 @@ input[type="radio"]:checked + .privacy-btn { background: var(--neon); color: #12
    SHARED MODAL (skill edit + admin view)
    ===================================================================== */
 .modal-overlay {
-  position: fixed; inset: 0; z-index: 300;
+  position: fixed; inset: 0; z-index: 500;
   background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
   display: flex; align-items: center; justify-content: center; padding: 1rem;
   opacity: 0; pointer-events: none; transition: opacity 0.2s;
