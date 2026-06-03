@@ -3,8 +3,6 @@ package handlers
 import (
 	"context"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -413,9 +411,9 @@ func AdminDeleteArtwork(c *gin.Context) {
 		_ = proofCursor.All(ctx, &proofs)
 		proofCursor.Close(ctx)
 		for _, p := range proofs {
-			// Delete proof file (local storage)
-			if p.FileURL != "" {
-				_ = removeLocalFile(p.FileURL)
+			// Delete proof file from Cloudinary
+			if p.CloudinaryPublicID != "" {
+				_ = cloud.DeleteFile(p.CloudinaryPublicID)
 			}
 		}
 		db.Col("proofs").DeleteMany(ctx, bson.M{"artwork_id": artworkID})
@@ -521,11 +519,3 @@ func UnbanUser(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{"message": "User unbanned successfully"})
 }
 
-// removeLocalFile removes a file stored at a local /uploads/ URL.
-func removeLocalFile(fileURL string) error {
-	fname := filepath.Base(fileURL)
-	if fname == "" || fname == "." {
-		return nil
-	}
-	return os.Remove(filepath.Join(".", "uploads", fname))
-}
