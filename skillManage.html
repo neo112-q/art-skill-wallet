@@ -66,6 +66,7 @@
         <h1 style="font-size:1.5rem; font-weight:800;">My Skills</h1>
         <p style="color:#888; font-size:0.85rem; margin-top:0.25rem;">Ranks are earned automatically when your artwork is approved</p>
       </div>
+      <a href="/upload.html" class="btn-neon"><i class="fas fa-cloud-upload-alt" style="font-size:0.7rem;"></i> Upload Art</a>
     </div>
 
     <!-- Loading -->
@@ -103,8 +104,7 @@
     <!-- Empty State -->
     <div v-if="!ranks.length" style="text-align:center; padding:3rem; color:#666;">
       <p style="font-size:1.1rem; margin-bottom:0.5rem;">No skill ranks yet.</p>
-      <p style="font-size:0.85rem; color:#555; margin-bottom:1.5rem;">Upload artwork and get it approved to earn your first rank.</p>
-      <a href="/upload.html" class="btn-neon">+ Upload Artwork</a>
+      <p style="font-size:0.85rem; color:#555;">Upload artwork and get it approved to earn your first rank.</p>
     </div>
     <div v-else-if="!filteredRanks.length" style="text-align:center; padding:2rem; color:#555;">
       No skills match your filters.
