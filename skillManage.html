@@ -140,6 +140,12 @@
           </span>
           <span v-else style="color:#555; font-size:0.8rem;">No rank yet</span>
         </div>
+
+        <!-- Tip / Roadmap -->
+        <div :style="rankTipStyle(r.rank)" style="margin-top:1rem; padding:0.6rem 0.8rem; border-radius:8px; font-size:0.78rem; line-height:1.5;">
+          <i class="fas" :class="rankTipIcon(r.rank)" style="margin-right:0.4rem;"></i>
+          <span>{{ rankTip(r.rank, r.target - r.approval_count, r.next_rank) }}</span>
+        </div>
       </div>
     </div>
 
@@ -188,6 +194,47 @@ createApp({
     doLogout() { logout(); },
     badgeClass(r) { return r === 'Beginner' ? 'badge-beg' : r === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
     badgeIcon(r)  { return r === 'Beginner' ? 'fa-seedling' : r === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
+    rankTip(rank) {
+      const tips = {
+        '': [
+          'เริ่มต้นด้วยการฝึกพื้นฐานให้แม่น เช่น สัดส่วน เส้น และแสงเงา',
+          'ศึกษาตัวอย่างงานของศิลปินที่คุณชื่นชอบ แล้วลองฝึกตาม',
+          'อัปโหลดผลงานพร้อมแนบหลักฐาน process เพื่อเริ่มสะสม rank',
+        ],
+        'Beginner': [
+          'ฝึกซ้ำ ๆ กับ subject เดิมจนคุณรู้สึกควบคุมได้ก่อนขยับไปสิ่งใหม่',
+          'แนบภาพ before–after ในผลงานเพื่อแสดงพัฒนาการที่ชัดเจน',
+          'ลองเปลี่ยนสไตล์หรือ medium ใหม่ เพื่อค้นหาแนวทางที่ถนัด',
+          'ตั้งเป้าฝึกอย่างน้อยสัปดาห์ละ 2–3 ชิ้น เพื่อสร้างความสม่ำเสมอ',
+        ],
+        'Intermediate': [
+          'เริ่มสร้างสไตล์เป็นของตัวเอง แทนการ copy ตาม reference อย่างเดียว',
+          'ลองทำ series ผลงานที่มี theme เดียวกัน เพื่อแสดงความลึกของทักษะ',
+          'บันทึก process วิดีโอหรือ step-by-step เพื่อเป็นหลักฐานที่น่าเชื่อถือ',
+          'รับ feedback จากคนอื่นและนำมาปรับปรุงผลงานชิ้นถัดไป',
+        ],
+        'Advanced': [
+          'ลองรับ commission หรือ project จริงเพื่อทดสอบทักษะในสถานการณ์จริง',
+          'สอนหรือแชร์ความรู้ให้คนอื่น — การสอนช่วยให้เข้าใจลึกยิ่งขึ้น',
+          'ขยายไปยัง sub-skill ที่เกี่ยวข้องเพื่อพัฒนาความเชี่ยวชาญแบบรอบด้าน',
+          'สร้าง portfolio ที่แสดงงานหลากหลาย เพื่อเพิ่มโอกาสในสายอาชีพ',
+        ],
+      };
+      const list = tips[rank] || tips[''];
+      return list[Math.floor(Date.now() / 86400000) % list.length];
+    },
+    rankTipIcon(rank) {
+      if (!rank) return 'fa-rocket';
+      if (rank === 'Advanced') return 'fa-star';
+      if (rank === 'Intermediate') return 'fa-bolt';
+      return 'fa-map-signs';
+    },
+    rankTipStyle(rank) {
+      if (!rank) return 'background:#1C1C1C; color:#888; border:1px solid #2A2A2A;';
+      if (rank === 'Advanced') return 'background:#1a2a1a; color:#CCFF00; border:1px solid #3a5a3a;';
+      if (rank === 'Intermediate') return 'background:#1a1a2a; color:#7eb8f7; border:1px solid #2a2a5a;';
+      return 'background:#1C1C1C; color:#aaa; border:1px solid #2A2A2A;';
+    },
   },
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
