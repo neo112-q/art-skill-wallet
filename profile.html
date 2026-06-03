@@ -88,7 +88,7 @@
           <a href="/skillManage.html" class="btn-neon">View All &rarr;</a>
         </div>
         <div v-if="!groupedRanks.length" style="text-align:center; padding:2rem; color:#555;">
-          No skill ranks yet. <a href="/upload.html" style="color:#CCFF00;">Upload artwork to earn ranks</a>.
+          No skill ranks yet. Upload artwork to earn ranks.
         </div>
         <div v-else style="display:flex; flex-direction:column; gap:0.5rem;">
           <div v-for="group in groupedRanks" :key="group.mainName"
@@ -138,7 +138,7 @@
           <a href="/upload.html" class="btn-neon">+ Add Artwork</a>
         </div>
         <div v-if="!artworks.length" style="text-align:center; padding:2rem; color:#555;">
-          No artworks yet. <span style="color:#CCFF00; text-decoration:none;">Upload your first piece</span>.
+          No artworks yet. Upload your first piece.
         </div>
         <div v-else class="portfolio-grid">
           <div class="portfolio-item" v-for="a in artworks" :key="a.id" @click="openArtwork(a)" style="cursor:pointer; position:relative;">
