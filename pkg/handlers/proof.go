@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -34,6 +35,26 @@ func isAllowedProofMIME(mime string) bool {
 		}
 	}
 	return false
+}
+
+// detectMIMEFromFilename guesses the MIME type from the file extension.
+// Used as fallback when the browser omits Content-Type in the multipart part.
+func detectMIMEFromFilename(filename string) string {
+	switch strings.ToLower(filepath.Ext(filename)) {
+	case ".mp4", ".mov", ".avi", ".mkv", ".webm":
+		return "video/mp4"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	case ".pdf":
+		return "application/pdf"
+	}
+	return ""
 }
 
 // deriveFileType returns "image" or "video" based on the MIME type.
@@ -78,26 +99,31 @@ func CreateProof(c *gin.Context) {
 	}
 	defer file.Close()
 
+	// Detect MIME from the part header; fall back to sniffing the filename extension
 	mime := header.Header.Get("Content-Type")
+	if mime == "" {
+		mime = detectMIMEFromFilename(header.Filename)
+	}
 	if !isAllowedProofMIME(mime) {
 		response.Error(c, http.StatusBadRequest,
 			"Invalid file type. Allowed: image/*, video/*, application/pdf")
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// Short-lived context just for the DB ownership check
+	dbCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer dbCancel()
 
 	// Validate artwork ownership
 	var artwork models.Artwork
-	if err := db.Col("artworks").FindOne(ctx, bson.M{
+	if err := db.Col("artworks").FindOne(dbCtx, bson.M{
 		"_id": artworkObjID, "user_id": objID,
 	}).Decode(&artwork); err != nil {
 		response.Error(c, http.StatusBadRequest, "Artwork not found or does not belong to you")
 		return
 	}
 
-	// Upload to Cloudinary
+	// Upload to Cloudinary (uses its own 30-second context internally)
 	uploaded, err := cloud.UploadFile(file, "proofs")
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to upload proof to Cloudinary: "+err.Error())
@@ -112,7 +138,11 @@ func CreateProof(c *gin.Context) {
 		CloudinaryPublicID: uploaded.PublicID,
 	}
 
-	if _, err := db.Col("proofs").InsertOne(ctx, proof); err != nil {
+	// Fresh context for the DB write — the old one may have expired during upload
+	saveCtx, saveCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer saveCancel()
+
+	if _, err := db.Col("proofs").InsertOne(saveCtx, proof); err != nil {
 		_ = cloud.DeleteFile(uploaded.PublicID)
 		response.Error(c, http.StatusInternalServerError, "Failed to save proof record")
 		return
@@ -187,29 +217,32 @@ func UpdateProof(c *gin.Context) {
 	defer file.Close()
 
 	mime := header.Header.Get("Content-Type")
+	if mime == "" {
+		mime = detectMIMEFromFilename(header.Filename)
+	}
 	if !isAllowedProofMIME(mime) {
 		response.Error(c, http.StatusBadRequest, "Invalid file type. Allowed: image/*, video/*, application/pdf")
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	dbCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer dbCancel()
 
 	var proof models.Proof
-	if err := db.Col("proofs").FindOne(ctx, bson.M{"_id": proofID}).Decode(&proof); err != nil {
+	if err := db.Col("proofs").FindOne(dbCtx, bson.M{"_id": proofID}).Decode(&proof); err != nil {
 		response.Error(c, http.StatusNotFound, "Proof not found")
 		return
 	}
 
 	var artwork models.Artwork
-	if err := db.Col("artworks").FindOne(ctx, bson.M{
+	if err := db.Col("artworks").FindOne(dbCtx, bson.M{
 		"_id": proof.ArtworkID, "user_id": objID,
 	}).Decode(&artwork); err != nil {
 		response.Error(c, http.StatusForbidden, "You do not own this proof")
 		return
 	}
 
-	// Upload new file to Cloudinary
+	// Upload new file to Cloudinary (uses its own 30-second context internally)
 	uploaded, err := cloud.UploadFile(file, "proofs")
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to upload proof to Cloudinary: "+err.Error())
@@ -222,7 +255,9 @@ func UpdateProof(c *gin.Context) {
 	}
 
 	newType := deriveFileType(mime)
-	db.Col("proofs").UpdateOne(ctx, bson.M{"_id": proofID}, bson.M{
+	saveCtx, saveCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer saveCancel()
+	db.Col("proofs").UpdateOne(saveCtx, bson.M{"_id": proofID}, bson.M{
 		"$set": bson.M{
 			"file_url":             uploaded.URL,
 			"file_type":            newType,
