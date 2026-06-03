@@ -5,10 +5,11 @@ import (
 )
 
 type Proof struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"  json:"id"`
-	ArtworkID primitive.ObjectID `bson:"artwork_id"     json:"artwork_id"`
-	FileURL   string             `bson:"file_url"       json:"file_url"`
-	FileType  string             `bson:"file_type"      json:"file_type"`
+	ID                 primitive.ObjectID `bson:"_id,omitempty"        json:"id"`
+	ArtworkID          primitive.ObjectID `bson:"artwork_id"           json:"artwork_id"`
+	FileURL            string             `bson:"file_url"             json:"file_url"`
+	FileType           string             `bson:"file_type"            json:"file_type"`
+	CloudinaryPublicID string             `bson:"cloudinary_public_id" json:"cloudinary_public_id,omitempty"`
 }
 
 type ProofRequest struct {
