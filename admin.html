@@ -6,7 +6,7 @@
   <title>Admin – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -471,7 +471,7 @@
 
 </div>
 
-<script src="/js/app.js"></script>
+<script src="/js/app.js?v=2"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 if (!TokenStore.isLoggedIn() || !TokenStore.isAdmin()) { window.location.replace('/home.html'); }
@@ -619,7 +619,7 @@ createApp({
         this.editMainTarget.name = this.editMainForm.name.trim();
         this.editMainOpen = false;
       } else {
-        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
       this.editMainSaving = false;
     },
@@ -629,7 +629,7 @@ createApp({
       if (r.ok) {
         this.mainSkillsData = this.mainSkillsData.filter(m => m.id !== main.id);
       } else {
-        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
     },
 
@@ -663,7 +663,7 @@ createApp({
         this.editSubTarget.display_name = this.editSubForm.display_name.trim();
         this.editSubOpen = false;
       } else {
-        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
       this.editSubSaving = false;
     },
@@ -673,7 +673,7 @@ createApp({
       if (r.ok) {
         main.subs = main.subs.filter(s => s.id !== sub.id);
       } else {
-        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
     },
 
@@ -691,7 +691,7 @@ createApp({
       if (r.ok) {
         u.banned = true;
       } else {
-        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data.error_message || 'Unknown error'), 'error');
       }
     },
 
@@ -701,7 +701,7 @@ createApp({
       if (r.ok) {
         u.banned = false;
       } else {
-        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data.error_message || 'Unknown error'), 'error');
       }
     },
 
@@ -726,7 +726,7 @@ createApp({
           if (d.status) listRow.status = d.status;
         }
       } else {
-        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
       row._saving = false;
     },
@@ -750,8 +750,8 @@ createApp({
       });
     } else {
       if (r.status === 403) {
-        alert('Access denied. Admin role required.');
-        window.location.href = '/profile.html';
+        showToast('Access denied. Admin role required.', 'error', 2000);
+        setTimeout(() => { window.location.href = '/profile.html'; }, 1200);
       }
     }
     this.loading = false;

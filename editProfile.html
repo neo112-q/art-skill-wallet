@@ -6,7 +6,7 @@
   <title>Edit Profile – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -128,7 +128,7 @@
 
 </div>
 
-<script src="/js/app.js"></script>
+<script src="/js/app.js?v=2"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 if (!TokenStore.isLoggedIn()) { window.location.replace('/home.html'); }
@@ -216,7 +216,7 @@ createApp({
       if (r.ok) {
         // Update stored username
         localStorage.setItem('username', this.form.username);
-        alert('Profile saved successfully!');
+        showToast('Profile saved successfully!', 'success');
         this.msg = 'Profile saved!'; this.msgType = 'success';
         this.form.old_password = '';
         this.form.new_password = '';

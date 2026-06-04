@@ -832,8 +832,9 @@ input[type="radio"]:checked + .privacy-btn { background: var(--neon); color: #12
   .timeline-dot { left: -18px; }
   .timeline-date { display: none; }
   .timeline-area { padding: 1rem 0; }
-  /* Hero */
-  .hero-text { padding-left: 1rem; font-size: clamp(2rem, 8vw, 3.5rem); }
+  /* Hero — shorter banner on phones; auto-height so content never clips */
+  .hero { height: auto; min-height: 52vh; padding: 2.5rem 0 2rem; }
+  .hero-text { font-size: clamp(2rem, 8vw, 3.5rem); }
   /* Misc */
   .level-radio-group { flex-wrap: wrap; }
   .edit-field-group { grid-template-columns: 1fr; }

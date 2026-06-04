@@ -6,7 +6,7 @@
   <title>Upload – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -225,7 +225,7 @@
 
 </div>
 
-<script src="/js/app.js"></script>
+<script src="/js/app.js?v=2"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 if (!TokenStore.isLoggedIn()) { window.location.replace('/home.html'); }
@@ -326,7 +326,7 @@ createApp({
         this.subSkills.push(sub);
         this.selectSub(sub);
       } else {
-        alert('Failed to create sub-skill: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed to create sub-skill: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
     },
 
@@ -346,7 +346,7 @@ createApp({
         this.selectSub(sub);
         this.newSubOpen = false;
       } else {
-        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
       this.newSubSaving = false;
     },
@@ -368,16 +368,16 @@ createApp({
         await this.onMainSkillChange();
         this.newMainOpen = false;
       } else {
-        alert('Failed: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
       this.newMainSaving = false;
     },
 
     async publish() {
-      if (!this.artworkFile)           { alert('Please select an artwork file.'); return; }
-      if (!this.form.title)            { alert('Title is required.'); return; }
-      if (!this.selectedSubs.length)   { alert('Please select at least one sub-skill.'); return; }
-      if (!this.evidenceFile)          { alert('Evidence file is required.'); return; }
+      if (!this.artworkFile)           { showToast('Please select an artwork file.', 'error'); return; }
+      if (!this.form.title)            { showToast('Title is required.', 'error'); return; }
+      if (!this.selectedSubs.length)   { showToast('Please select at least one sub-skill.', 'error'); return; }
+      if (!this.evidenceFile)          { showToast('Evidence file is required.', 'error'); return; }
 
       this.publishing = true;
       try {
@@ -388,7 +388,7 @@ createApp({
         artFD.append('title', this.form.title);
         artFD.append('description', this.form.description || '');
         const upRes = await apiUpload('/uploads', artFD);
-        if (!upRes.ok) { alert('Artwork upload failed: ' + (upRes.data.error_message || 'Unknown')); this.publishing = false; return; }
+        if (!upRes.ok) { showToast('Artwork upload failed: ' + (upRes.data.error_message || 'Unknown'), 'error'); this.publishing = false; return; }
 
         // Step 2: Create artwork record with sub_skill_ids
         this.publishStatus = 'Creating record...';
@@ -401,7 +401,7 @@ createApp({
             privacy_status: this.form.privacy,
           }),
         });
-        if (!artRes.ok) { alert('Artwork creation failed: ' + (artRes.data.error_message || 'Unknown')); this.publishing = false; return; }
+        if (!artRes.ok) { showToast('Artwork creation failed: ' + (artRes.data.error_message || 'Unknown'), 'error'); this.publishing = false; return; }
         const artworkId = artRes.data.data.id;
 
         // Step 3: Upload proof
@@ -411,15 +411,15 @@ createApp({
         proofFD.append('artwork_id', artworkId);
         const proofRes = await apiUpload('/proofs', proofFD);
         if (!proofRes.ok) {
-          alert('Proof upload failed. Your artwork was created but has no proof.');
-          window.location.href = '/profile.html';
+          showToast('Proof upload failed. Artwork created but has no proof.', 'error', 2500);
+          setTimeout(() => { window.location.href = '/profile.html'; }, 1300);
           return;
         }
 
-        alert('Artwork published! It will be reviewed by admins.');
-        window.location.href = '/profile.html';
+        showToast('Artwork published! It will be reviewed by admins.', 'success', 1800);
+        setTimeout(() => { window.location.href = '/profile.html'; }, 1000);
       } catch (e) {
-        alert('Upload error: ' + e.message);
+        showToast('Upload error: ' + e.message, 'error');
       }
       this.publishing = false;
     },

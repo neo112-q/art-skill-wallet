@@ -6,7 +6,7 @@
   <title>Profile – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -302,7 +302,7 @@
 
 </div>
 
-<script src="/js/app.js"></script>
+<script src="/js/app.js?v=2"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 if (!TokenStore.isLoggedIn()) { window.location.replace('/home.html'); }
@@ -424,7 +424,7 @@ createApp({
     },
 
     async saveEditArtwork() {
-      if (!this.editArtForm.title) { alert('Title is required.'); return; }
+      if (!this.editArtForm.title) { showToast('Title is required.', 'error'); return; }
       this.editArtSaving = true;
 
       const r = await apiFetch('/artworks/' + this.editArtForm.id, {
@@ -437,7 +437,7 @@ createApp({
       });
 
       if (r.ok) {
-        alert('Artwork updated!');
+        showToast('Artwork updated!', 'success');
         // Update local data
         const idx = this.artworks.findIndex(a => a.id === this.editArtForm.id);
         if (idx !== -1) {
@@ -452,7 +452,7 @@ createApp({
         }
         this.editArtOpen = false;
       } else {
-        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data.error_message || 'Unknown error'), 'error');
       }
       this.editArtSaving = false;
     },
@@ -472,7 +472,7 @@ createApp({
         proof.file_url = r.data.data.file_url + '?t=' + Date.now();
         proof.file_type = r.data.data.file_type;
       } else {
-        alert('Failed to update proof: ' + (r.data?.error_message || 'Unknown error'));
+        showToast('Failed to update proof: ' + (r.data?.error_message || 'Unknown error'), 'error');
       }
       event.target.value = '';
     },
@@ -484,11 +484,11 @@ createApp({
       const r = await apiFetch('/artworks/' + this.selectedArt.id, { method: 'DELETE' });
 
       if (r.ok) {
-        alert('Artwork deleted.');
+        showToast('Artwork deleted.', 'success');
         this.artworks = this.artworks.filter(a => a.id !== this.selectedArt.id);
         this.closeArtwork();
       } else {
-        alert('Failed: ' + (r.data.error_message || 'Unknown error'));
+        showToast('Failed: ' + (r.data.error_message || 'Unknown error'), 'error');
       }
     },
   },

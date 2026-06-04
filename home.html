@@ -6,7 +6,7 @@
   <title>Home – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -140,7 +140,7 @@
   </footer>
 
   <!-- Auth Popup -->
-  <div class="auth-overlay" :class="{ open: authOpen }" role="dialog" aria-modal="true" @click.self="closeAuth()">
+  <div class="auth-overlay" :class="{ open: authOpen }" role="dialog" aria-modal="true">
     <div class="auth-modal">
       <button class="auth-close" @click="closeAuth()" aria-label="Close">&times;</button>
 
@@ -244,7 +244,7 @@
 
 </div>
 
-<script src="/js/app.js"></script>
+<script src="/js/app.js?v=2"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 const { createApp } = Vue;
@@ -304,7 +304,7 @@ createApp({
     async handleLogin() {
       this.authMsg = '';
       if (!this.loginEmail || !this.loginPassword) {
-        this.authMsg = 'Please fill in all fields.'; this.authMsgType = 'error'; return;
+        this.authMsg = 'Please fill in all fields.'; this.authMsgType = 'error'; showToast('Please fill in all fields.', 'error'); return;
       }
       this.authLoading = true;
       try {
@@ -318,14 +318,15 @@ createApp({
           const claims = decodeJWT(access_token);
           const role = claims?.role || 'user';
           TokenStore.set(access_token, refresh_token, role, username);
-          alert('Login successful! Welcome, ' + username);
+          showToast('Welcome back, ' + username + '!', 'success', 1500);
           this.closeAuth();
-          window.location.href = (role === 'admin') ? '/admin.html' : '/profile.html';
+          setTimeout(() => { window.location.href = (role === 'admin') ? '/admin.html' : '/profile.html'; }, 700);
         } else {
           this.authMsg = r.data.error_message || 'Login failed.'; this.authMsgType = 'error';
+          showToast(this.authMsg, 'error');
         }
       } catch (e) {
-        this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error';
+        this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error'; showToast('Connection error. Please try again.', 'error');
       }
       this.authLoading = false;
     },
@@ -334,13 +335,13 @@ createApp({
     async handleRegister() {
       this.authMsg = '';
       if (!this.regUsername || !this.regEmail || !this.regPassword) {
-        this.authMsg = 'All fields are required.'; this.authMsgType = 'error'; return;
+        this.authMsg = 'All fields are required.'; this.authMsgType = 'error'; showToast('All fields are required.', 'error'); return;
       }
       if (this.regPassword !== this.regConfirm) {
-        this.authMsg = 'Passwords do not match.'; this.authMsgType = 'error'; return;
+        this.authMsg = 'Passwords do not match.'; this.authMsgType = 'error'; showToast('Passwords do not match.', 'error'); return;
       }
       if (this.regPassword.length < 6) {
-        this.authMsg = 'Password must be at least 6 characters.'; this.authMsgType = 'error'; return;
+        this.authMsg = 'Password must be at least 6 characters.'; this.authMsgType = 'error'; showToast('Password must be at least 6 characters.', 'error'); return;
       }
       this.authLoading = true;
       try {
@@ -350,15 +351,16 @@ createApp({
         });
 
         if (r.ok) {
-          alert('Account created successfully! Please log in.');
+          showToast('Account created! Please log in.', 'success');
           this.authTab = 'login';
           this.loginEmail = this.regEmail;
           this.authMsg = 'Account created! Please log in.'; this.authMsgType = 'success';
         } else {
           this.authMsg = r.data.error_message || 'Registration failed.'; this.authMsgType = 'error';
+          showToast(this.authMsg, 'error');
         }
       } catch (e) {
-        this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error';
+        this.authMsg = 'Connection error. Please try again.'; this.authMsgType = 'error'; showToast('Connection error. Please try again.', 'error');
       }
       this.authLoading = false;
     },
