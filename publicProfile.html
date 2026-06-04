@@ -34,7 +34,7 @@
           <a href="/profile.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">👤</span> Profile</a>
           <a v-if="isAdmin" href="/admin.html" class="avatar-dropdown-item"><span class="avatar-dropdown-icon">🛡️</span> Admin</a>
           <div class="avatar-dropdown-divider"></div>
-          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="logout()"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
+          <button class="avatar-dropdown-item avatar-dropdown-logout" @click="doLogout()"><span class="avatar-dropdown-icon">🚪</span> Logout</button>
         </div>
       </div>
       <a v-else href="/home.html" class="btn-outline">Login / Register</a>
@@ -236,6 +236,7 @@ createApp({
     },
   },
   methods: {
+    doLogout() { logout(); },
     toggleMain(name) { this.expandedMain = this.expandedMain === name ? null : name; },
     badgeClass(r) { return r === 'Beginner' ? 'badge-beg' : r === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
     badgeIcon(r)  { return r === 'Beginner' ? 'fa-seedling' : r === 'Intermediate' ? 'fa-fire' : 'fa-crown'; },
@@ -297,10 +298,14 @@ createApp({
     }
 
     try {
-      const [pubRes, rankRes] = await Promise.all([
+      const [pubRes, rankRes, meRes] = await Promise.all([
         fetch('/api/v1/users/' + userId + '/public'),
         fetch('/api/v1/users/' + userId + '/ranks'),
+        apiFetch('/me'),
       ]);
+      if (meRes.ok && meRes.data.data?.profile_picture) {
+        this.myAvatarUrl = meRes.data.data.profile_picture;
+      }
       const pubBody  = await pubRes.json();
       const rankBody = await rankRes.json();
       if (pubRes.ok && pubBody.data) {

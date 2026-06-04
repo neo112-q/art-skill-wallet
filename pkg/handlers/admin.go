@@ -28,6 +28,8 @@ type SubmissionRow struct {
 	Submitted        time.Time `json:"submitted"`
 	VoteApproveCount int       `json:"vote_approve_count"`
 	VoteRejectCount  int       `json:"vote_reject_count"`
+	FileURL          string    `json:"file_url"`
+	FileType         string    `json:"file_type"`
 }
 
 // GetSubmissionsEnriched godoc
@@ -93,6 +95,19 @@ func GetSubmissionsEnriched(c *gin.Context) {
 		mainSkillMap[m.ID.Hex()] = m
 	}
 
+	// Uploads — keyed by "userID:title" for artwork image lookup
+	uploadCursor, _ := db.Col("uploads").Find(ctx, bson.M{})
+	var uploads []models.Upload
+	if uploadCursor != nil {
+		_ = uploadCursor.All(ctx, &uploads)
+		uploadCursor.Close(ctx)
+	}
+	uploadMap := make(map[string]models.Upload)
+	for _, u := range uploads {
+		key := u.UserID.Hex() + ":" + u.Title
+		uploadMap[key] = u
+	}
+
 	rows := make([]SubmissionRow, 0, len(artworks))
 	for _, a := range artworks {
 		uname := userMap[a.UserID.Hex()]
@@ -124,6 +139,13 @@ func GetSubmissionsEnriched(c *gin.Context) {
 		if status == "" {
 			status = "Pending"
 		}
+		fileURL := ""
+		fileType := ""
+		if upload, ok := uploadMap[a.UserID.Hex()+":"+a.Title]; ok {
+			fileURL = upload.FileURL
+			fileType = upload.MimeType
+		}
+
 		rows = append(rows, SubmissionRow{
 			ID:               a.ID.Hex(),
 			User:             uname,
@@ -136,6 +158,8 @@ func GetSubmissionsEnriched(c *gin.Context) {
 			Submitted:        a.UploadDate,
 			VoteApproveCount: a.VoteApproveCount,
 			VoteRejectCount:  a.VoteRejectCount,
+			FileURL:          fileURL,
+			FileType:         fileType,
 		})
 	}
 
@@ -370,19 +394,33 @@ func VoteArtwork(c *gin.Context) {
 		newStatus = "Rejected"
 	}
 
-	setFields := bson.M{
-		"vote_approve_count": approveCount,
-		"vote_reject_count":  rejectCount,
-		"updated_at":         time.Now(),
-	}
-	if newStatus != artwork.Status {
-		setFields["status"] = newStatus
-	}
+	statusChanged := newStatus != artwork.Status
 
-	db.Col("artworks").UpdateOne(ctx, bson.M{"_id": artworkID}, bson.M{
-		"$push": bson.M{"votes": newVote},
-		"$set":  setFields,
-	})
+	if statusChanged {
+		// Decision reached — clear all vote data
+		db.Col("artworks").UpdateOne(ctx, bson.M{"_id": artworkID}, bson.M{
+			"$set": bson.M{
+				"status":             newStatus,
+				"vote_approve_count": 0,
+				"vote_reject_count":  0,
+				"votes":              []models.ArtworkVote{},
+				"updated_at":         time.Now(),
+			},
+		})
+		approveCount = 0
+		rejectCount = 0
+	} else {
+		// Still pending — just record the vote
+		setFields := bson.M{
+			"vote_approve_count": approveCount,
+			"vote_reject_count":  rejectCount,
+			"updated_at":         time.Now(),
+		}
+		db.Col("artworks").UpdateOne(ctx, bson.M{"_id": artworkID}, bson.M{
+			"$push": bson.M{"votes": newVote},
+			"$set":  setFields,
+		})
+	}
 
 	response.Success(c, http.StatusOK, gin.H{
 		"vote":          req.Vote,
