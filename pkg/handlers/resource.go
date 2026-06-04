@@ -231,6 +231,11 @@ func DeleteArtwork(c *gin.Context) {
 	// Delete the artwork record
 	db.Col("artworks").DeleteOne(ctx, bson.M{"_id": artworkID})
 
+	// If it was approved, roll back the skill ranks so the level stays accurate
+	if artwork.Status == "Approved" {
+		DecrementRanksAfterRemoval(objID, artwork.SubSkillIDs)
+	}
+
 	// Delete artwork file from Cloudinary via the linked upload record
 	var upload models.Upload
 	if err := db.Col("uploads").FindOne(ctx, bson.M{"user_id": objID, "title": artwork.Title}).Decode(&upload); err == nil {

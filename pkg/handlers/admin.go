@@ -278,6 +278,10 @@ func UpdateSubmissionStatus(c *gin.Context) {
 	if req.Status == "Approved" && artwork.Status != "Approved" {
 		UpdateRanksAfterApproval(artwork.UserID, artwork.SubSkillIDs)
 	}
+	// Roll back ranks when moving an approved artwork out of the Approved state
+	if req.Status != "Approved" && artwork.Status == "Approved" {
+		DecrementRanksAfterRemoval(artwork.UserID, artwork.SubSkillIDs)
+	}
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Status updated to " + req.Status})
 }
@@ -446,6 +450,11 @@ func AdminDeleteArtwork(c *gin.Context) {
 
 	// Delete the artwork itself
 	db.Col("artworks").DeleteOne(ctx, bson.M{"_id": artworkID})
+
+	// If it was approved, roll back the skill ranks so the level stays accurate
+	if artwork.Status == "Approved" {
+		DecrementRanksAfterRemoval(artwork.UserID, artwork.SubSkillIDs)
+	}
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Artwork deleted successfully"})
 }

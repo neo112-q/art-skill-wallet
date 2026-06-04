@@ -541,3 +541,36 @@ func UpdateRanksAfterApproval(userID primitive.ObjectID, subSkillIDs []primitive
 		}
 	}
 }
+
+// DecrementRanksAfterRemoval decrements approval_count for each sub skill used
+// and recalculates rank. Called when a previously-approved artwork is deleted
+// or moved out of the Approved state, so the displayed level stays accurate.
+// When a sub skill's count reaches 0, its rank document is removed entirely.
+func DecrementRanksAfterRemoval(userID primitive.ObjectID, subSkillIDs []primitive.ObjectID) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, skillID := range subSkillIDs {
+		filter := bson.M{"user_id": userID, "sub_skill_id": skillID}
+
+		var existing models.UserSkillRank
+		if err := db.Col("user_skill_ranks").FindOne(ctx, filter).Decode(&existing); err != nil {
+			continue // no rank doc → nothing to decrement
+		}
+
+		newCount := existing.ApprovalCount - 1
+		if newCount <= 0 {
+			// No approved artworks left for this skill → drop the rank entry
+			db.Col("user_skill_ranks").DeleteOne(ctx, filter)
+			continue
+		}
+
+		db.Col("user_skill_ranks").UpdateOne(ctx, filter, bson.M{
+			"$set": bson.M{
+				"approval_count": newCount,
+				"rank":           models.CalcRank(newCount),
+				"updated_at":     time.Now(),
+			},
+		})
+	}
+}
