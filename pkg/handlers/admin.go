@@ -253,6 +253,13 @@ func UpdateSubmissionStatus(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Load artwork first to check previous status and get skill IDs
+	var artwork models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{"_id": artworkID}).Decode(&artwork); err != nil {
+		response.Error(c, http.StatusNotFound, "Artwork not found")
+		return
+	}
+
 	result, err := db.Col("artworks").UpdateOne(ctx,
 		bson.M{"_id": artworkID},
 		bson.M{"$set": bson.M{"status": req.Status, "updated_at": time.Now()}},
@@ -264,6 +271,12 @@ func UpdateSubmissionStatus(c *gin.Context) {
 	if result.MatchedCount == 0 {
 		response.Error(c, http.StatusNotFound, "Artwork not found")
 		return
+	}
+
+	// Update skill ranks only when transitioning to Approved for the first time
+	// (prevents double-counting if admin approves the same artwork more than once)
+	if req.Status == "Approved" && artwork.Status != "Approved" {
+		UpdateRanksAfterApproval(artwork.UserID, artwork.SubSkillIDs)
 	}
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Status updated to " + req.Status})
