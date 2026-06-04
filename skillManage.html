@@ -254,7 +254,6 @@ createApp({
     if (rankRes.ok && rankRes.data.data) {
       this.ranks = rankRes.data.data;
     } else {
-      console.error('[SKILLS] Failed to load ranks:', rankRes.data?.error_message);
     }
 
     this.loading = false;

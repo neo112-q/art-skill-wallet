@@ -593,13 +593,10 @@ createApp({
       this.viewProofsLoading = true;
       this.viewOpen = true;
 
-      console.log('[ADMIN] Fetching proofs for submission', r.id);
       const res = await apiFetch('/admin/submissions/' + r.id + '/proofs');
       if (res.ok && res.data.data) {
         this.viewProofs = res.data.data;
-        console.log('[ADMIN] Loaded', this.viewProofs.length, 'proofs');
       } else {
-        console.warn('[ADMIN] No proofs or error:', res.data.error_message);
       }
       this.viewProofsLoading = false;
     },
@@ -740,9 +737,7 @@ createApp({
     const meRes = await apiFetch('/me');
     if (meRes.ok && meRes.data.data?.profile_picture) this.profilePicture = meRes.data.data.profile_picture;
 
-    console.log('[ADMIN] Fetching GET /admin/submissions …');
     const r = await apiFetch('/admin/submissions');
-    console.log('[ADMIN] Response:', r.status, r.data);
 
     if (r.ok && r.data.data) {
       // Backend already enriches skill names — no extra fetch needed
@@ -753,9 +748,7 @@ createApp({
           _saving: false,
         };
       });
-      console.log('[ADMIN] Loaded', this.rows.length, 'submissions');
     } else {
-      console.error('[ADMIN] Failed:', r.data.error_message);
       if (r.status === 403) {
         alert('Access denied. Admin role required.');
         window.location.href = '/profile.html';

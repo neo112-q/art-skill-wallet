@@ -398,11 +398,9 @@ createApp({
       this.artworkOpen = true;
       document.body.style.overflow = 'hidden';
 
-      console.log('[PROFILE] Fetching proofs for artwork', a.id);
       const r = await apiFetch('/proofs?artwork_id=' + a.id);
       if (r.ok && r.data.data) {
         this.proofs = r.data.data;
-        console.log('[PROFILE] Loaded', this.proofs.length, 'proofs');
       }
       this.proofsLoading = false;
     },
@@ -429,7 +427,6 @@ createApp({
       if (!this.editArtForm.title) { alert('Title is required.'); return; }
       this.editArtSaving = true;
 
-      console.log('[PROFILE] PUT /artworks/' + this.editArtForm.id);
       const r = await apiFetch('/artworks/' + this.editArtForm.id, {
         method: 'PUT',
         body: JSON.stringify({
@@ -484,7 +481,6 @@ createApp({
       if (!this.selectedArt) return;
       if (!confirm('Delete "' + this.selectedArt.title + '"? This will also remove all linked proofs. This cannot be undone.')) return;
 
-      console.log('[PROFILE] DELETE /artworks/' + this.selectedArt.id);
       const r = await apiFetch('/artworks/' + this.selectedArt.id, { method: 'DELETE' });
 
       if (r.ok) {
@@ -511,13 +507,6 @@ createApp({
 
     this.enrichArtworks();
     this.loading = false;
-
-    // Auto-open an artwork when linked from history (?art=<id>)
-    const artId = new URLSearchParams(location.search).get('art');
-    if (artId) {
-      const a = this.artworks.find(x => x.id === artId);
-      if (a) this.openArtwork(a);
-    }
   }
 }).mount('#app');
 </script>

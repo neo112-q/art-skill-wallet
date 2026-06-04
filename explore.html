@@ -230,15 +230,13 @@ createApp({
 
     const meRes = await apiFetch('/me');
     if (meRes.ok && meRes.data.data?.profile_picture) this.avatarUrl = meRes.data.data.profile_picture;
-    console.log('[EXPLORE] Fetching GET /explore …');
     try {
       const res = await fetch(API_BASE + '/explore');
       const body = await res.json();
       if (res.ok && body.data) {
         this.artists = body.data;
-        console.log('[EXPLORE] Loaded', this.artists.length, 'artists (only Public+Approved artworks shown)');
       }
-    } catch (e) { console.error('[EXPLORE] Error:', e); }
+    } catch (e) { /* ignore */ }
     this.loading = false;
   }
 }).mount('#app');

@@ -297,9 +297,7 @@ createApp({
     const meRes = await apiFetch('/me');
     if (meRes.ok && meRes.data.data?.profile_picture) this.profilePicture = meRes.data.data.profile_picture;
 
-    console.log('[HISTORY] Fetching GET /history …');
     const [r, upRes] = await Promise.all([apiFetch('/history'), apiFetch('/uploads')]);
-    console.log('[HISTORY] Response:', r.status, r.data);
 
     // Map artwork title → real image URL (from uploads)
     const thumbByTitle = {};
@@ -315,9 +313,7 @@ createApp({
         ...ev,
         _thumb: thumbByTitle[(ev.title || '').toLowerCase()] || '',
       }));
-      console.log('[HISTORY] Loaded', this.events.length, 'events');
     } else {
-      console.error('[HISTORY] Failed:', r.data.error_message);
     }
     this.loading = false;
   }

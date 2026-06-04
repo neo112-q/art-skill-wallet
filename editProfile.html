@@ -211,9 +211,7 @@ createApp({
         new_password: this.form.new_password || '',
       };
 
-      console.log('[EDIT] Sending PUT /me …', { ...payload, old_password: '***', new_password: payload.new_password ? '***' : '' });
       const r = await apiFetch('/me', { method: 'PUT', body: JSON.stringify(payload) });
-      console.log('[EDIT] Response:', r.status, r.data);
 
       if (r.ok) {
         // Update stored username
@@ -226,7 +224,6 @@ createApp({
         setTimeout(() => { window.location.href = '/profile.html'; }, 800);
       } else {
         this.msg = r.data.error_message || 'Failed to save profile.'; this.msgType = 'error';
-        console.error('[EDIT] Failed:', this.msg);
       }
       this.saving = false;
     },
@@ -234,7 +231,6 @@ createApp({
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
 
-    console.log('[EDIT] Fetching /me …');
     const r = await apiFetch('/me');
     if (r.ok && r.data.data) {
       const u = r.data.data;
@@ -243,9 +239,7 @@ createApp({
       this.form.bio = u.bio || '';
       this.currentAvatar = u.profile_picture || '';
       this.avatarPreview = u.profile_picture || '';
-      console.log('[EDIT] Loaded user:', u.username);
     } else {
-      console.error('[EDIT] Failed to load profile');
     }
     this.loading = false;
   }
