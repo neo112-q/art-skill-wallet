@@ -114,7 +114,7 @@
           <tr v-if="!filteredRows.length">
             <td colspan="7" style="text-align:center; padding:2rem; color:#555;">No submissions found.</td>
           </tr>
-          <tr v-for="row in filteredRows" :key="row.id" class="tr-row" style="border-bottom:1px solid #2A2A2A;">
+          <tr v-for="row in pagedRows" :key="row.id" class="tr-row" style="border-bottom:1px solid #2A2A2A;">
             <td class="td-cell">
               <div style="display:flex; align-items:center; gap:0.6rem;">
                 <div class="avatar-init">{{ row.initials }}</div>
@@ -124,7 +124,8 @@
             <td class="td-cell" style="font-weight:600; color:white;">{{ row.title }}</td>
             <td class="td-cell" style="color:#aaa;">
               <template v-if="row.skills && row.skills.length">
-                <span v-for="(sk, i) in row.skills" :key="sk">{{ sk }}<span v-if="i < row.skills.length - 1">, </span></span>
+                <span v-for="(sk, i) in row.skills.slice(0, 3)" :key="sk">{{ sk }}<span v-if="i < Math.min(row.skills.length, 3) - 1">, </span></span>
+                <span v-if="row.skills.length > 3" style="color:#555;"> +{{ row.skills.length - 3 }}</span>
               </template>
               <span v-else>{{ row.skill || '—' }}</span>
             </td>
@@ -148,6 +149,23 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Submissions Pagination -->
+    <div v-if="subTotalPages > 1" style="display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:1.5rem 0 0.5rem;">
+      <button @click="subPage--" :disabled="subPage === 1"
+        :style="{ background:'none', border:'1px solid #2A2A2A', color:'#888', width:'34px', height:'34px', borderRadius:'8px', cursor: subPage===1 ? 'not-allowed':'pointer', fontSize:'0.8rem', display:'flex', alignItems:'center', justifyContent:'center', opacity: subPage===1 ? 0.3 : 1 }">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button v-for="p in subPageNumbers" :key="p" @click="subPage = p"
+        :style="{ width:'34px', height:'34px', borderRadius:'8px', cursor:'pointer', fontSize:'0.82rem', fontWeight:600, fontFamily:'Syne,sans-serif', border: p===subPage ? '1px solid #CCFF00':'1px solid #2A2A2A', background: p===subPage ? '#CCFF00':'transparent', color: p===subPage ? '#121212':'#666', transition:'all 0.15s' }">
+        {{ p }}
+      </button>
+      <button @click="subPage++" :disabled="subPage === subTotalPages"
+        :style="{ background:'none', border:'1px solid #2A2A2A', color:'#888', width:'34px', height:'34px', borderRadius:'8px', cursor: subPage===subTotalPages ? 'not-allowed':'pointer', fontSize:'0.8rem', display:'flex', alignItems:'center', justifyContent:'center', opacity: subPage===subTotalPages ? 0.3 : 1 }">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <span style="font-size:0.75rem; color:#555; margin-left:0.5rem;">{{ subPage }} / {{ subTotalPages }}</span>
     </div>
 
     </div><!-- end submissions tab -->
@@ -183,7 +201,7 @@
             <tr v-if="!filteredUsers.length">
               <td colspan="6" style="text-align:center; padding:2rem; color:#555;">No users found.</td>
             </tr>
-            <tr v-for="u in filteredUsers" :key="u.id"
+            <tr v-for="u in pagedUsers" :key="u.id"
                 style="border-bottom:1px solid #2A2A2A; transition:background 0.15s;"
                 @mouseenter="$event.currentTarget.style.background='rgba(204,255,0,0.02)'"
                 @mouseleave="$event.currentTarget.style.background='transparent'">
@@ -226,6 +244,23 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Users Pagination -->
+      <div v-if="userTotalPages > 1" style="display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:1.5rem 0 0.5rem;">
+        <button @click="userPage--" :disabled="userPage === 1"
+          :style="{ background:'none', border:'1px solid #2A2A2A', color:'#888', width:'34px', height:'34px', borderRadius:'8px', cursor: userPage===1 ? 'not-allowed':'pointer', fontSize:'0.8rem', display:'flex', alignItems:'center', justifyContent:'center', opacity: userPage===1 ? 0.3 : 1 }">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button v-for="p in userPageNumbers" :key="p" @click="userPage = p"
+          :style="{ width:'34px', height:'34px', borderRadius:'8px', cursor:'pointer', fontSize:'0.82rem', fontWeight:600, fontFamily:'Syne,sans-serif', border: p===userPage ? '1px solid #CCFF00':'1px solid #2A2A2A', background: p===userPage ? '#CCFF00':'transparent', color: p===userPage ? '#121212':'#666', transition:'all 0.15s' }">
+          {{ p }}
+        </button>
+        <button @click="userPage++" :disabled="userPage === userTotalPages"
+          :style="{ background:'none', border:'1px solid #2A2A2A', color:'#888', width:'34px', height:'34px', borderRadius:'8px', cursor: userPage===userTotalPages ? 'not-allowed':'pointer', fontSize:'0.8rem', display:'flex', alignItems:'center', justifyContent:'center', opacity: userPage===userTotalPages ? 0.3 : 1 }">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <span style="font-size:0.75rem; color:#555; margin-left:0.5rem;">{{ userPage }} / {{ userTotalPages }}</span>
       </div>
 
     </div><!-- end users tab -->
@@ -419,6 +454,7 @@ createApp({
       loading: true,
       rows: [],
       search: '', fStatus: '', fSkill: '', sortDir: 'Newest First',
+      subPage: 1, subPageSize: 9,
       viewOpen: false,
       viewData: {},
       viewProofs: [],
@@ -428,6 +464,7 @@ createApp({
       users: [],
       usersLoading: false,
       userSearch: '',
+      userPage: 1, userPageSize: 9,
       // Skills tab
       mainSkillsData: [],
       skillsLoading: false,
@@ -462,6 +499,16 @@ createApp({
         u.username.toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)
       );
     },
+    userTotalPages() { return Math.ceil(this.filteredUsers.length / this.userPageSize) || 1; },
+    pagedUsers() {
+      const start = (this.userPage - 1) * this.userPageSize;
+      return this.filteredUsers.slice(start, start + this.userPageSize);
+    },
+    userPageNumbers() {
+      const pages = [];
+      for (let i = 1; i <= this.userTotalPages; i++) pages.push(i);
+      return pages;
+    },
     uniqueSkills() {
       const all = this.rows.flatMap(r => r.skills && r.skills.length ? r.skills : (r.skill ? [r.skill] : []));
       return [...new Set(all)];
@@ -478,6 +525,23 @@ createApp({
       res.sort((a, b) => dir * (new Date(a.submitted) - new Date(b.submitted)));
       return res;
     },
+    subTotalPages() { return Math.ceil(this.filteredRows.length / this.subPageSize) || 1; },
+    pagedRows() {
+      const start = (this.subPage - 1) * this.subPageSize;
+      return this.filteredRows.slice(start, start + this.subPageSize);
+    },
+    subPageNumbers() {
+      const pages = [];
+      for (let i = 1; i <= this.subTotalPages; i++) pages.push(i);
+      return pages;
+    },
+  },
+  watch: {
+    search()      { this.subPage = 1; },
+    fStatus()     { this.subPage = 1; },
+    fSkill()      { this.subPage = 1; },
+    sortDir()     { this.subPage = 1; },
+    userSearch()  { this.userPage = 1; },
   },
   methods: {
     doLogout() { logout(); },
@@ -619,11 +683,13 @@ createApp({
         const d = r.data.data;
         row.vote_approve_count = d.approve_count;
         row.vote_reject_count  = d.reject_count;
+        if (d.status) row.status = d.status;
         // sync the matching row in rows[] if called from modal
         const listRow = this.rows.find(rw => rw.id === row.id);
         if (listRow && listRow !== row) {
           listRow.vote_approve_count = d.approve_count;
           listRow.vote_reject_count  = d.reject_count;
+          if (d.status) listRow.status = d.status;
         }
       } else {
         alert('Failed: ' + (r.data?.error_message || 'Unknown error'));

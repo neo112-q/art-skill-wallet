@@ -283,6 +283,7 @@ textarea.auth-input { resize: none; height: 70px; }
 .seg { height: 6px; flex: 1; border-radius: 99px; }
 .seg-green { background: var(--neon); }
 .seg-blue  { background: #3B82F6; }
+.seg-gold  { background: #F59E0B; }
 .seg-empty { background: #333; }
 .meter-labels { display: flex; justify-content: space-between; font-size: 0.6rem; color: #555; margin-bottom: 8px; }
 .level-text { font-size: 0.75rem; color: #aaa; margin: 0; }
@@ -588,6 +589,7 @@ input[type="radio"]:checked + .privacy-btn { background: var(--neon); color: #12
    SKILL MANAGE PAGE
    ===================================================================== */
 .seg-neon { background: var(--neon); }
+.seg-gold { background: #F59E0B; }
 .btn-edit-sm { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: #888; font-size: 0.75rem; font-family: 'Syne', sans-serif; font-weight: 600; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
 .btn-edit-sm:hover { border-color: var(--neon); color: var(--neon); }
 

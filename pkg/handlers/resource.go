@@ -3,14 +3,13 @@ package handlers
 import (
 	"context"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"art-skill-wallet/pkg/cloud"
 	"art-skill-wallet/pkg/db"
 	"art-skill-wallet/pkg/models"
 	"art-skill-wallet/pkg/response"
@@ -159,13 +158,25 @@ func UpdateArtwork(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"_id": artworkID, "user_id": objID}
-	update := bson.M{"$set": bson.M{
-		"title":          req.Title,
-		"description":    req.Description,
+	// Fetch existing artwork to check status
+	var existing models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{"_id": artworkID, "user_id": objID}).Decode(&existing); err != nil {
+		response.Error(c, http.StatusNotFound, "Artwork not found or does not belong to you")
+		return
+	}
+
+	// Approved artworks: only privacy_status can change
+	setFields := bson.M{
 		"privacy_status": req.PrivacyStatus,
 		"updated_at":     time.Now(),
-	}}
+	}
+	if existing.Status != "Approved" {
+		setFields["title"]       = req.Title
+		setFields["description"] = req.Description
+	}
+
+	filter := bson.M{"_id": artworkID, "user_id": objID}
+	update := bson.M{"$set": setFields}
 
 	result, err := db.Col("artworks").UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -210,27 +221,34 @@ func DeleteArtwork(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Delete the artwork
-	result, err := db.Col("artworks").DeleteOne(ctx, bson.M{"_id": artworkID, "user_id": objID})
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to delete artwork")
-		return
-	}
-	if result.DeletedCount == 0 {
+	// Fetch artwork first to get the Cloudinary public ID
+	var artwork models.Artwork
+	if err := db.Col("artworks").FindOne(ctx, bson.M{"_id": artworkID, "user_id": objID}).Decode(&artwork); err != nil {
 		response.Error(c, http.StatusNotFound, "Artwork not found or does not belong to you")
 		return
 	}
 
-	// Cascade-delete all proofs linked to this artwork
+	// Delete the artwork record
+	db.Col("artworks").DeleteOne(ctx, bson.M{"_id": artworkID})
+
+	// Delete artwork file from Cloudinary via the linked upload record
+	var upload models.Upload
+	if err := db.Col("uploads").FindOne(ctx, bson.M{"user_id": objID, "title": artwork.Title}).Decode(&upload); err == nil {
+		if upload.CloudinaryPublicID != "" {
+			_ = cloud.DeleteFile(upload.CloudinaryPublicID)
+		}
+		db.Col("uploads").DeleteOne(ctx, bson.M{"_id": upload.ID})
+	}
+
+	// Cascade-delete all proofs linked to this artwork (Cloudinary + DB)
 	proofCursor, _ := db.Col("proofs").Find(ctx, bson.M{"artwork_id": artworkID})
 	if proofCursor != nil {
 		var proofs []models.Proof
 		_ = proofCursor.All(ctx, &proofs)
 		proofCursor.Close(ctx)
 		for _, p := range proofs {
-			if p.FileURL != "" {
-				fname := filepath.Base(p.FileURL)
-				_ = os.Remove(filepath.Join(".", "uploads", fname))
+			if p.CloudinaryPublicID != "" {
+				_ = cloud.DeleteFile(p.CloudinaryPublicID)
 			}
 		}
 		db.Col("proofs").DeleteMany(ctx, bson.M{"artwork_id": artworkID})

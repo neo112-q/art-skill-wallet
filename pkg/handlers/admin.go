@@ -358,14 +358,26 @@ func VoteArtwork(c *gin.Context) {
 		majority = 1
 	}
 
-	// Update artwork with new vote
+	// Determine if majority reached → auto-update status
+	newStatus := artwork.Status
+	if approveCount >= majority {
+		newStatus = "Approved"
+	} else if rejectCount >= majority {
+		newStatus = "Rejected"
+	}
+
+	setFields := bson.M{
+		"vote_approve_count": approveCount,
+		"vote_reject_count":  rejectCount,
+		"updated_at":         time.Now(),
+	}
+	if newStatus != artwork.Status {
+		setFields["status"] = newStatus
+	}
+
 	db.Col("artworks").UpdateOne(ctx, bson.M{"_id": artworkID}, bson.M{
 		"$push": bson.M{"votes": newVote},
-		"$set":  bson.M{
-			"vote_approve_count": approveCount,
-			"vote_reject_count":  rejectCount,
-			"updated_at":         time.Now(),
-		},
+		"$set":  setFields,
 	})
 
 	response.Success(c, http.StatusOK, gin.H{
@@ -373,7 +385,7 @@ func VoteArtwork(c *gin.Context) {
 		"approve_count": approveCount,
 		"reject_count":  rejectCount,
 		"majority":      majority,
-		"status":        artwork.Status,
+		"status":        newStatus,
 	})
 }
 

@@ -118,9 +118,9 @@
 
         <!-- Progress bar -->
         <div class="meter" style="margin-bottom:0.25rem;">
-          <div class="seg" :class="r.approval_count >= 1  ? 'seg-neon'  : 'seg-empty'"></div>
-          <div class="seg" :class="r.approval_count >= 10 ? 'seg-blue'  : 'seg-empty'"></div>
-          <div class="seg" :class="r.approval_count >= 25 ? 'seg-neon'  : 'seg-empty'"></div>
+          <div class="seg" :style="{ background: r.approval_count >= 1  ? '#CCFF00' : '#333' }"></div>
+          <div class="seg" :style="{ background: r.approval_count >= 10 ? '#3B82F6' : '#333' }"></div>
+          <div class="seg" :style="{ background: r.approval_count >= 25 ? '#F59E0B' : '#333' }"></div>
         </div>
         <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
 

@@ -101,36 +101,53 @@
         <p v-else>No artists have registered yet. Be the first!</p>
       </div>
 
-      <div v-else class="artist-grid">
-        <div class="artist-card" v-for="a in filteredArtists" :key="a.id"
-             @click="goToProfile(a.id)" style="cursor:pointer;">
-          <img v-if="a.profile_picture" :src="a.profile_picture" :alt="a.username" class="artist-thumb">
-          <div v-else class="artist-thumb-placeholder" :style="{ background: avatarColor(a.username) }">
-            <span style="font-size:2rem; font-weight:800; color:rgba(255,255,255,0.7);">{{ initials(a.username) }}</span>
-          </div>
-          <div class="artist-body">
-            <h3 class="artist-name">{{ a.username }}</h3>
-            <div class="artist-skills">
-              <span class="skill-badge" v-for="s in a.skills.slice(0, 4)" :key="s.sub_skill_id">
-                <span class="skill-badge-dot"></span>{{ s.main_skill_name }} › {{ s.display_name }}
-              </span>
-              <span v-if="a.skills.length > 4" class="skill-badge" style="opacity:0.5;">+{{ a.skills.length - 4 }} more</span>
+      <div v-else>
+
+        <div class="artist-grid">
+          <div class="artist-card" v-for="a in pagedArtists" :key="a.id"
+               @click="goToProfile(a.id)" style="cursor:pointer;">
+            <img v-if="a.profile_picture" :src="a.profile_picture" :alt="a.username" class="artist-thumb">
+            <div v-else class="artist-thumb-placeholder" :style="{ background: avatarColor(a.username) }">
+              <span style="font-size:2rem; font-weight:800; color:rgba(255,255,255,0.7);">{{ initials(a.username) }}</span>
             </div>
-            <p class="artist-bio" v-if="a.bio">Bio : {{ a.bio }}</p>
-            <p class="artist-bio" v-else style="color:#444;">No bio</p>
-            <!-- Public approved artwork count -->
-            <p v-if="a.artwork_count" style="color:#CCFF00; font-size:0.72rem; margin-top:0.4rem;">
-              {{ a.artwork_count }} approved work{{ a.artwork_count > 1 ? 's' : '' }}
-            </p>
-            <!-- Public artwork titles -->
-            <div v-if="a.artworks && a.artworks.length" style="margin-top:0.4rem; display:flex; flex-wrap:wrap; gap:0.3rem;">
-              <span v-for="art in a.artworks.slice(0, 3)" :key="art.id"
-                style="font-size:0.68rem; background:#2A2A2A; color:#ccc; padding:0.15rem 0.5rem; border-radius:4px;">
-                {{ art.title }}
-              </span>
-              <span v-if="a.artworks.length > 3" style="font-size:0.68rem; color:#555;">+{{ a.artworks.length - 3 }} more</span>
+            <div class="artist-body">
+              <h3 class="artist-name">{{ a.username }}</h3>
+              <div class="artist-skills">
+                <span class="skill-badge" v-for="s in a.skills.slice(0, 4)" :key="s.sub_skill_id">
+                  <span class="skill-badge-dot"></span>{{ s.main_skill_name }} › {{ s.display_name }}
+                </span>
+                <span v-if="a.skills.length > 4" class="skill-badge" style="opacity:0.5;">+{{ a.skills.length - 4 }} more</span>
+              </div>
+              <p class="artist-bio" v-if="a.bio">Bio : {{ a.bio }}</p>
+              <p class="artist-bio" v-else style="color:#444;">No bio</p>
+              <p v-if="a.artwork_count" style="color:#CCFF00; font-size:0.72rem; margin-top:0.4rem;">
+                {{ a.artwork_count }} approved work{{ a.artwork_count > 1 ? 's' : '' }}
+              </p>
+              <div v-if="a.artworks && a.artworks.length" style="margin-top:0.4rem; display:flex; flex-wrap:wrap; gap:0.3rem;">
+                <span v-for="art in a.artworks.slice(0, 3)" :key="art.id"
+                  style="font-size:0.68rem; background:#2A2A2A; color:#ccc; padding:0.15rem 0.5rem; border-radius:4px;">
+                  {{ art.title }}
+                </span>
+                <span v-if="a.artworks.length > 3" style="font-size:0.68rem; color:#555;">+{{ a.artworks.length - 3 }} more</span>
+              </div>
             </div>
           </div>
+        </div>
+
+        <!-- Pagination Bottom -->
+        <div v-if="totalPages > 1" style="display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:2rem 0;">
+          <button @click="currentPage--" :disabled="currentPage === 1"
+            :style="{ background:'none', border:'1px solid #2A2A2A', color:'#888', width:'36px', height:'36px', borderRadius:'8px', cursor: currentPage===1 ? 'not-allowed' : 'pointer', fontSize:'0.85rem', display:'flex', alignItems:'center', justifyContent:'center', opacity: currentPage===1 ? 0.3 : 1 }">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button v-for="p in pageNumbers" :key="p" @click="currentPage = p"
+            :style="{ width:'36px', height:'36px', borderRadius:'8px', cursor:'pointer', fontSize:'0.85rem', fontWeight:600, fontFamily:'Syne,sans-serif', border: p===currentPage ? '1px solid #CCFF00' : '1px solid #2A2A2A', background: p===currentPage ? '#CCFF00' : 'transparent', color: p===currentPage ? '#121212' : '#666', transition:'all 0.15s' }">
+            {{ p }}
+          </button>
+          <button @click="currentPage++" :disabled="currentPage === totalPages"
+            :style="{ background:'none', border:'1px solid #2A2A2A', color:'#888', width:'36px', height:'36px', borderRadius:'8px', cursor: currentPage===totalPages ? 'not-allowed' : 'pointer', fontSize:'0.85rem', display:'flex', alignItems:'center', justifyContent:'center', opacity: currentPage===totalPages ? 0.3 : 1 }">
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </main>
@@ -156,6 +173,8 @@ createApp({
       loading: true,
       artists: [],
       filterName: '', filterSkill: '', filterLevel: '',
+      currentPage: 1,
+      pageSize: 9,
     };
   },
   computed: {
@@ -170,6 +189,23 @@ createApp({
         return true;
       });
     },
+    totalPages() {
+      return Math.ceil(this.filteredArtists.length / this.pageSize);
+    },
+    pagedArtists() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.filteredArtists.slice(start, start + this.pageSize);
+    },
+    pageNumbers() {
+      const pages = [];
+      for (let i = 1; i <= this.totalPages; i++) pages.push(i);
+      return pages;
+    },
+  },
+  watch: {
+    filterName() { this.currentPage = 1; },
+    filterSkill() { this.currentPage = 1; },
+    filterLevel() { this.currentPage = 1; },
   },
   methods: {
     doLogout() { logout(); },

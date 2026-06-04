@@ -45,32 +45,65 @@
     <div class="hero"></div>
   </div>
 
-  <!-- Featured Works -->
-  <section id="explore" class="cards-section fade-in">
-    <div class="cards-grid">
-      <div class="work-card" v-for="w in featured" :key="w.title">
-        <img :src="w.img" :alt="w.title">
-        <span class="card-badge" aria-hidden="true">🏅</span>
-        <div class="card-info">
-          <h3>{{ w.title }}</h3>
-          <p>{{ w.level }}</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- What It Does -->
+  <!-- Skill Showcase -->
   <section id="features" class="features-section">
     <div class="features-inner">
-      <h2 class="features-title">What it does</h2>
-      <div class="features-grid">
-        <div class="feature-item" v-for="f in features" :key="f.title">
-          <span class="feature-icon" aria-hidden="true">{{ f.icon }}</span>
-          <h3>{{ f.title }}</h3>
-          <p>{{ f.desc }}</p>
+      <h2 class="features-title">Skill Showcase</h2>
+      <div class="skills-grid fade-in" style="margin-bottom:2rem; justify-content:center; max-width:900px; margin-left:auto; margin-right:auto;">
+        <div class="skill-card" v-for="f in features" :key="f.title" style="padding:0; overflow:hidden;">
+          <!-- Image -->
+          <div style="position:relative;">
+            <img :src="f.img" :alt="f.title" style="width:100%; height:160px; object-fit:cover; display:block;">
+            <!-- Level badge overlay -->
+            <span style="position:absolute; top:10px; right:10px; font-size:0.68rem; font-weight:700; padding:0.2rem 0.55rem; border-radius:99px;"
+              :style="{ background: f.rank === 'Advanced' ? '#CCFF00' : f.rank === 'Intermediate' ? '#7eb8f7' : '#aaa', color: '#121212' }">
+              <i class="fas" :class="f.rank === 'Advanced' ? 'fa-crown' : f.rank === 'Intermediate' ? 'fa-fire' : 'fa-seedling'" style="font-size:0.6rem; margin-right:0.2rem;"></i>
+              {{ f.rank }}
+            </span>
+          </div>
+
+          <!-- Card body -->
+          <div style="padding:1rem 1.1rem 1.1rem;">
+            <div style="font-size:0.72rem; color:#555; margin-bottom:0.25rem; text-transform:uppercase; letter-spacing:0.05em;">{{ f.category }}</div>
+            <h3 style="margin-bottom:0.75rem; font-size:0.95rem; font-weight:700; color:#fff;">{{ f.title }}</h3>
+
+            <!-- Progress meter -->
+            <div class="meter" style="margin-bottom:0.25rem;">
+              <div class="seg" :style="{ background: f.seg1 }"></div>
+              <div class="seg" :style="{ background: f.seg2 }"></div>
+              <div class="seg" :style="{ background: f.seg3 }"></div>
+            </div>
+            <div class="meter-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span></div>
+
+            <p style="color:#888; font-size:0.78rem; margin-top:0.5rem; line-height:1.5;">{{ f.desc }}</p>
+
+            <!-- Tip box -->
+            <div :style="f.tipStyle" style="margin-top:1rem; padding:0.6rem 0.8rem; border-radius:8px; font-size:0.78rem; line-height:1.5;">
+              <i class="fas" :class="f.tipIcon" style="margin-right:0.4rem;"></i>
+              <span>{{ f.tip }}</span>
+            </div>
+          </div>
         </div>
       </div>
-      <a href="/explore.html" class="btn-neon">View Our Community</a>
+      <h2 class="features-title">What it does</h2>
+      <div class="features-grid" style="margin-bottom:3rem; text-align:left;">
+        <div class="feature-item">
+          <span class="feature-icon">📈</span>
+          <h3>Trace Progress</h3>
+          <p>Track every milestone in your art journey with a visual timeline of your growth. See exactly how far you've come and what's next.</p>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🗂️</span>
+          <h3>Create Portfolio</h3>
+          <p>Build a dynamic portfolio that showcases your best work. Share it publicly to let the world discover your talent and creativity.</p>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🎨</span>
+          <h3>Showcase Skills</h3>
+          <p>Display your skills with gamified ranks — Beginner, Intermediate, Advanced. Earn ranks by uploading artwork and getting approved.</p>
+        </div>
+      </div>
+      <a href="/explore.html" class="btn-neon">Meet Our Artists</a>
     </div>
   </section>
 
@@ -225,15 +258,40 @@ createApp({
       loginEmail: '', loginPassword: '',
       regUsername: '', regEmail: '', regPassword: '', regConfirm: '',
       forgotEmail: '', otpCode: '', newPassword: '', newPasswordConfirm: '',
-      featured: [
-        { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80' },
-        { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80' },
-        { title: 'Character Design – ADVANCE', level: 'LEVEL 3', img: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80' },
-      ],
       features: [
-        { icon: '📈', title: 'Trace Progress', desc: 'Track every milestone in your art journey with a visual timeline of your growth.' },
-        { icon: '🗂️', title: 'Curate Portfolio', desc: 'Build a dynamic portfolio that shows not just where you are, but how far you\'ve come.' },
-        { icon: '🎨', title: 'Showcase Skills', desc: 'Display your skills with gamified levels — Beginner, Intermediate, Advanced.' },
+        {
+          category: 'Painting',
+          title: 'Watercolor',
+          rank: 'Beginner',
+          img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80',
+          seg1: '#CCFF00', seg2: '#333', seg3: '#333',
+          desc: 'Explore the art of watercolor — from soft washes to vibrant layers. A perfect skill for artists who love fluid, expressive painting.',
+          tip: 'Start with basic washes and color blending before moving to detailed work.',
+          tipIcon: 'fa-map-signs',
+          tipStyle: 'background:#1C1C1C; color:#aaa; border:1px solid #2A2A2A;',
+        },
+        {
+          category: 'Digital Art',
+          title: 'Pixel Art',
+          rank: 'Intermediate',
+          img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
+          seg1: '#CCFF00', seg2: '#3B82F6', seg3: '#333',
+          desc: 'Craft retro-style art one pixel at a time. Pixel art blends creativity with precision — a unique skill for digital artists.',
+          tip: 'Focus on a consistent color palette and grid size to keep your work clean.',
+          tipIcon: 'fa-bolt',
+          tipStyle: 'background:#1a1a2a; color:#7eb8f7; border:1px solid #2a2a5a;',
+        },
+        {
+          category: 'Design',
+          title: 'Typography',
+          rank: 'Advanced',
+          img: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80',
+          seg1: '#CCFF00', seg2: '#3B82F6', seg3: '#F59E0B',
+          desc: 'Master the art of type — letterforms, spacing, hierarchy, and layout. Typography is the foundation of great design and visual communication.',
+          tip: 'Study classic typefaces and practice pairing fonts to develop your eye.',
+          tipIcon: 'fa-star',
+          tipStyle: 'background:#1a2a1a; color:#CCFF00; border:1px solid #3a5a3a;',
+        },
       ],
     };
   },
