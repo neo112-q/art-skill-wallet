@@ -410,9 +410,9 @@
 
           <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
             <div v-for="p in viewProofs" :key="p.id" style="position:relative;">
-              <a v-if="p.file_type === 'image'" :href="p.file_url" target="_blank">
-                <img :src="p.file_url" style="width:140px; height:105px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A;">
-              </a>
+              <img v-if="p.file_type === 'image'" :src="p.file_url" @click="openLightbox(p.file_url)"
+                style="width:140px; height:105px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A; cursor:pointer;"
+                title="คลิกเพื่อดูรูปขนาดเต็ม">
               <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:200px; border-radius:6px; border:1px solid #2A2A2A;"></video>
               <a v-else :href="p.file_url" target="_blank" style="display:flex; align-items:center; gap:0.3rem; background:#1C1C1C; border:1px solid #2A2A2A; padding:0.4rem 0.6rem; border-radius:6px; color:#CCFF00; font-size:0.75rem; text-decoration:none;">
                 <i class="fas fa-file-pdf"></i> View PDF
@@ -437,6 +437,14 @@
     </div>
   </div>
 
+  <!-- Image Lightbox -->
+  <div v-if="lightboxUrl" @click="closeLightbox"
+    style="position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; padding:2rem; cursor:zoom-out;">
+    <button @click.stop="closeLightbox"
+      style="position:absolute; top:1rem; right:1.25rem; background:rgba(0,0,0,0.6); border:none; color:#fff; width:40px; height:40px; border-radius:50%; font-size:1.4rem; cursor:pointer;">&times;</button>
+    <img :src="lightboxUrl" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+  </div>
+
 </div>
 
 <script src="/js/app.js"></script>
@@ -459,6 +467,7 @@ createApp({
       viewData: {},
       viewProofs: [],
       viewProofsLoading: false,
+      lightboxUrl: null,
       // Users tab
       activeTab: 'submissions',
       users: [],
@@ -544,6 +553,8 @@ createApp({
     userSearch()  { this.userPage = 1; },
   },
   methods: {
+    openLightbox(url) { if (url) this.lightboxUrl = url; },
+    closeLightbox() { this.lightboxUrl = null; },
     doLogout() { logout(); },
     badgeClass(l) { return l === 'Beginner' ? 'badge-beg' : l === 'Intermediate' ? 'badge-inter' : 'badge-adv'; },
     formatDate(d) {

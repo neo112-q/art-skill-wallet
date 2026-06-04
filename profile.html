@@ -73,7 +73,6 @@
         </div>
         <p class="profile-bio" v-if="user.bio">Bio: "{{ user.bio }}"</p>
         <div class="stats-row">
-          <div class="stat-item"><span class="stat-value">{{ totalPoints }}</span><p class="stat-label">Total Points</p></div>
           <div class="stat-item"><span class="stat-value">{{ ranks.length }}</span><p class="stat-label">Skills</p></div>
           <div class="stat-item"><span class="stat-value">{{ artworks.length }}</span><p class="stat-label">Artworks</p></div>
         </div>
@@ -132,7 +131,7 @@
       </section>
 
       <!-- Portfolio Gallery -->
-      <section aria-label="Portfolio gallery" style="padding-bottom:3rem;">
+      <section aria-label="Portfolio gallery" style="margin-top:2.5rem; padding-bottom:3rem;">
         <div class="section-hd">
           <h2>Your Portfolio</h2>
           <a href="/upload.html" class="btn-neon">+ Add Artwork</a>
@@ -183,7 +182,8 @@
       <button class="artwork-modal-close" @click="closeArtwork">&times;</button>
 
       <!-- Artwork image -->
-      <img v-if="selectedArt._thumbUrl" :src="selectedArt._thumbUrl" :alt="selectedArt.title" class="artwork-modal-img">
+      <img v-if="selectedArt._thumbUrl" :src="selectedArt._thumbUrl" :alt="selectedArt.title" class="artwork-modal-img"
+        @click="openLightbox(selectedArt._thumbUrl)" style="cursor:pointer;">
 
       <div class="artwork-modal-body">
         <!-- Title + status -->
@@ -215,9 +215,9 @@
           <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
             <div v-for="p in proofs" :key="p.id" style="position:relative;">
               <!-- Image proof -->
-              <a v-if="p.file_type === 'image'" :href="p.file_url" target="_blank">
-                <img :src="p.file_url" style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A;">
-              </a>
+              <img v-if="p.file_type === 'image'" :src="p.file_url" @click="openLightbox(p.file_url)"
+                style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A; cursor:pointer;"
+                title="คลิกเพื่อดูรูปขนาดเต็ม">
               <!-- Video proof -->
               <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:180px; border-radius:6px; border:1px solid #2A2A2A;"></video>
               <!-- Type label -->
@@ -248,6 +248,16 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- Image Lightbox (full-size viewer)                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div v-if="lightboxUrl" @click="closeLightbox"
+    style="position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; padding:2rem; cursor:zoom-out;">
+    <button @click.stop="closeLightbox"
+      style="position:absolute; top:1rem; right:1.25rem; background:rgba(0,0,0,0.6); border:none; color:#fff; width:40px; height:40px; border-radius:50%; font-size:1.4rem; cursor:pointer;">&times;</button>
+    <img :src="lightboxUrl" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.6);">
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════ -->
@@ -314,6 +324,8 @@ createApp({
       selectedArt: null,
       proofs: [],
       proofsLoading: false,
+      // Image lightbox
+      lightboxUrl: null,
       // Edit artwork modal
       editArtOpen: false,
       editArtForm: { id: '', title: '', description: '', privacy_status: 'Public', isApproved: false },
@@ -336,14 +348,6 @@ createApp({
       const m = {};
       this.ranks.forEach(r => { m[r.sub_skill_id] = r.display_name; });
       return m;
-    },
-    totalPoints() {
-      let pts = 0;
-      this.artworks.forEach(a => { if (a.status === 'Approved') pts += 10; });
-      this.ranks.forEach(r => {
-        pts += r.rank === 'Advanced' ? 200 : r.rank === 'Intermediate' ? 100 : r.rank === 'Beginner' ? 50 : 0;
-      });
-      return pts.toLocaleString();
     },
   },
   methods: {
@@ -376,6 +380,14 @@ createApp({
         a._skillName  = a._skillNames.join(', ') || '—';
         a._thumbUrl   = uploadsByTitle[(a.title || '').toLowerCase()] || '';
       });
+    },
+
+    // ── Image lightbox ────────────────────────────────────────────────
+    openLightbox(url) {
+      if (url) this.lightboxUrl = url;
+    },
+    closeLightbox() {
+      this.lightboxUrl = null;
     },
 
     // ── Open artwork detail + fetch proofs ────────────────────────────

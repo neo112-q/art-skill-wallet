@@ -153,7 +153,8 @@
       <button class="artwork-modal-close" @click="closeArtwork">&times;</button>
 
       <!-- Image -->
-      <img v-if="selectedArt.thumb_url" :src="selectedArt.thumb_url" :alt="selectedArt.title" class="artwork-modal-img">
+      <img v-if="selectedArt.thumb_url" :src="selectedArt.thumb_url" :alt="selectedArt.title" class="artwork-modal-img"
+        @click="openLightbox(selectedArt.thumb_url)" style="cursor:pointer;">
       <div v-else style="width:100%; height:200px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-radius:1.25rem 1.25rem 0 0;">
         <i class="fas fa-image" style="font-size:3rem; color:#333;"></i>
       </div>
@@ -180,15 +181,23 @@
           <div v-else-if="!proofs.length" style="color:#555; font-size:0.8rem;">No proofs attached.</div>
           <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
             <div v-for="p in proofs" :key="p.id">
-              <a v-if="p.file_type === 'image'" :href="p.file_url" target="_blank">
-                <img :src="p.file_url" style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A;">
-              </a>
+              <img v-if="p.file_type === 'image'" :src="p.file_url" @click="openLightbox(p.file_url)"
+                style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A; cursor:pointer;"
+                title="คลิกเพื่อดูรูปขนาดเต็ม">
               <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:180px; border-radius:6px; border:1px solid #2A2A2A;"></video>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Image Lightbox -->
+  <div v-if="lightboxUrl" @click="closeLightbox"
+    style="position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; padding:2rem; cursor:zoom-out;">
+    <button @click.stop="closeLightbox"
+      style="position:absolute; top:1rem; right:1.25rem; background:rgba(0,0,0,0.6); border:none; color:#fff; width:40px; height:40px; border-radius:50%; font-size:1.4rem; cursor:pointer;">&times;</button>
+    <img :src="lightboxUrl" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.6);">
   </div>
 
 </div>
@@ -213,6 +222,7 @@ createApp({
       selectedArt: null,
       proofs: [],
       proofsLoading: false,
+      lightboxUrl: null,
     };
   },
   computed: {
@@ -239,6 +249,9 @@ createApp({
       for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
       return 'hsl(' + (Math.abs(hash) % 360) + ', 50%, 25%)';
     },
+
+    openLightbox(url) { if (url) this.lightboxUrl = url; },
+    closeLightbox() { this.lightboxUrl = null; },
 
     async openArtwork(art) {
       this.selectedArt  = art;
