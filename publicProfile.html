@@ -6,7 +6,7 @@
   <title>Profile – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=2">
 </head>
 <body>
 <div id="app">
@@ -134,7 +134,7 @@
         <div v-if="user.artworks && user.artworks.length" class="portfolio-grid">
           <div v-for="art in user.artworks" :key="art.id"
                class="portfolio-item" @click="openArtwork(art)" style="cursor:pointer;">
-            <img v-if="art.thumb_url" :src="art.thumb_url" :alt="art.title">
+            <img v-if="art.thumb_url" :src="wm(art.thumb_url)" :alt="art.title">
             <div v-else style="width:100%;height:100%;background:var(--card);display:flex;align-items:center;justify-content:center;">
               <i class="fas fa-image" style="font-size:2rem;color:#333;"></i>
             </div>
@@ -153,8 +153,8 @@
       <button class="artwork-modal-close" @click="closeArtwork">&times;</button>
 
       <!-- Image -->
-      <img v-if="selectedArt.thumb_url" :src="selectedArt.thumb_url" :alt="selectedArt.title" class="artwork-modal-img"
-        @click="openLightbox(selectedArt.thumb_url)" style="cursor:pointer;">
+      <img v-if="selectedArt.thumb_url" :src="wm(selectedArt.thumb_url)" :alt="selectedArt.title" class="artwork-modal-img"
+        @click="openLightbox(wm(selectedArt.thumb_url))" style="cursor:pointer;">
       <div v-else style="width:100%; height:200px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-radius:1.25rem 1.25rem 0 0;">
         <i class="fas fa-image" style="font-size:3rem; color:#333;"></i>
       </div>
@@ -181,10 +181,10 @@
           <div v-else-if="!proofs.length" style="color:#555; font-size:0.8rem;">No proofs attached.</div>
           <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
             <div v-for="p in proofs" :key="p.id">
-              <img v-if="p.file_type === 'image'" :src="p.file_url" @click="openLightbox(p.file_url)"
+              <img v-if="p.file_type === 'image'" :src="wm(p.file_url)" @click="openLightbox(wm(p.file_url))"
                 style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A; cursor:pointer;"
                 title="คลิกเพื่อดูรูปขนาดเต็ม">
-              <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:180px; border-radius:6px; border:1px solid #2A2A2A;"></video>
+              <video v-else-if="p.file_type === 'video'" :src="wm(p.file_url)" controls style="width:180px; border-radius:6px; border:1px solid #2A2A2A;"></video>
             </div>
           </div>
         </div>
@@ -252,6 +252,15 @@ createApp({
 
     openLightbox(url) { if (url) this.lightboxUrl = url; },
     closeLightbox() { this.lightboxUrl = null; },
+    // Add "© username" watermark (bottom-right) to public Cloudinary images/videos.
+    // Original stays clean — overlay is applied only on delivery via transformation.
+    wm(url) {
+      const name = this.user && this.user.username;
+      if (!url || !name || url.indexOf('/upload/') === -1) return url;
+      let text = encodeURIComponent('© ' + name).replace(/%2C/gi, '%252C').replace(/%2F/gi, '%252F');
+      const tx = 'l_text:Arial_30_bold:' + text + ',co_white,o_80,g_south_east,x_18,y_18';
+      return url.replace('/upload/', '/upload/' + tx + '/');
+    },
 
     async openArtwork(art) {
       this.selectedArt  = art;

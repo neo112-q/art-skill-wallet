@@ -6,7 +6,7 @@
   <title>History – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=2">
 </head>
 <body>
 <div id="app">
@@ -122,9 +122,14 @@
           <div class="timeline-date" v-html="group.dateLabel"></div>
           <div class="timeline-dot"></div>
           <div class="timeline-entries">
-            <div class="timeline-card" v-for="(ev, ei) in group.items" :key="ei">
+            <div class="timeline-card" v-for="(ev, ei) in group.items" :key="ei"
+              @click="ev.artwork_id && openArtwork(ev)"
+              :style="ev.artwork_id ? 'cursor:pointer;' : ''"
+              :title="ev.artwork_id ? 'คลิกเพื่อดูผลงานนี้' : ''">
               <div class="timeline-thumb">
-                <span v-if="ev.type === 'upload'" class="timeline-icon">🎨</span>
+                <img v-if="ev._thumb" :src="ev._thumb" :alt="ev.title"
+                  style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">
+                <span v-else-if="ev.type === 'upload'" class="timeline-icon">🎨</span>
                 <span v-else class="timeline-icon">⬆️</span>
               </div>
               <div class="timeline-text">
@@ -143,6 +148,61 @@
       </div>
     </main>
 
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- Artwork Detail Popup (with proofs)                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="artwork-overlay" :class="{ open: artworkOpen }" @click.self="closeArtwork">
+    <div class="artwork-modal" v-if="selectedEv" style="max-width:700px;">
+      <button class="artwork-modal-close" @click="closeArtwork">&times;</button>
+
+      <!-- Artwork image -->
+      <img v-if="selectedEv._thumb" :src="selectedEv._thumb" :alt="selectedEv.title" class="artwork-modal-img"
+        @click="openLightbox(selectedEv._thumb)" style="cursor:pointer;">
+
+      <div class="artwork-modal-body">
+        <!-- Title + status -->
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;">
+          <h2 class="artwork-modal-title" style="margin:0;">{{ selectedEv.title }}</h2>
+          <span v-if="selectedEv.status" style="font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;"
+            :style="{ background: selectedEv.status === 'Approved' ? '#22c55e' : selectedEv.status === 'Rejected' ? '#ef4444' : '#eab308', color: '#000' }">
+            {{ selectedEv.status }}
+          </span>
+        </div>
+
+        <div class="artwork-meta" style="margin-top:0.5rem;">
+          <span class="artwork-meta-item">{{ new Date(selectedEv.date).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) }}</span>
+          <span class="artwork-meta-tag" v-for="sn in (selectedEv.skill_names && selectedEv.skill_names.length ? selectedEv.skill_names : ['—'])" :key="sn">{{ sn }}</span>
+        </div>
+
+        <!-- Proofs -->
+        <div style="margin-top:1rem; border-top:1px solid #2A2A2A; padding-top:1rem;">
+          <h3 style="font-size:0.85rem; font-weight:700; margin-bottom:0.75rem;">
+            <i class="fas fa-file-alt" style="color:#CCFF00;"></i> Evidence / Proofs
+          </h3>
+          <div v-if="proofsLoading" style="color:#888; font-size:0.8rem;">Loading proofs...</div>
+          <div v-else-if="!proofs.length" style="color:#555; font-size:0.8rem;">No proofs attached.</div>
+          <div v-else style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <div v-for="p in proofs" :key="p.id" style="position:relative;">
+              <img v-if="p.file_type === 'image'" :src="p.file_url" @click="openLightbox(p.file_url)"
+                style="width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid #2A2A2A; cursor:pointer;"
+                title="คลิกเพื่อดูรูปขนาดเต็ม">
+              <video v-else-if="p.file_type === 'video'" :src="p.file_url" controls style="width:180px; border-radius:6px; border:1px solid #2A2A2A;"></video>
+              <span style="position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.7); color:#ccc; font-size:0.6rem; padding:0.1rem 0.3rem; border-radius:3px;">{{ p.file_type }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Lightbox -->
+  <div v-if="lightboxUrl" @click="closeLightbox"
+    style="position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; padding:2rem; cursor:zoom-out;">
+    <button @click.stop="closeLightbox"
+      style="position:absolute; top:1rem; right:1.25rem; background:rgba(0,0,0,0.6); border:none; color:#fff; width:40px; height:40px; border-radius:50%; font-size:1.4rem; cursor:pointer;">&times;</button>
+    <img :src="lightboxUrl" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.6);">
   </div>
 
 </div>
@@ -167,6 +227,12 @@ createApp({
       sortDir: 'desc',
       mobileOpen: false,
       filterOpen: false,
+      // Artwork detail popup
+      artworkOpen: false,
+      selectedEv: null,
+      proofs: [],
+      proofsLoading: false,
+      lightboxUrl: null,
     };
   },
   computed: {
@@ -206,19 +272,49 @@ createApp({
   },
   methods: {
     doLogout() { logout(); },
+    openLightbox(url) { if (url) this.lightboxUrl = url; },
+    closeLightbox() { this.lightboxUrl = null; },
+    async openArtwork(ev) {
+      this.selectedEv = ev;
+      this.proofs = [];
+      this.proofsLoading = true;
+      this.artworkOpen = true;
+      document.body.style.overflow = 'hidden';
+      const r = await apiFetch('/proofs?artwork_id=' + ev.artwork_id);
+      if (r.ok && r.data.data) this.proofs = r.data.data;
+      this.proofsLoading = false;
+    },
+    closeArtwork() {
+      this.artworkOpen = false;
+      this.selectedEv = null;
+      document.body.style.overflow = '';
+    },
   },
   async mounted() {
     document.addEventListener('click', () => { this.dropdownOpen = false; });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { this.closeLightbox(); this.closeArtwork(); } });
 
     const meRes = await apiFetch('/me');
     if (meRes.ok && meRes.data.data?.profile_picture) this.profilePicture = meRes.data.data.profile_picture;
 
     console.log('[HISTORY] Fetching GET /history …');
-    const r = await apiFetch('/history');
+    const [r, upRes] = await Promise.all([apiFetch('/history'), apiFetch('/uploads')]);
     console.log('[HISTORY] Response:', r.status, r.data);
 
+    // Map artwork title → real image URL (from uploads)
+    const thumbByTitle = {};
+    if (upRes.ok && upRes.data.data) {
+      upRes.data.data.forEach(u => {
+        const url = u.file_url || u.file_path || '';
+        if (u.title && url) thumbByTitle[u.title.toLowerCase()] = url;
+      });
+    }
+
     if (r.ok && r.data.data) {
-      this.events = r.data.data;
+      this.events = r.data.data.map(ev => ({
+        ...ev,
+        _thumb: thumbByTitle[(ev.title || '').toLowerCase()] || '',
+      }));
       console.log('[HISTORY] Loaded', this.events.length, 'events');
     } else {
       console.error('[HISTORY] Failed:', r.data.error_message);

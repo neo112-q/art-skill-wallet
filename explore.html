@@ -6,7 +6,7 @@
   <title>Explore – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=2">
 </head>
 <body>
 <div id="app">
@@ -113,8 +113,9 @@
             <div class="artist-body">
               <h3 class="artist-name">{{ a.username }}</h3>
               <div class="artist-skills">
-                <span class="skill-badge" v-for="s in a.skills.slice(0, 4)" :key="s.sub_skill_id">
-                  <span class="skill-badge-dot"></span>{{ s.main_skill_name }} › {{ s.display_name }}
+                <span class="skill-badge" v-for="s in a.skills.slice(0, 4)" :key="s.sub_skill_id"
+                  :title="s.rank">
+                  <span class="skill-badge-dot" :style="{ background: rankColor(s.rank) }"></span>{{ s.main_skill_name }} › {{ s.display_name }}
                 </span>
                 <span v-if="a.skills.length > 4" class="skill-badge" style="opacity:0.5;">+{{ a.skills.length - 4 }} more</span>
               </div>
@@ -210,6 +211,9 @@ createApp({
   methods: {
     doLogout() { logout(); },
     goToProfile(userId) { window.location.href = '/publicProfile.html?id=' + userId; },
+    rankColor(rank) {
+      return rank === 'Advanced' ? '#F59E0B' : rank === 'Intermediate' ? '#3B82F6' : '#CCFF00';
+    },
     initials(name) {
       if (!name) return '?';
       const parts = name.trim().split(/\s+/);

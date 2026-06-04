@@ -6,7 +6,7 @@
   <title>My Skills – ArtSkillWallet</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=2">
 </head>
 <body>
 <div id="app">
@@ -231,9 +231,9 @@ createApp({
     },
     rankTipStyle(rank) {
       if (!rank) return 'background:#1C1C1C; color:#888; border:1px solid #2A2A2A;';
-      if (rank === 'Advanced') return 'background:#1a2a1a; color:#CCFF00; border:1px solid #3a5a3a;';
+      if (rank === 'Advanced') return 'background:#2a210f; color:#F59E0B; border:1px solid #5a4a2a;';
       if (rank === 'Intermediate') return 'background:#1a1a2a; color:#7eb8f7; border:1px solid #2a2a5a;';
-      return 'background:#1C1C1C; color:#aaa; border:1px solid #2A2A2A;';
+      return 'background:#1a2a1a; color:#CCFF00; border:1px solid #3a5a3a;';  /* Beginner → green */
     },
   },
   async mounted() {
