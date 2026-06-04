@@ -292,17 +292,27 @@ func fetchArtImages(query string) []string {
 }
 
 // uploadURL อัปโหลดภาพจาก remote URL เข้า Cloudinary แล้วคืน secure_url + public_id
+// retry สูงสุด 3 ครั้ง และถือว่า SecureURL ว่าง = ล้มเหลว (กัน record ว่างหลุดเข้า DB)
 func uploadURL(cld *cloudinary.Cloudinary, src string) (string, string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
-	defer cancel()
-	res, err := cld.Upload.Upload(ctx, src, uploader.UploadParams{
-		Folder:       seedFolder,
-		ResourceType: "auto",
-	})
-	if err != nil {
-		return "", "", err
+	var lastErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+		res, err := cld.Upload.Upload(ctx, src, uploader.UploadParams{
+			Folder:       seedFolder,
+			ResourceType: "auto",
+		})
+		cancel()
+		if err == nil && res.SecureURL != "" {
+			return res.SecureURL, res.PublicID, nil
+		}
+		if err != nil {
+			lastErr = err
+		} else {
+			lastErr = fmt.Errorf("empty secure_url")
+		}
+		time.Sleep(500 * time.Millisecond)
 	}
-	return res.SecureURL, res.PublicID, nil
+	return "", "", lastErr
 }
 
 // uploadPool อัปโหลดภาพจาก list URL เข้า Cloudinary สูงสุด max รูป
