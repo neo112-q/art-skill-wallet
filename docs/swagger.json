@@ -1042,187 +1042,6 @@
                 }
             }
         },
-        "/proofs": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all proof files linked to the given artwork_id.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "proofs"
-                ],
-                "summary": "List proofs for an artwork",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Artwork ID to fetch proofs for",
-                        "name": "artwork_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Accepts a multipart/form-data request with a file and an artwork_id.",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "proofs"
-                ],
-                "summary": "Upload a proof file linked to an artwork",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "Proof file (image/video/PDF, max 10 MB)",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Artwork ID this proof belongs to",
-                        "name": "artwork_id",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/proofs/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "proofs"
-                ],
-                "summary": "Replace the file of an existing proof",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Proof ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "New proof file (image/video/PDF, max 10 MB)",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Removes the proof file from disk and deletes the record. Validates artwork ownership.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "proofs"
-                ],
-                "summary": "Delete a proof by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Proof ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/public/artworks/{id}/proofs": {
             "get": {
                 "produces": [
@@ -1241,6 +1060,26 @@
                         "required": true
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/repair-ranks": {
+            "post": {
+                "description": "Deletes orphaned rank entries (whose sub_skill no longer exists) and",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin — rebuild all user_skill_ranks from approved artworks",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1595,7 +1434,7 @@
                 },
                 "username": {
                     "type": "string",
-                    "maxLength": 30,
+                    "maxLength": 12,
                     "minLength": 3
                 }
             }

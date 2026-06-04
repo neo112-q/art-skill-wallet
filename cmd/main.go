@@ -111,6 +111,7 @@ func main() {
 	api.GET("/main-skills", handlers.GetMainSkills)
 	api.GET("/main-skills/:id/sub-skills", handlers.GetSubSkills)
 	api.GET("/sub-skills/search", handlers.SearchSubSkills)
+	api.POST("/repair-ranks", handlers.RepairSkillRanks)
 
 	// Protected endpoints — valid JWT required
 	protected := api.Group("/")

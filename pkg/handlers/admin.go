@@ -409,6 +409,11 @@ func VoteArtwork(c *gin.Context) {
 		})
 		approveCount = 0
 		rejectCount = 0
+
+		// Update skill ranks
+		if newStatus == "Approved" {
+			UpdateRanksAfterApproval(artwork.UserID, artwork.SubSkillIDs)
+		}
 	} else {
 		// Still pending — just record the vote
 		setFields := bson.M{
@@ -495,6 +500,102 @@ func AdminDeleteArtwork(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Artwork deleted successfully"})
+}
+
+// ── Data Repair ───────────────────────────────────────────────────────────────
+
+// RepairSkillRanks godoc
+// @Summary      Admin — rebuild all user_skill_ranks from approved artworks
+// @Description  Deletes orphaned rank entries (whose sub_skill no longer exists) and
+//
+//	recalculates every user's rank counts from scratch based on currently
+//	approved artworks. Safe to call multiple times.
+//
+// @Tags         admin
+// @Produce      json
+// @Success      200 {object} response.APIResponse
+// @Router       /repair-ranks [post]
+func RepairSkillRanks(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// 1. Load all valid sub_skill IDs into a set
+	subCursor, err := db.Col("sub_skills").Find(ctx, bson.M{})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch sub_skills")
+		return
+	}
+	var subSkills []models.SubSkill
+	_ = subCursor.All(ctx, &subSkills)
+	subCursor.Close(ctx)
+
+	validSubSkills := make(map[string]bool)
+	for _, s := range subSkills {
+		validSubSkills[s.ID.Hex()] = true
+	}
+
+	// 2. Delete orphaned user_skill_ranks (sub_skill no longer exists)
+	allRanksCursor, _ := db.Col("user_skill_ranks").Find(ctx, bson.M{})
+	var allRanks []models.UserSkillRank
+	if allRanksCursor != nil {
+		_ = allRanksCursor.All(ctx, &allRanks)
+		allRanksCursor.Close(ctx)
+	}
+	orphanedDeleted := 0
+	for _, r := range allRanks {
+		if !validSubSkills[r.SubSkillID.Hex()] {
+			db.Col("user_skill_ranks").DeleteOne(ctx, bson.M{"_id": r.ID})
+			orphanedDeleted++
+		}
+	}
+
+	// 3. Drop all remaining rank entries and rebuild from approved artworks
+	db.Col("user_skill_ranks").DeleteMany(ctx, bson.M{})
+
+	artCursor, err := db.Col("artworks").Find(ctx, bson.M{"status": "Approved"})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch artworks")
+		return
+	}
+	var artworks []models.Artwork
+	_ = artCursor.All(ctx, &artworks)
+	artCursor.Close(ctx)
+
+	// Count approvals per user per sub_skill
+	type rankKey struct {
+		UserID     string
+		SubSkillID string
+	}
+	counts := make(map[rankKey]int)
+	for _, a := range artworks {
+		for _, sid := range a.SubSkillIDs {
+			if validSubSkills[sid.Hex()] {
+				counts[rankKey{a.UserID.Hex(), sid.Hex()}]++
+			}
+		}
+	}
+
+	// Re-insert rank documents
+	rebuilt := 0
+	for k, count := range counts {
+		userID, _ := primitive.ObjectIDFromHex(k.UserID)
+		skillID, _ := primitive.ObjectIDFromHex(k.SubSkillID)
+		db.Col("user_skill_ranks").InsertOne(ctx, models.UserSkillRank{
+			ID:            primitive.NewObjectID(),
+			UserID:        userID,
+			SubSkillID:    skillID,
+			ApprovalCount: count,
+			Rank:          models.CalcRank(count),
+			UpdatedAt:     time.Now(),
+		})
+		rebuilt++
+	}
+
+	response.Success(c, http.StatusOK, gin.H{
+		"message":          "Ranks repaired successfully",
+		"orphaned_deleted": orphanedDeleted,
+		"ranks_rebuilt":    rebuilt,
+	})
 }
 
 // ── User Management ───────────────────────────────────────────────────────────

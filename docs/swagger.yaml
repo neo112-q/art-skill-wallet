@@ -40,7 +40,7 @@ definitions:
         minLength: 6
         type: string
       username:
-        maxLength: 30
+        maxLength: 12
         minLength: 3
         type: string
     required:
@@ -750,122 +750,6 @@ paths:
       summary: Get the authenticated user's skill ranks
       tags:
       - skills
-  /proofs:
-    get:
-      description: Returns all proof files linked to the given artwork_id.
-      parameters:
-      - description: Artwork ID to fetch proofs for
-        in: query
-        name: artwork_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: List proofs for an artwork
-      tags:
-      - proofs
-    post:
-      consumes:
-      - multipart/form-data
-      description: Accepts a multipart/form-data request with a file and an artwork_id.
-      parameters:
-      - description: Proof file (image/video/PDF, max 10 MB)
-        in: formData
-        name: file
-        required: true
-        type: file
-      - description: Artwork ID this proof belongs to
-        in: formData
-        name: artwork_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Upload a proof file linked to an artwork
-      tags:
-      - proofs
-  /proofs/{id}:
-    delete:
-      description: Removes the proof file from disk and deletes the record. Validates
-        artwork ownership.
-      parameters:
-      - description: Proof ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete a proof by ID
-      tags:
-      - proofs
-    put:
-      consumes:
-      - multipart/form-data
-      parameters:
-      - description: Proof ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: New proof file (image/video/PDF, max 10 MB)
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Replace the file of an existing proof
-      tags:
-      - proofs
   /public/artworks/{id}/proofs:
     get:
       parameters:
@@ -882,6 +766,20 @@ paths:
           schema:
             $ref: '#/definitions/response.APIResponse'
       summary: Get proofs for a public approved artwork (no auth required)
+      tags:
+      - admin
+  /repair-ranks:
+    post:
+      description: Deletes orphaned rank entries (whose sub_skill no longer exists)
+        and
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Admin — rebuild all user_skill_ranks from approved artworks
       tags:
       - admin
   /sub-skills/search:

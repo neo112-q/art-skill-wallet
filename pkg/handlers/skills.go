@@ -161,8 +161,23 @@ func DeleteMainSkill(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Collect sub_skill IDs before deleting them so we can clean up ranks
+	subCursor, _ := db.Col("sub_skills").Find(ctx, bson.M{"main_skill_id": skillID})
+	var subIDs []primitive.ObjectID
+	if subCursor != nil {
+		var subs []models.SubSkill
+		_ = subCursor.All(ctx, &subs)
+		subCursor.Close(ctx)
+		for _, s := range subs {
+			subIDs = append(subIDs, s.ID)
+		}
+	}
+
 	db.Col("main_skills").DeleteOne(ctx, bson.M{"_id": skillID})
 	db.Col("sub_skills").DeleteMany(ctx, bson.M{"main_skill_id": skillID})
+	if len(subIDs) > 0 {
+		db.Col("user_skill_ranks").DeleteMany(ctx, bson.M{"sub_skill_id": bson.M{"$in": subIDs}})
+	}
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Main skill deleted"})
 }
@@ -338,6 +353,9 @@ func DeleteSubSkill(c *gin.Context) {
 		response.Error(c, http.StatusNotFound, "Sub skill not found")
 		return
 	}
+
+	// Clean up orphaned rank entries so GetMyRanks doesn't silently skip them
+	db.Col("user_skill_ranks").DeleteMany(ctx, bson.M{"sub_skill_id": skillID})
 
 	response.Success(c, http.StatusOK, gin.H{"message": "Sub skill deleted"})
 }
