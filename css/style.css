@@ -199,11 +199,17 @@ textarea.auth-input { resize: none; height: 70px; }
 .auth-forgot span { font-size: 0.75rem; color: #666; cursor: pointer; transition: color 0.2s; }
 .auth-forgot span:hover { color: var(--neon); }
 .auth-msg {
-  font-size: 0.78rem; padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem; margin-bottom: 1rem; display: none;
+  font-size: 0.82rem; padding: 0.65rem 0.9rem;
+  border-radius: 0.5rem; margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  font-weight: 500; animation: authMsgIn 0.2s ease;
 }
-.auth-msg.error   { background: rgba(255,80,80,0.1);   border: 1px solid rgba(255,80,80,0.25);   color: #ff8080; }
-.auth-msg.success { background: rgba(204,255,0,0.08);  border: 1px solid rgba(204,255,0,0.2);    color: var(--neon); }
+@keyframes authMsgIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.auth-msg.error   { background: rgba(255,60,60,0.15);  border: 1px solid rgba(255,80,80,0.45);  color: #ff6b6b; }
+.auth-msg.success { background: rgba(204,255,0,0.08);  border: 1px solid rgba(204,255,0,0.3);   color: var(--neon); }
 
 /* =====================================================================
    HOME PAGE

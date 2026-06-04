@@ -161,7 +161,10 @@
 
       <!-- Login Panel -->
       <div class="auth-panel" :class="{ active: authTab === 'login' }">
-        <div v-if="authMsg && authTab === 'login'" class="auth-msg" :class="authMsgType">{{ authMsg }}</div>
+        <div v-if="authMsg && authTab === 'login'" class="auth-msg" :class="authMsgType">
+          <i class="fas" :class="authMsgType === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'"></i>
+          {{ authMsg }}
+        </div>
         <button class="auth-google-btn" @click="loginWithGoogle">
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google">
           Continue with Google
@@ -244,7 +247,7 @@
 
 </div>
 
-<script src="/js/app.js?v=2"></script>
+<script src="/js/app.js?v=3"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 const { createApp } = Vue;

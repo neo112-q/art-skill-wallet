@@ -91,9 +91,12 @@ async function ensureToken() {
 
 // ── apiFetch — JSON requests ─────────────────────────────────────────────────
 
+const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/verify-otp', '/auth/reset-password', '/auth/refresh'];
+
 async function apiFetch(path, opts = {}) {
-  let accessToken = await ensureToken();
-  if (!accessToken && TokenStore.getAccess()) {
+  const isPublic = PUBLIC_PATHS.some(p => path.startsWith(p));
+  let accessToken = isPublic ? TokenStore.getAccess() : await ensureToken();
+  if (!isPublic && !accessToken && TokenStore.getAccess()) {
     return { ok: false, status: 401, data: { error_message: 'Session expired' } };
   }
 
@@ -107,8 +110,8 @@ async function apiFetch(path, opts = {}) {
 
   let res = await fetch(API_BASE + path, { ...opts, headers });
 
-  // Silent refresh + one retry on 401
-  if (res.status === 401) {
+  // Silent refresh + one retry on 401 (skip for public auth endpoints)
+  if (res.status === 401 && !isPublic) {
     const ok = await refreshAccessToken();
     if (!ok) return { ok: false, status: 401, data: { error_message: 'Session expired' } };
     headers['Authorization'] = 'Bearer ' + TokenStore.getAccess();
