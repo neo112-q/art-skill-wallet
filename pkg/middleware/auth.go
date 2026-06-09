@@ -11,9 +11,7 @@ import (
 
 	"art-skill-wallet/pkg/response"
 )
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
+// jwt
 func jwtSecret() []byte {
 	s := os.Getenv("JWT_SECRET")
 	if s == "" {
@@ -22,7 +20,6 @@ func jwtSecret() []byte {
 	return []byte(s)
 }
 
-// ── JWTAuth ───────────────────────────────────────────────────────────────────
 
 // JWTAuth validates the Bearer token from the Authorization header.
 // On success it sets "user_id" and "role" in the Gin context.
@@ -81,11 +78,6 @@ func JWTAuth() gin.HandlerFunc {
 	}
 }
 
-// ── CheckAdmin ────────────────────────────────────────────────────────────────
-
-// CheckAdmin is an authorization middleware that enforces the "admin" role.
-// Must be used AFTER JWTAuth() in the middleware chain.
-// Returns 403 Forbidden if the role is not exactly "admin".
 func CheckAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")

@@ -11,7 +11,7 @@ import (
 type RefreshToken struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"-"`
 	UserID    primitive.ObjectID `bson:"user_id"       json:"-"`
-	TokenHash string             `bson:"token_hash"    json:"-"` // SHA-256 of raw token
+	TokenHash string             `bson:"token_hash"    json:"-"`
 	ExpiresAt time.Time          `bson:"expires_at"    json:"-"`
 	CreatedAt time.Time          `bson:"created_at"    json:"-"`
 }

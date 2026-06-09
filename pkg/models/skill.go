@@ -59,12 +59,10 @@ func CalcRank(count int) string {
 	}
 }
 
-// RankProgress returns how many approvals until the next rank.
-// Returns current count, target count, and next rank name.
 func RankProgress(count int) (current, target int, nextRank string) {
 	switch {
 	case count >= 25:
-		return count, 25, "Advanced" // already max
+		return count, 25, "Advanced"
 	case count >= 10:
 		return count, 25, "Advanced"
 	case count >= 1:

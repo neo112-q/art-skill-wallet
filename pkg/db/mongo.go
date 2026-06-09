@@ -13,7 +13,7 @@ import (
 
 var Client *mongo.Client
 var Database *mongo.Database
-
+// เชื่อมต่อ DB 
 func Connect() error {
 	uri := os.Getenv("MONGO_URI")
 	if uri == "" {

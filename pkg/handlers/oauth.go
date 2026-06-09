@@ -77,7 +77,7 @@ func frontendURL() string {
 	}
 	return "http://localhost:8080"
 }
-
+// Google OAuth สุ่มชื่อ
 func genUsername(name, email string) string {
 	base := strings.ToLower(strings.ReplaceAll(name, " ", "_"))
 	if base == "" {

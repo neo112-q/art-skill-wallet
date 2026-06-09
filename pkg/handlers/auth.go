@@ -215,7 +215,7 @@ func Login(c *gin.Context) {
 		response.Error(c, http.StatusInternalServerError, "Failed to generate refresh token")
 		return
 	}
-
+// refresh
 	// Persist hashed refresh token in MongoDB
 	rtDoc := models.RefreshToken{
 		ID:        primitive.NewObjectID(),
@@ -315,7 +315,7 @@ func Refresh(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{"access_token": newAccessToken})
 }
 
-// ── Logout ───────────────────────────────────────────────────────────────────
+// ── Logout ───────────────────────────────────────────
 
 // Logout godoc
 // @Summary      Revoke the refresh token
@@ -342,7 +342,7 @@ func Logout(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
-// ── GetMe ────────────────────────────────────────────────────────────────────
+// GetMe ──────────────────────────────────────────────────────
 
 // GetMe godoc
 // @Summary      Get the currently authenticated user's profile
